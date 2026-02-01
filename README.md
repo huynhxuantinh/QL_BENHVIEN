@@ -51,6 +51,9 @@ pip install django
 3. Chạy migrate
 4. Runserver
 
+ANH TÀY CAO BẰNG
+
+
 Kéo code mới nhất về
 git pull
 

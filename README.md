@@ -44,7 +44,8 @@ Truy cập:
 http://127.0.0.1:8000/admin
 
 # Setup
-
+pip install python-dotenv
+pip install django
 1. Tạo file .env
 2. Copy từ .env.example
 3. Chạy migrate

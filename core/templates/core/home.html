@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang chủ</title>
+</head>
+<body>
+
+<h1>Danh sách bệnh viện</h1>
+
+<ul>
+    {% for bv in bvs %}
+        <li>
+            <a href="/benh-vien/{{ bv.id }}/">
+                {{ bv.ten }} - {{ bv.quan }}
+            </a>
+        </li>
+    {% empty %}
+        <li>Chưa có bệnh viện nào</li>
+    {% endfor %}
+</ul>
+
+</body>
+</html>

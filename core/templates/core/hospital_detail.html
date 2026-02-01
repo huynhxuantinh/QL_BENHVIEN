@@ -1,0 +1,34 @@
+<h1>{{ bv.ten }}</h1>
+
+<p>Quận: {{ bv.quan }}</p>
+<p>Địa chỉ: {{ bv.dia_chi }}</p>
+
+<hr>
+
+<h2>Khoa</h2>
+
+<ul>
+    {% for k in khoas %}
+        <li>{{ k.ten }}</li>
+    {% empty %}
+        <li>Chưa có khoa</li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<h2>Bác sĩ</h2>
+
+<ul>
+    {% for bs in bac_sis %}
+        <li>
+            {{ bs.ho_ten }} - {{ bs.chuyen_khoa }}
+        </li>
+    {% empty %}
+        <li>Chưa có bác sĩ</li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<a href="/">← Quay về</a>

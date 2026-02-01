@@ -1,0 +1,13 @@
+<h2>Đăng ký</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <input name="name" placeholder="Họ tên"><br>
+    <input name="username" placeholder="Số điện thoại"><br>
+    <input name="password" type="password" placeholder="Mật khẩu"><br>
+
+    <button type="submit">Đăng ký</button>
+</form>
+
+<a href="/login/">Đăng nhập</a>

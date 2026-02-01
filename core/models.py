@@ -10,7 +10,7 @@ class BenhVien(models.Model):
     ten = models.CharField(max_length=255, db_index=True)
     dia_chi = models.TextField()
     quan = models.CharField(max_length=100, db_index=True)
-    vi_tri = models.PointField(spatial_index=True)
+    vi_tri = models.PointField(srid=4326, spatial_index=True)
     co_cap_cuu = models.BooleanField(default=False, db_index=True)
     cap_cuu_24h = models.BooleanField(default=False, db_index=True)
     co_bhyt = models.BooleanField(default=False, db_index=True)
@@ -180,12 +180,18 @@ class BaoHiemYTe(models.Model):
 
     def __str__(self):
         return self.ma_bhyt
-
-
+    
 # ========================= 
 # BỆNH NHÂN
 # ========================= 
 class BenhNhan(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='benh_nhan'
+    )
     ho_ten = models.CharField(max_length=255, db_index=True)
     ngay_sinh = models.DateField()
     gioi_tinh = models.CharField(
@@ -212,8 +218,7 @@ class BenhNhan(models.Model):
 
     def __str__(self):
         return self.ho_ten
-
-
+    
 # ========================= 
 # LỊCH KHÁM
 # ========================= 

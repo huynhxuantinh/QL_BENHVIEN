@@ -1,7 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ bv.ten }}</title>
+</head>
+
+<body>
+
 <h1>{{ bv.ten }}</h1>
 
-<p>Quận: {{ bv.quan }}</p>
-<p>Địa chỉ: {{ bv.dia_chi }}</p>
+<p><b>Quận:</b> {{ bv.quan }}</p>
+<p><b>Địa chỉ:</b> {{ bv.dia_chi }}</p>
 
 <hr>
 
@@ -31,4 +40,16 @@
 
 <hr>
 
-<a href="/">← Quay về</a>
+<!-- NÚT ĐẶT LỊCH -->
+<h2>Đặt lịch khám</h2>
+
+<a href="{% url 'dat_lich' bv.id %}">
+    👉 Đặt lịch tại bệnh viện này
+</a>
+
+<hr>
+
+<a href="{% url 'home' %}">⬅ Quay về trang chủ</a>
+
+</body>
+</html>

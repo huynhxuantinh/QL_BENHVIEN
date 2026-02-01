@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt lịch khám</title>
+</head>
+
+<body>
+
+<h1>Hệ thống quản lý bệnh viện</h1>
+
+<hr>
+
+<h2>Đặt lịch tại: {{ benh_vien.ten }}</h2>
+
+<p>
+    Địa chỉ: {{ benh_vien.dia_chi }} <br>
+    Quận: {{ benh_vien.quan }}
+</p>
+
+<hr>
+
+<h3>Thông tin đặt lịch</h3>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div>
+        <label><b>Bác sĩ:</b></label><br>
+        {{ form.bac_si }}
+    </div>
+
+    <br>
+
+    <div>
+        <label><b>Ngày khám:</b></label><br>
+        {{ form.ngay_kham }}
+    </div>
+
+    <br>
+
+    <div>
+        <label><b>Giờ khám:</b></label><br>
+        {{ form.gio_kham }}
+    </div>
+
+    <br>
+
+    <div>
+        <label><b>Ghi chú:</b></label><br>
+        {{ form.ghi_chu }}
+    </div>
+
+    <br>
+
+    <button type="submit">
+        Đặt lịch
+    </button>
+
+</form>
+
+<hr>
+
+<p>
+    <a href="{% url 'home' %}">⬅ Quay về trang chủ</a>
+</p>
+
+</body>
+</html>

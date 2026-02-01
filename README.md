@@ -1,3 +1,9 @@
+
+## QUY TRÌNH ĐÚNG MỖI KHI SỬA MODEL
+python manage.py makemigrations
+python manage.py migrate
+
+
 # Hệ thống quản lý bệnh viện + GIS
 
 ## 1. Yêu cầu môi trường
@@ -36,3 +42,11 @@ python manage.py runserver
 
 Truy cập:
 http://127.0.0.1:8000/admin
+
+# Setup
+
+1. Tạo file .env
+2. Copy từ .env.example
+3. Chạy migrate
+4. Runserver
+

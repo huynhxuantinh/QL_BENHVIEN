@@ -1,3 +1,8 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 """
 Django settings for hospital project.
 
@@ -77,11 +82,11 @@ WSGI_APPLICATION = 'hospital.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'ql_benhvien',
-        'USER': 'postgres',
-        'PASSWORD': '123321!@',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -125,6 +130,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 import os
-
-GDAL_LIBRARY_PATH = r'C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\gdal312.dll'
-GEOS_LIBRARY_PATH = r'C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\geos_c.dll'
+GDAL_LIBRARY_PATH = os.getenv('GDAL_PATH')
+GEOS_LIBRARY_PATH = os.getenv('GEOS_PATH')

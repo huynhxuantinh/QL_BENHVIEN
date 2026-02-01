@@ -4,20 +4,34 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 
-from .models import BenhVien, BenhNhan
+from .models import (
+    BenhVien,
+    BenhNhan,
+    BacSi,
+    LichKham,
+    PhieuKham
+)
+
 from .forms import DatLichForm
 
 
-# Trang chủ
+# ==========================
+# TRANG CHỦ
+# ==========================
 def home(request):
+
     bvs = BenhVien.objects.all()
+
     return render(request, "core/home.html", {
         "bvs": bvs
     })
 
 
-# Chi tiết bệnh viện
+# ==========================
+# CHI TIẾT BỆNH VIỆN
+# ==========================
 def hospital_detail(request, id):
+
     bv = get_object_or_404(BenhVien, id=id)
 
     khoas = bv.khoas.all()
@@ -28,54 +42,50 @@ def hospital_detail(request, id):
         "khoas": khoas,
         "bac_sis": bac_sis,
     })
+
+
+# ==========================
+# ĐẶT LỊCH KHÁM (BỆNH NHÂN)
+# ==========================
 @login_required
 def dat_lich(request, bv_id):
 
-    # Lấy bệnh viện
     benh_vien = get_object_or_404(BenhVien, id=bv_id)
 
-    # Lấy bệnh nhân theo số điện thoại (username)
     benh_nhan = BenhNhan.objects.filter(
         so_dien_thoai=request.user.username
     ).first()
 
-    # Chưa có hồ sơ
     if not benh_nhan:
         return render(request, "core/error.html", {
             "msg": "Bạn chưa có hồ sơ bệnh nhân"
         })
 
-    # POST: gửi form
+
     if request.method == "POST":
 
         form = DatLichForm(request.POST)
 
-        # Chỉ cho chọn bác sĩ thuộc bệnh viện này
+        # Lọc bác sĩ theo bệnh viện
         form.fields["bac_si"].queryset = benh_vien.bac_sis.all()
 
         if form.is_valid():
 
             lich = form.save(commit=False)
 
-            # Gán bệnh nhân
             lich.benh_nhan = benh_nhan
-
-            # Gán bệnh viện (nếu model có field benh_vien)
-            # lich.benh_vien = benh_vien
-
             lich.save()
 
             messages.success(request, "Đặt lịch thành công")
 
             return redirect("home")
 
-    # GET: hiển thị form
     else:
 
         form = DatLichForm()
 
-        # Lọc bác sĩ theo bệnh viện
         form.fields["bac_si"].queryset = benh_vien.bac_sis.all()
+
 
     return render(request, "core/dat_lich.html", {
         "form": form,
@@ -83,23 +93,103 @@ def dat_lich(request, bv_id):
     })
 
 
-# Đăng ký
-def register(request):
+# ==========================
+# DASHBOARD BÁC SĨ
+# ==========================
+@login_required
+def doctor_dashboard(request):
+
+    try:
+        bac_si = request.user.bac_si
+    except:
+        return redirect("home")
+
+
+    lich_khams = LichKham.objects.filter(
+        bac_si=bac_si
+    ).order_by("ngay_kham", "gio_kham")
+
+
+    return render(request, "core/doctor_dashboard.html", {
+        "bac_si": bac_si,
+        "lich_khams": lich_khams
+    })
+
+
+# ==========================
+# KHÁM BỆNH (TẠO PHIẾU)
+# ==========================
+@login_required
+def doctor_exam(request, lich_id):
+
+    try:
+        bac_si = request.user.bac_si
+    except:
+        return redirect("home")
+
+
+    lich = get_object_or_404(
+        LichKham,
+        id=lich_id,
+        bac_si=bac_si
+    )
+
+
     if request.method == "POST":
+
+        trieu_chung = request.POST["trieu_chung"]
+        chan_doan = request.POST["chan_doan"]
+        huong_dieu_tri = request.POST["huong_dieu_tri"]
+
+
+        PhieuKham.objects.create(
+            benh_nhan=lich.benh_nhan,
+            lich_kham=lich,
+            trieu_chung=trieu_chung,
+            chan_doan=chan_doan,
+            huong_dieu_tri=huong_dieu_tri
+        )
+
+
+        lich.trang_thai = "xong"
+        lich.save()
+
+
+        messages.success(request, "Đã hoàn thành khám")
+
+        return redirect("doctor_dashboard")
+
+
+    return render(request, "core/doctor_exam.html", {
+        "lich": lich
+    })
+
+
+# ==========================
+# ĐĂNG KÝ
+# ==========================
+def register(request):
+
+    if request.method == "POST":
+
         username = request.POST["username"]
         password = request.POST["password"]
         name = request.POST["name"]
 
+
         if User.objects.filter(username=username).exists():
+
             messages.error(request, "Tài khoản đã tồn tại")
+
             return redirect("register")
+
 
         user = User.objects.create_user(
             username=username,
             password=password
         )
 
-        # Tạo hồ sơ bệnh nhân
+
         BenhNhan.objects.create(
             ho_ten=name,
             so_dien_thoai=username,
@@ -108,13 +198,18 @@ def register(request):
             dia_chi="Chưa cập nhật"
         )
 
+
         messages.success(request, "Đăng ký thành công")
+
         return redirect("login")
+
 
     return render(request, "core/register.html")
 
 
-# Đăng nhập
+# ==========================
+# ĐĂNG NHẬP
+# ==========================
 def user_login(request):
     if request.method == "POST":
         username = request.POST["username"]
@@ -128,6 +223,12 @@ def user_login(request):
 
         if user:
             login(request, user)
+
+            # Nếu là bác sĩ
+            if hasattr(user, "bac_si"):
+                return redirect("bac_si_home")
+
+            # Nếu là bệnh nhân
             return redirect("home")
 
         messages.error(request, "Sai tài khoản hoặc mật khẩu")
@@ -135,7 +236,29 @@ def user_login(request):
     return render(request, "core/login.html")
 
 
-# Đăng xuất
+# ==========================
+# ĐĂNG XUẤT
+# ==========================
 def user_logout(request):
+
     logout(request)
+
     return redirect("login")
+
+# ==========================
+# TRANG CHỦ BÁC SĨ
+# ==========================
+@login_required
+def bac_si_home(request):
+
+    try:
+        bac_si = request.user.bac_si
+    except:
+        return redirect("home")
+
+    lich_khams = bac_si.lich_khams.all().order_by("-ngay_kham")
+
+    return render(request, "core/bac_si_home.html", {
+        "bac_si": bac_si,
+        "lich_khams": lich_khams
+    })

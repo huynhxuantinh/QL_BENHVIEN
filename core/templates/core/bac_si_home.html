@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Trang bác sĩ</title>
+</head>
+<body>
+
+<h1>Xin chào bác sĩ {{ bac_si.ho_ten }}</h1>
+
+<hr>
+
+<h2>Lịch khám của bạn</h2>
+
+<ul>
+    {% for lk in lich_khams %}
+        <li>
+            {{ lk.ngay_kham }} - {{ lk.gio_kham }} <br>
+            Bệnh nhân: {{ lk.benh_nhan.ho_ten }} <br>
+            Trạng thái: {{ lk.get_trang_thai_display }}
+        </li>
+        <hr>
+    {% empty %}
+        <li>Chưa có lịch khám nào</li>
+    {% endfor %}
+</ul>
+
+<br>
+
+<a href="{% url 'logout' %}">Đăng xuất</a>
+
+</body>
+</html>

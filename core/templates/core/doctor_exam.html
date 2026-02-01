@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Khám bệnh</title>
+</head>
+<body>
+
+<h1>Khám bệnh</h1>
+
+<p>
+    Bệnh nhân: <b>{{ lich.benh_nhan.ho_ten }}</b>
+</p>
+
+<p>
+    Ngày: {{ lich.ngay_kham }} - {{ lich.gio_kham }}
+</p>
+
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div>
+        <label>Triệu chứng</label><br>
+        <textarea name="trieu_chung" required></textarea>
+    </div>
+
+    <br>
+
+    <div>
+        <label>Chẩn đoán</label><br>
+        <textarea name="chan_doan" required></textarea>
+    </div>
+
+    <br>
+
+    <div>
+        <label>Hướng điều trị</label><br>
+        <textarea name="huong_dieu_tri" required></textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        Hoàn thành khám
+    </button>
+
+</form>
+
+<hr>
+
+<a href="{% url 'doctor_dashboard' %}">
+    ← Quay về
+</a>
+
+</body>
+</html>

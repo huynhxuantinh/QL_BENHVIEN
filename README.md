@@ -51,3 +51,5 @@ pip install django
 3. Chạy migrate
 4. Runserver
 
+Kéo code mới nhất về
+git pull

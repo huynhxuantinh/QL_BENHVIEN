@@ -63,3 +63,6 @@ git add .
 git commit -m "update"
 git push
 ssffs
+
+## nhớ cài cái này mới chạy được doten (.env)
+pip install python-dotenv

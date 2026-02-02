@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from .models import BaoHiemYTe
 
 from .models import (
     BenhVien,
@@ -61,18 +62,25 @@ def dat_lich(request, bv_id):
             "msg": "Bạn chưa có hồ sơ bệnh nhân"
         })
 
+    khoas = benh_vien.khoas.all()
+
+    khoa_id = request.GET.get("khoa")
+
+    bac_sis = None
+
+    if khoa_id:
+        bac_sis = benh_vien.bac_sis.filter(khoa_id=khoa_id)
 
     if request.method == "POST":
 
         form = DatLichForm(request.POST)
 
-        # Lọc bác sĩ theo bệnh viện
-        form.fields["bac_si"].queryset = benh_vien.bac_sis.all()
+        if khoa_id:
+            form.fields["bac_si"].queryset = bac_sis
 
         if form.is_valid():
 
             lich = form.save(commit=False)
-
             lich.benh_nhan = benh_nhan
             lich.save()
 
@@ -84,13 +92,19 @@ def dat_lich(request, bv_id):
 
         form = DatLichForm()
 
-        form.fields["bac_si"].queryset = benh_vien.bac_sis.all()
-
+        if khoa_id:
+            form.fields["bac_si"].queryset = bac_sis
+        else:
+            form.fields["bac_si"].queryset = BacSi.objects.none()
 
     return render(request, "core/dat_lich.html", {
         "form": form,
-        "benh_vien": benh_vien
+        "benh_vien": benh_vien,
+        "khoas": khoas,
+        "bac_sis": bac_sis,
+        "khoa_id": khoa_id
     })
+
 
 
 # ==========================
@@ -261,4 +275,53 @@ def bac_si_home(request):
     return render(request, "core/bac_si_home.html", {
         "bac_si": bac_si,
         "lich_khams": lich_khams
+    })
+ 
+# ==========================
+# HỒ SƠ NGƯỜI DÙNG
+# ==========================
+@login_required
+def profile(request):
+
+    benh_nhan = BenhNhan.objects.filter(
+        so_dien_thoai=request.user.username
+    ).first()
+
+    if not benh_nhan:
+        return render(request, "core/error.html", {
+            "msg": "Không tìm thấy hồ sơ"
+        })
+
+    if request.method == "POST":
+
+        benh_nhan.ho_ten = request.POST["ho_ten"]
+        benh_nhan.ngay_sinh = request.POST["ngay_sinh"]
+        benh_nhan.gioi_tinh = request.POST["gioi_tinh"]
+        benh_nhan.dia_chi = request.POST["dia_chi"]
+
+        # BHYT
+        ma_bhyt = request.POST.get("ma_bhyt")
+        ngay_cap = request.POST.get("ngay_cap")
+        ngay_het_han = request.POST.get("ngay_het_han")
+
+        if ma_bhyt:
+
+            bhyt, created = BaoHiemYTe.objects.get_or_create(
+                ma_bhyt=ma_bhyt,
+                defaults={
+                    "ngay_cap": ngay_cap,
+                    "ngay_het_han": ngay_het_han
+                }
+            )
+
+            benh_nhan.bhyt = bhyt
+
+        benh_nhan.save()
+
+        messages.success(request, "Cập nhật thành công")
+
+        return redirect("profile")
+
+    return render(request, "core/profile.html", {
+        "bn": benh_nhan
     })

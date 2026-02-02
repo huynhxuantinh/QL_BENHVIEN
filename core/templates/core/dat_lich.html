@@ -2,52 +2,69 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đặt lịch khám</title>
+    <title>Đặt lịch</title>
 </head>
-
 <body>
 
-<h1>Hệ thống quản lý bệnh viện</h1>
+<h2>Đặt lịch tại {{ benh_vien.ten }}</h2>
 
 <hr>
 
-<h2>Đặt lịch tại: {{ benh_vien.ten }}</h2>
+<!-- CHỌN KHOA -->
+<form method="get">
 
-<p>
-    Địa chỉ: {{ benh_vien.dia_chi }} <br>
-    Quận: {{ benh_vien.quan }}
-</p>
+    <label>Chọn khoa:</label>
+
+    <select name="khoa" onchange="this.form.submit()">
+
+        <option value="">-- Chọn khoa --</option>
+
+        {% for k in khoas %}
+            <option value="{{ k.id }}"
+                {% if k.id|stringformat:"s" == khoa_id %}
+                    selected
+                {% endif %}
+            >
+                {{ k.ten }}
+            </option>
+        {% endfor %}
+
+    </select>
+
+</form>
 
 <hr>
 
-<h3>Thông tin đặt lịch</h3>
+<!-- FORM ĐẶT LỊCH -->
+{% if bac_sis %}
 
 <form method="post">
+
     {% csrf_token %}
 
     <div>
-        <label><b>Bác sĩ:</b></label><br>
+        <label>Bác sĩ</label><br>
         {{ form.bac_si }}
     </div>
 
     <br>
 
     <div>
-        <label><b>Ngày khám:</b></label><br>
+        <label>Ngày khám</label><br>
         {{ form.ngay_kham }}
     </div>
 
     <br>
 
     <div>
-        <label><b>Giờ khám:</b></label><br>
+        <label>Giờ khám</label><br>
         {{ form.gio_kham }}
     </div>
 
     <br>
 
     <div>
-        <label><b>Ghi chú:</b></label><br>
+        <label>Ghi chú</label><br>
         {{ form.ghi_chu }}
     </div>
 
@@ -59,11 +76,15 @@
 
 </form>
 
-<hr>
+{% else %}
 
-<p>
-    <a href="{% url 'home' %}">⬅ Quay về trang chủ</a>
-</p>
+<p>👉 Vui lòng chọn khoa trước</p>
+
+{% endif %}
+
+<br>
+
+<a href="/">← Về trang chủ</a>
 
 </body>
 </html>

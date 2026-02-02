@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hồ sơ của tôi</title>
+</head>
+<body>
+
+<h1>Hồ sơ của tôi</h1>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div>
+        <label>Họ tên</label><br>
+        <input type="text" name="ho_ten" value="{{ bn.ho_ten }}">
+    </div>
+
+    <br>
+
+    <div>
+        <label>Ngày sinh</label><br>
+        <input type="date" name="ngay_sinh" value="{{ bn.ngay_sinh|date:'Y-m-d' }}">
+    </div>
+
+    <br>
+
+    <div>
+        <label>Giới tính</label><br>
+        <select name="gioi_tinh">
+            <option value="nam" {% if bn.gioi_tinh == "nam" %}selected{% endif %}>Nam</option>
+            <option value="nu" {% if bn.gioi_tinh == "nu" %}selected{% endif %}>Nữ</option>
+            <option value="khac" {% if bn.gioi_tinh == "khac" %}selected{% endif %}>Khác</option>
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label>Địa chỉ</label><br>
+        <textarea name="dia_chi">{{ bn.dia_chi }}</textarea>
+    </div>
+
+    <br>
+<hr>
+
+<h3>Bảo hiểm y tế</h3>
+
+<div>
+    <label>Mã BHYT</label><br>
+    <input type="text" name="ma_bhyt"
+           value="{% if bn.bhyt %}{{ bn.bhyt.ma_bhyt }}{% endif %}">
+</div>
+
+<br>
+
+<div>
+    <label>Ngày cấp</label><br>
+    <input type="date" name="ngay_cap"
+           value="{% if bn.bhyt %}{{ bn.bhyt.ngay_cap|date:'Y-m-d' }}{% endif %}">
+</div>
+
+<br>
+
+<div>
+    <label>Ngày hết hạn</label><br>
+    <input type="date" name="ngay_het_han"
+           value="{% if bn.bhyt %}{{ bn.bhyt.ngay_het_han|date:'Y-m-d' }}{% endif %}">
+</div>
+
+    <button type="submit">
+        Lưu thay đổi
+    </button>
+
+</form>
+
+<hr>
+
+<a href="/">← Trang chủ</a>
+
+</body>
+</html>

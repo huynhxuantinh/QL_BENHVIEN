@@ -212,6 +212,7 @@
                         <span>{{ lich.ca_label }}</span>
                         <span>Khoa: {{ lich.bac_si.khoa.ten }}</span>
                     </div>
+                    <div class="meta">Tr&#7841;ng th&#225;i: <strong>{{ lich.get_trang_thai_display }}</strong></div>
                     <div>
                         {% if lich.trang_thai == "cho" %}
                             <span class="badge">Chờ khám</span>

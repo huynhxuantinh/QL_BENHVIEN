@@ -172,7 +172,7 @@
                             <div class="card">
                                 <div class="card-title">{{ lich.benh_nhan.ho_ten }}</div>
                                 <div class="card-meta">
-                                    Gi&#7901; {{ lich.gio_kham|time:"H\\hi" }}
+                                    Gi&#7901; {{ lich.gio_kham|time:"H\hi" }}
                                     ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
                                     &#183; {{ lich.ca_label }} &#183; {{ lich.get_trang_thai_display }}
                                 </div>

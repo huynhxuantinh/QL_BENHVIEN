@@ -194,6 +194,7 @@
                         </p>
                         <p class="meta"><strong>Khoa:</strong> {{ lich.bac_si.khoa.ten }}</p>
                         <p class="meta"><strong>Bệnh viện:</strong> {{ lich.bac_si.benh_vien.ten }}</p>
+                        <p class="meta"><strong>Tr&#7841;ng th&#225;i:</strong> {{ lich.get_trang_thai_display }}</p>
                         <span class="badge {% if lich.trang_thai == 'huy' %}danger{% elif lich.trang_thai == 'dang' %}warn{% endif %}">
                             {{ lich.get_trang_thai_display }}
                         </span>
@@ -225,6 +226,7 @@
                         </p>
                         <p class="meta"><strong>Khoa:</strong> {{ lich.bac_si.khoa.ten }}</p>
                         <p class="meta"><strong>Bệnh viện:</strong> {{ lich.bac_si.benh_vien.ten }}</p>
+                        <p class="meta"><strong>Tr&#7841;ng th&#225;i:</strong> {{ lich.get_trang_thai_display }}</p>
                         <span class="badge danger">{{ lich.get_trang_thai_display }}</span>
                     </div>
                 {% endfor %}

@@ -606,17 +606,17 @@ def phieu_kham_detail(request, phieu_id):
             id=phieu_id,
             lich_kham__bac_si=bac_si,
         )
-    edit_logs = LogHeThong.objects.filter(
-        model_name="PhieuKham",
-        object_id=phieu.id,
-        hanh_dong="update",
-    ).select_related("nguoi_thuc_hien").order_by("-thoi_gian")
+        edit_logs = LogHeThong.objects.filter(
+            model_name="PhieuKham",
+            object_id=phieu.id,
+            hanh_dong="update",
+        ).select_related("nguoi_thuc_hien").order_by("-thoi_gian")
 
-    return render(request, "core/exam_detail.html", {
-        "benh_nhan": phieu.benh_nhan,
-        "phieu": phieu,
-        "edit_logs": edit_logs,
-    })
+        return render(request, "core/exam_detail.html", {
+            "benh_nhan": phieu.benh_nhan,
+            "phieu": phieu,
+            "edit_logs": edit_logs,
+        })
 
     benh_nhan = BenhNhan.objects.filter(
         so_dien_thoai=request.user.username

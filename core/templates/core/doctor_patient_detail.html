@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hồ sơ bệnh nhân</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+        :root {
+            --bg-1: #f6f3ee;
+            --bg-2: #eef4f0;
+            --ink: #1f2a2b;
+            --muted: #5b6b6a;
+            --primary: #0b6b5b;
+            --card: #ffffff;
+            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(11, 107, 91, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .card {
+            background: var(--card);
+            padding: 22px;
+            border-radius: 20px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            box-shadow: var(--shadow);
+            margin-top: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .value {
+            font-weight: 600;
+        }
+
+        .history-item {
+            border-top: 1px solid rgba(31, 42, 43, 0.08);
+            padding-top: 14px;
+            margin-top: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>Hồ sơ bệnh nhân</h1>
+                <span>Thông tin cơ bản và lịch sử khám</span>
+            </div>
+            <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay lại</a>
+        </header>
+
+        <div class="card">
+            <div class="grid">
+                <div>
+                    <div class="label">Họ tên</div>
+                    <div class="value">{{ benh_nhan.ho_ten }}</div>
+                </div>
+                <div>
+                    <div class="label">Ngày sinh</div>
+                    <div class="value">{{ benh_nhan.ngay_sinh }}</div>
+                </div>
+                <div>
+                    <div class="label">Giới tính</div>
+                    <div class="value">{{ benh_nhan.get_gioi_tinh_display }}</div>
+                </div>
+                <div>
+                    <div class="label">Số điện thoại</div>
+                    <div class="value">{{ benh_nhan.so_dien_thoai }}</div>
+                </div>
+                <div>
+                    <div class="label">Địa chỉ</div>
+                    <div class="value">{{ benh_nhan.dia_chi }}</div>
+                </div>
+                <div>
+                    <div class="label">BHYT</div>
+                    <div class="value">
+                        {% if benh_nhan.bhyt %}{{ benh_nhan.bhyt.ma_bhyt }}{% else %}Không có{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Lịch sử khám</h3>
+            {% for item in lich_su %}
+                <div class="history-item">
+                    <div class="label">Ngày khám</div>
+                    <div class="value">{{ item.ngay_kham|date:"d/m/Y" }}</div>
+                    <div class="label">Chẩn đoán</div>
+                    <div class="value">{{ item.chan_doan }}</div>
+                    <div class="label">Hướng điều trị</div>
+                    <div class="value">{{ item.huong_dieu_tri }}</div>
+                    <div class="label">Bác sĩ</div>
+                    <div class="value">{% if item.bac_si %}{{ item.bac_si.ho_ten }}{% else %}--{% endif %}</div>
+                    <div class="label">Bệnh viện</div>
+                    <div class="value">{% if item.benh_vien %}{{ item.benh_vien.ten }}{% else %}--{% endif %}</div>
+                    {% if item.phieu_kham %}
+                        <div style="margin-top:8px;">
+                            <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}">Xem phiếu khám</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div>Chưa có lịch sử khám.</div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

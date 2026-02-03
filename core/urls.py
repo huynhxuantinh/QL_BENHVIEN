@@ -24,6 +24,11 @@ urlpatterns = [
     path("phieu-kham/<int:phieu_id>/", views.phieu_kham_detail, name="phieu_kham_detail"),
     path("bac-si/kham/<int:lich_id>/", views.doctor_exam, name="doctor_exam"),
     path("bac-si/", views.bac_si_home, name="bac_si_home"),
+    path("bac-si/benh-nhan/<int:benh_nhan_id>/", views.bac_si_patient_detail, name="bac_si_patient_detail"),
+    path("bac-si/lich/<int:lich_id>/bat-dau/", views.start_exam, name="start_exam"),
+    path("bac-si/thong-bao/", views.bac_si_notifications, name="bac_si_notifications"),
+    path("bac-si/lich-lam-viec/", views.bac_si_schedule, name="bac_si_schedule"),
+    path("bac-si/phieu-kham/<int:phieu_id>/sua/", views.bac_si_phieu_kham_edit, name="bac_si_phieu_kham_edit"),
     path("profile/", views.profile, name="profile"),
 
 ]

@@ -1,68 +1,80 @@
-
-## QUY TRÌNH ĐÚNG MỖI KHI SỬA MODEL
-python manage.py makemigrations
-python manage.py migrate
-
-
 # Hệ thống quản lý bệnh viện + GIS
 
-## 1. Yêu cầu môi trường
+Ứng dụng quản lý bệnh viện, lịch khám và bản đồ GIS (PostGIS + GeoDjango).
+
+## Tính năng chính
+- Tra cứu bệnh viện, hiển thị bản đồ và khoảng cách.
+- Lọc theo bán kính, loại hình (công/tư/quốc tế), BHYT, cấp cứu, đang mở.
+- Đặt lịch khám, xem lịch sắp tới, lịch sử khám.
+- Thông báo nhắc lịch.
+- Trang bác sĩ: danh sách lịch, khám bệnh, tạo phiếu khám.
+
+## Yêu cầu môi trường
 - Python >= 3.10
 - PostgreSQL + PostGIS
-- GDAL
-- OSGeo4W (Windows)
+- GDAL, GEOS
+- Windows: khuyến nghị OSGeo4W
 
-## 2. Cài đặt
+## Cài đặt
 
-### Clone project
-git clone <link github>
-cd QL_BENHVIEN
-
-### Tạo môi trường ảo
+### 1. Tạo môi trường ảo
+```bash
 python -m venv venv
 venv\Scripts\activate
+```
 
-### Cài thư viện
+### 2. Cài thư viện
+```bash
 pip install -r requirements.txt
+```
 
-### Cấu hình database
-Tạo database: ql_benhvien (PostgreSQL + PostGIS)
+### 3. Cấu hình database
+Tạo database PostgreSQL: `ql_benhvien` và bật PostGIS.
 
-Chỉnh file: hospital/settings.py
+Thiết lập biến môi trường (Windows ví dụ):
+```
+GDAL_PATH=C:\OSGeo4W\bin\gdal312.dll
+GEOS_PATH=C:\OSGeo4W\bin\geos_c.dll
+```
 
-### Migrate
+### 4. Migrate
+```bash
 python manage.py makemigrations
 python manage.py migrate
+```
 
-### Tạo admin
+### 5. Tạo tài khoản admin
+```bash
 python manage.py createsuperuser
+```
 
-### Chạy server
+### 6. Chạy server
+```bash
 python manage.py runserver
+```
 
 Truy cập:
-http://127.0.0.1:8000/admin
+- Trang admin: `http://127.0.0.1:8000/admin`
+- Trang web: `http://127.0.0.1:8000/`
 
-# Setup
-pip install python-dotenv
-pip install django
-1. Tạo file .env
-2. Copy từ .env.example
-3. Chạy migrate
-4. Runserver
+## Seed dữ liệu mẫu (nếu có)
+```bash
+venv\Scripts\python.exe manage.py seed_core --purge-only
+venv\Scripts\python.exe manage.py seed_core --seed-only
+```
 
-ANH TÀY CAO BẰNG
+## Ghi chú
+- Khi sửa `models.py`, nhớ chạy lại:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+- Cache đang dùng `LocMemCache` (phù hợp dev).
 
-
-Kéo code mới nhất về
+## Làm việc với Git
+```bash
 git pull
-
-Code xong thì push lại
-
 git add .
 git commit -m "update"
 git push
-ssffs
-
-## nhớ cài cái này mới chạy được doten (.env)
-pip install python-dotenv
+```

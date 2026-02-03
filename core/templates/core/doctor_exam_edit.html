@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Khám bệnh</title>
+    <title>Sửa phiếu khám</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -12,7 +12,6 @@
             --ink: #1f2a2b;
             --muted: #5b6b6a;
             --primary: #0b6b5b;
-            --primary-2: #0f8a74;
             --card: #ffffff;
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
@@ -97,10 +96,10 @@
 <body>
     <div class="page">
         <div class="card">
-            <h2 style="margin-top:0;">Khám bệnh</h2>
+            <h2 style="margin-top:0;">Sửa phiếu khám</h2>
             <p style="color:var(--muted);">
-                Bệnh nhân: <strong>{{ lich.benh_nhan.ho_ten }}</strong> —
-                Ngày {{ lich.ngay_kham }} lúc {{ lich.gio_kham }}
+                Bệnh nhân: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> —
+                Ngày {{ phieu.lich_kham.ngay_kham }} lúc {{ phieu.lich_kham.gio_kham }}
             </p>
 
             <form method="post">
@@ -108,22 +107,22 @@
 
                 <div class="field">
                     <label>Triệu chứng</label>
-                    <textarea name="trieu_chung" required></textarea>
+                    <textarea name="trieu_chung" required>{{ phieu.trieu_chung }}</textarea>
                 </div>
 
                 <div class="field">
                     <label>Chẩn đoán</label>
-                    <textarea name="chan_doan" required></textarea>
+                    <textarea name="chan_doan" required>{{ phieu.chan_doan }}</textarea>
                 </div>
 
                 <div class="field">
                     <label>Hướng điều trị</label>
-                    <textarea name="huong_dieu_tri" required></textarea>
+                    <textarea name="huong_dieu_tri" required>{{ phieu.huong_dieu_tri }}</textarea>
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn primary" type="submit">Hoàn thành khám</button>
-                    <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay lại</a>
+                    <button class="btn primary" type="submit">Lưu thay đổi</button>
+                    <a class="btn ghost" href="{% url 'phieu_kham_detail' phieu.id %}">Quay lại</a>
                 </div>
             </form>
         </div>

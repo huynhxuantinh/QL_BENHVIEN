@@ -354,16 +354,28 @@
             </div>
             <div class="user-area">
                 {% if user.is_authenticated %}
-                    <span class="user-name">Xin chào {{ display_name }}</span>
-                    <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Lịch khám</a>
-                    <a class="btn ghost" href="{% url 'medical_history' %}">Lịch sử khám</a>
-                    <a class="btn ghost" href="{% url 'profile' %}">Hồ sơ của tôi</a>
-                    <a class="btn ghost" href="{% url 'notifications' %}">
-                        Thông báo
-                        {% if unread_count > 0 %}
-                            <span class="notif-badge">{{ unread_count }}</span>
+                    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                        <span class="user-name">Xin chào {{ display_name }}</span>
+                        {% if doctor_info %}
+                            <span style="font-size:12px; color:var(--muted);">
+                                {{ doctor_info.khoa }} - {{ doctor_info.benh_vien }}
+                            </span>
                         {% endif %}
-                    </a>
+                    </div>
+                    {% if doctor_info %}
+                        <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang bác sĩ</a>
+                        <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Thông báo</a>
+                    {% else %}
+                        <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Lịch khám</a>
+                        <a class="btn ghost" href="{% url 'medical_history' %}">Lịch sử khám</a>
+                        <a class="btn ghost" href="{% url 'profile' %}">Hồ sơ của tôi</a>
+                        <a class="btn ghost" href="{% url 'notifications' %}">
+                            Thông báo
+                            {% if unread_count > 0 %}
+                                <span class="notif-badge">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
                     <a class="btn primary" href="{% url 'logout' %}">Đăng xuất</a>
                 {% else %}
                     <a class="btn ghost" href="{% url 'login' %}">Đăng nhập</a>
@@ -396,6 +408,27 @@
                 </div>
             </div>
         </section>
+
+        {% if doctor_info %}
+            <section>
+                <h2 style="font-family: 'Playfair Display', serif; font-size: 28px; margin: 0 0 12px;">Lịch hôm nay</h2>
+                {% if doctor_today %}
+                    <div class="grid">
+                        {% for lich in doctor_today %}
+                            <div class="card">
+                                <div class="card-title">{{ lich.benh_nhan.ho_ten }}</div>
+                                <div class="card-meta">Giờ {{ lich.gio_kham }} · {{ lich.ca_label }} · {{ lich.get_trang_thai_display }}</div>
+                                <div class="card-cta">
+                                    <a href="{% url 'doctor_exam' lich.id %}" style="color: var(--primary); text-decoration: none;">Khám bệnh</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">Hôm nay chưa có lịch khám nào.</div>
+                {% endif %}
+            </section>
+        {% endif %}
 
         <section class="tools">
             <div class="tool-card">

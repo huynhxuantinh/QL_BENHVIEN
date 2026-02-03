@@ -109,6 +109,9 @@
                 <h1>Phiếu khám</h1>
                 <span>{{ benh_nhan.ho_ten }} · {{ benh_nhan.so_dien_thoai }}</span>
             </div>
+            {% if request.user.bac_si %}
+                <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' phieu.id %}">Sửa phiếu</a>
+            {% endif %}
             <a class="btn ghost" href="{% url 'medical_history' %}">← Lịch sử khám</a>
         </header>
 
@@ -134,6 +137,34 @@
         <div class="card">
             <h2 class="section-title">Hướng điều trị</h2>
             <div>{{ phieu.huong_dieu_tri }}</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Lịch sử chỉnh sửa</h2>
+            {% if edit_logs %}
+                {% for log in edit_logs %}
+                    <div style="margin-bottom:12px;">
+                        <div class="meta">
+                            {{ log.thoi_gian|date:"d/m/Y H:i" }} ·
+                            {% if log.nguoi_thuc_hien %}{{ log.nguoi_thuc_hien.username }}{% else %}Hệ thống{% endif %}
+                        </div>
+                        <div><strong>Triệu chứng:</strong></div>
+                        <div class="meta">Cũ: {{ log.du_lieu_cu.trieu_chung }}</div>
+                        <div class="meta">Mới: {{ log.du_lieu_moi.trieu_chung }}</div>
+                        <div><strong>Chẩn đoán:</strong></div>
+                        <div class="meta">Cũ: {{ log.du_lieu_cu.chan_doan }}</div>
+                        <div class="meta">Mới: {{ log.du_lieu_moi.chan_doan }}</div>
+                        <div><strong>Hướng điều trị:</strong></div>
+                        <div class="meta">Cũ: {{ log.du_lieu_cu.huong_dieu_tri }}</div>
+                        <div class="meta">Mới: {{ log.du_lieu_moi.huong_dieu_tri }}</div>
+                    </div>
+                    {% if not forloop.last %}
+                        <hr style="border:none; border-top:1px solid rgba(31,42,43,0.12); margin:14px 0;">
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="meta">Chưa có chỉnh sửa nào.</div>
+            {% endif %}
         </div>
     </div>
 </body>

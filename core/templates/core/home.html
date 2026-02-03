@@ -407,6 +407,15 @@
                             <input id="radius" name="radius" type="number" min="1" step="1" value="{{ radius_km|default:5 }}">
                         </div>
                         <div class="tool-field">
+                            <label for="loai_hinh">Loại hình BV</label>
+                            <select id="loai_hinh" name="loai_hinh" class="form-control">
+                                <option value="">Tất cả</option>
+                                <option value="cong" {% if loai_hinh == "cong" %}selected{% endif %}>Công</option>
+                                <option value="tu" {% if loai_hinh == "tu" %}selected{% endif %}>Tư</option>
+                                <option value="qt" {% if loai_hinh == "qt" %}selected{% endif %}>Quốc tế</option>
+                            </select>
+                        </div>
+                        <div class="tool-field">
                             <label>Vị trí hiện tại</label>
                             <input id="lat" name="lat" type="text" placeholder="Vĩ độ" value="{{ user_lat|default:'' }}">
                         </div>
@@ -426,6 +435,20 @@
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
                                 Cấp cứu hoạt động
+                            </label>
+                        </div>
+                        <div class="tool-field">
+                            <label>&nbsp;</label>
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="bhyt" value="1" {% if filter_bhyt %}checked{% endif %}>
+                                Có BHYT
+                            </label>
+                        </div>
+                        <div class="tool-field">
+                            <label>&nbsp;</label>
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="cap_cuu" value="1" {% if filter_cap_cuu %}checked{% endif %}>
+                                Có cấp cứu
                             </label>
                         </div>
                     </div>

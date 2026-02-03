@@ -7,11 +7,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
-from django.contrib.gis.measure import D
 from .models import BaoHiemYTe
 
 from .models import (
@@ -41,6 +41,9 @@ def home(request):
     radius_km = None
     filter_open = request.GET.get("open") == "1"
     filter_emergency = request.GET.get("emergency") == "1"
+    filter_bhyt = request.GET.get("bhyt") == "1"
+    filter_cap_cuu = request.GET.get("cap_cuu") == "1"
+    loai_hinh = request.GET.get("loai_hinh")
 
     lat_str = request.GET.get("lat")
     lon_str = request.GET.get("lon")
@@ -64,11 +67,11 @@ def home(request):
         except ValueError:
             radius_km = None
 
-    if user_point:
-        bvs = bvs.annotate(distance=Distance("vi_tri", user_point))
-        if radius_km:
-            bvs = bvs.filter(vi_tri__distance_lte=(user_point, D(km=radius_km)))
-        bvs = bvs.order_by("distance")
+    if loai_hinh in {"cong", "tu", "qt"}:
+        bvs = bvs.filter(loai_hinh=loai_hinh)
+    else:
+        loai_hinh = None
+
     if request.user.is_authenticated:
         unread_count = ThongBao.objects.filter(
             nguoi_nhan=request.user,
@@ -78,6 +81,75 @@ def home(request):
             so_dien_thoai=request.user.username
         ).only("ho_ten").first()
         display_name = benh_nhan.ho_ten if benh_nhan else request.user.username
+
+    now = timezone.localtime()
+    time_bucket = now.strftime("%Y%m%d%H%M")
+    cache_key = (
+        f"home_filter:"
+        f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
+        f"open={int(filter_open)}|emg={int(filter_emergency)}|"
+        f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
+        f"loai={loai_hinh or 'all'}|t={time_bucket}"
+    )
+    cached = cache.get(cache_key)
+    if cached:
+        ids = cached.get("ids", [])
+        computed_map = cached.get("computed", {})
+        bvs_qs = BenhVien.objects.filter(id__in=ids).prefetch_related("gio_lam_viecs")
+        bvs_map = {bv.id: bv for bv in bvs_qs}
+        cached_bvs = []
+        for bv_id in ids:
+            bv = bvs_map.get(bv_id)
+            if not bv:
+                continue
+            info = computed_map.get(str(bv_id)) or computed_map.get(bv_id, {})
+            bv.map_lat = info.get("map_lat")
+            bv.map_lon = info.get("map_lon")
+            bv.is_open = info.get("is_open", False)
+            bv.emergency_active = info.get("emergency_active", False)
+            bv.distance_km = info.get("distance_km")
+            cached_bvs.append(bv)
+        bvs = cached_bvs
+
+        map_data = []
+        for bv in bvs:
+            if bv.map_lat is None or bv.map_lon is None:
+                continue
+            map_data.append({
+                "id": bv.id,
+                "name": bv.ten,
+                "lat": bv.map_lat,
+                "lon": bv.map_lon,
+                "open": bv.is_open,
+                "emergency": bv.emergency_active,
+                "distance_km": bv.distance_km,
+            })
+
+        return render(request, "core/home.html", {
+            "bvs": bvs,
+            "unread_count": unread_count,
+            "display_name": display_name,
+            "user_lat": user_lat,
+            "user_lon": user_lon,
+            "radius_km": radius_km,
+            "filter_bhyt": filter_bhyt,
+            "filter_cap_cuu": filter_cap_cuu,
+            "filter_open": filter_open,
+            "filter_emergency": filter_emergency,
+            "loai_hinh": loai_hinh,
+            "map_data": map_data,
+        })
+
+    if filter_bhyt:
+        bvs = bvs.filter(co_bhyt=True)
+    if filter_cap_cuu:
+        bvs = bvs.filter(co_cap_cuu=True)
+
+    if user_point:
+        bvs = bvs.annotate(distance_m=Distance("vi_tri", user_point, spheroid=False))
+        if radius_km:
+            bvs = bvs.filter(distance_m__lte=radius_km * 1000)
+        bvs = bvs.order_by("distance_m")
 
     def point_to_latlon(point):
         if not point:
@@ -102,7 +174,6 @@ def home(request):
             return None, None
         return y, x
 
-    now = timezone.localtime()
     thu = (now.weekday() + 1) % 7
     computed_bvs = []
     for bv in bvs:
@@ -129,11 +200,13 @@ def home(request):
         setattr(bv, "emergency_active", emergency_active)
 
         distance_km = None
-        if hasattr(bv, "distance") and bv.distance is not None:
-            if hasattr(bv.distance, "km"):
-                distance_km = round(bv.distance.km, 2)
+        if hasattr(bv, "distance_m") and bv.distance_m is not None:
+            if hasattr(bv.distance_m, "km"):
+                distance_km = round(bv.distance_m.km, 2)
+            elif hasattr(bv.distance_m, "m"):
+                distance_km = round(bv.distance_m.m / 1000.0, 2)
             else:
-                distance_km = round(bv.distance * 111.139, 2)
+                distance_km = round(float(bv.distance_m) / 1000.0, 2)
         setattr(bv, "distance_km", distance_km)
         if filter_open and not bv.is_open:
             continue
@@ -141,6 +214,21 @@ def home(request):
             continue
         computed_bvs.append(bv)
 
+    if user_point:
+        computed_bvs.sort(
+            key=lambda item: (
+                not getattr(item, "is_open", False),
+                item.distance_km is None,
+                item.distance_km if item.distance_km is not None else 1e9,
+            )
+        )
+    else:
+        computed_bvs.sort(
+            key=lambda item: (
+                not getattr(item, "is_open", False),
+                item.ten.lower(),
+            )
+        )
     bvs = computed_bvs
 
     map_data = []
@@ -157,6 +245,20 @@ def home(request):
             "distance_km": bv.distance_km,
         })
 
+    computed_payload = {}
+    for bv in bvs:
+        computed_payload[str(bv.id)] = {
+            "map_lat": getattr(bv, "map_lat", None),
+            "map_lon": getattr(bv, "map_lon", None),
+            "is_open": getattr(bv, "is_open", False),
+            "emergency_active": getattr(bv, "emergency_active", False),
+            "distance_km": getattr(bv, "distance_km", None),
+        }
+    cache.set(cache_key, {
+        "ids": [bv.id for bv in bvs],
+        "computed": computed_payload,
+    }, timeout=60)
+
     return render(request, "core/home.html", {
         "bvs": bvs,
         "unread_count": unread_count,
@@ -164,8 +266,11 @@ def home(request):
         "user_lat": user_lat,
         "user_lon": user_lon,
         "radius_km": radius_km,
+        "filter_bhyt": filter_bhyt,
+        "filter_cap_cuu": filter_cap_cuu,
         "filter_open": filter_open,
         "filter_emergency": filter_emergency,
+        "loai_hinh": loai_hinh,
         "map_data": map_data,
     })
 

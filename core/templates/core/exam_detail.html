@@ -120,8 +120,14 @@
             <p class="meta"><strong>Bác sĩ:</strong> {{ phieu.lich_kham.bac_si.ho_ten }}</p>
             <p class="meta"><strong>Bệnh viện:</strong> {{ phieu.lich_kham.bac_si.benh_vien.ten }}</p>
             <p class="meta"><strong>Ngày khám:</strong> {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }}</p>
-            <p class="meta"><strong>Giờ khám:</strong> {{ phieu.lich_kham.gio_kham }}</p>
-            <p class="meta"><strong>Ngày lập:</strong> {{ phieu.ngay_lap|date:"d/m/Y H:i" }}</p>
+            <p class="meta">
+                <strong>Giờ khám:</strong> {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
+                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+            </p>
+            <p class="meta">
+                <strong>Ngày lập:</strong> {{ phieu.ngay_lap|date:"d/m/Y H\hi" }}
+                ({% with h=phieu.ngay_lap|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+            </p>
         </div>
 
         <div class="card">
@@ -145,7 +151,8 @@
                 {% for log in edit_logs %}
                     <div style="margin-bottom:12px;">
                         <div class="meta">
-                            {{ log.thoi_gian|date:"d/m/Y H:i" }} ·
+                            {{ log.thoi_gian|date:"d/m/Y H\hi" }}
+                            ({% with h=log.thoi_gian|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %}) ·
                             {% if log.nguoi_thuc_hien %}{{ log.nguoi_thuc_hien.username }}{% else %}Hệ thống{% endif %}
                         </div>
                         <div><strong>Triệu chứng:</strong></div>

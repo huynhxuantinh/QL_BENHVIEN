@@ -184,7 +184,10 @@
             <div class="card">
                 <h2 class="section-title">Thông tin bệnh viện</h2>
                 <p class="meta"><strong>Địa chỉ:</strong> {{ benh_vien.dia_chi }}</p>
-                <p class="meta"><strong>Giờ mở cửa:</strong> {{ benh_vien.gio_mo }} - {{ benh_vien.gio_dong }}</p>
+                <p class="meta">
+                    <strong>Giờ mở cửa:</strong> {{ benh_vien.gio_mo|time:"H\hi" }} - {{ benh_vien.gio_dong|time:"H\hi" }}
+                    ({% with h=benh_vien.gio_mo|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                </p>
                 <p class="meta"><strong>BHYT:</strong> {% if benh_vien.co_bhyt %}Có{% else %}Không{% endif %}</p>
                 <p class="meta"><strong>Cấp cứu:</strong> {% if benh_vien.co_cap_cuu %}Có{% else %}Không{% endif %}</p>
             </div>
@@ -257,6 +260,7 @@
                         <div class="field">
                             <label>Ngày khám</label>
                             {{ form.ngay_kham }}
+                            <small class="meta">&#272;&#7883;nh d&#7841;ng: dd/mm/yyyy</small>
                         </div>
 
                         <div class="field">
@@ -292,7 +296,8 @@
                                         {% if glv.nghi %}
                                             Nghỉ
                                         {% else %}
-                                            {{ glv.gio_bat_dau }} - {{ glv.gio_ket_thuc }}
+                                            {{ glv.gio_bat_dau|time:"H\hi" }} - {{ glv.gio_ket_thuc|time:"H\hi" }}
+                                            ({% with h=glv.gio_bat_dau|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
                                         {% endif %}
                                     </div>
                                 {% endfor %}
@@ -307,5 +312,15 @@
             {% endif %}
         </div>
     </div>
+    <script>
+        (function () {
+            var input = document.querySelector('input[name="ngay_kham"]');
+            if (input) {
+                input.setAttribute('lang', 'vi');
+                input.setAttribute('placeholder', 'dd/mm/yyyy');
+                input.setAttribute('inputmode', 'numeric');
+            }
+        })();
+    </script>
 </body>
 </html>

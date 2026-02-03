@@ -100,7 +100,8 @@
             <h2 style="margin-top:0;">Khám bệnh</h2>
             <p style="color:var(--muted);">
                 Bệnh nhân: <strong>{{ lich.benh_nhan.ho_ten }}</strong> —
-                Ngày {{ lich.ngay_kham }} lúc {{ lich.gio_kham }}
+                Ngày {{ lich.ngay_kham|date:"d/m/Y" }} lúc {{ lich.gio_kham|time:"H\hi" }}
+                ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
             </p>
 
             <form method="post">

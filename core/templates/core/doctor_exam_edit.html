@@ -99,7 +99,8 @@
             <h2 style="margin-top:0;">Sửa phiếu khám</h2>
             <p style="color:var(--muted);">
                 Bệnh nhân: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> —
-                Ngày {{ phieu.lich_kham.ngay_kham }} lúc {{ phieu.lich_kham.gio_kham }}
+                Ngày {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }} lúc {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
+                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
             </p>
 
             <form method="post">

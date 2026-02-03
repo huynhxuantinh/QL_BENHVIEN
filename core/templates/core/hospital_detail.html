@@ -255,11 +255,13 @@
                     </div>
                     <div class="meta">
                         <strong>Giờ mở cửa</strong>
-                        {{ bv.gio_mo }}
+                        {{ bv.gio_mo|time:"H\hi" }}
+                        ({% with h=bv.gio_mo|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
                     </div>
                     <div class="meta">
                         <strong>Giờ đóng cửa</strong>
-                        {{ bv.gio_dong }}
+                        {{ bv.gio_dong|time:"H\hi" }}
+                        ({% with h=bv.gio_dong|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
                     </div>
                 </div>
 
@@ -283,7 +285,10 @@
                             {% if glv.nghi %}
                                 <span>Nghỉ</span>
                             {% else %}
-                                <span>{{ glv.gio_mo }} - {{ glv.gio_dong }}</span>
+                                <span>
+                                    {{ glv.gio_mo|time:"H\hi" }} - {{ glv.gio_dong|time:"H\hi" }}
+                                    ({% with h=glv.gio_mo|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                                </span>
                             {% endif %}
                         </div>
                     {% empty %}

@@ -417,7 +417,11 @@
                         {% for lich in doctor_today %}
                             <div class="card">
                                 <div class="card-title">{{ lich.benh_nhan.ho_ten }}</div>
-                                <div class="card-meta">Giờ {{ lich.gio_kham }} · {{ lich.ca_label }} · {{ lich.get_trang_thai_display }}</div>
+                                <div class="card-meta">
+                                    Giờ {{ lich.gio_kham|time:"H\hi" }}
+                                    ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                                    · {{ lich.ca_label }} · {{ lich.get_trang_thai_display }}
+                                </div>
                                 <div class="card-cta">
                                     <a href="{% url 'doctor_exam' lich.id %}" style="color: var(--primary); text-decoration: none;">Khám bệnh</a>
                                 </div>

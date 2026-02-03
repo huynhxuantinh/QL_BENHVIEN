@@ -194,7 +194,10 @@
                             <h3 class="item-title">{{ tb.tieu_de }}</h3>
                             <span class="badge">{{ tb.get_loai_display }}</span>
                         </div>
-                        <div class="item-meta">{{ tb.thoi_gian|date:"d/m/Y H:i" }}</div>
+                        <div class="item-meta">
+                            {{ tb.thoi_gian|date:"d/m/Y H\hi" }}
+                            ({% with h=tb.thoi_gian|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                        </div>
                         <div class="item-content">{{ tb.noi_dung }}</div>
                         <div class="actions">
                             {% if tb.lien_ket %}

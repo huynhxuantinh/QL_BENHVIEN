@@ -188,7 +188,10 @@
                     <div class="card">
                         <h3>{{ lich.bac_si.ho_ten }}</h3>
                         <p class="meta"><strong>Ngày:</strong> {{ lich.ngay_kham|date:"d/m/Y" }}</p>
-                        <p class="meta"><strong>Giờ:</strong> {{ lich.gio_kham }}</p>
+                        <p class="meta">
+                            <strong>Giờ:</strong> {{ lich.gio_kham|time:"H\hi" }}
+                            ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                        </p>
                         <p class="meta"><strong>Khoa:</strong> {{ lich.bac_si.khoa.ten }}</p>
                         <p class="meta"><strong>Bệnh viện:</strong> {{ lich.bac_si.benh_vien.ten }}</p>
                         <span class="badge {% if lich.trang_thai == 'huy' %}danger{% elif lich.trang_thai == 'dang' %}warn{% endif %}">
@@ -216,7 +219,10 @@
                     <div class="card">
                         <h3>{{ lich.bac_si.ho_ten }}</h3>
                         <p class="meta"><strong>Ngày:</strong> {{ lich.ngay_kham|date:"d/m/Y" }}</p>
-                        <p class="meta"><strong>Giờ:</strong> {{ lich.gio_kham }}</p>
+                        <p class="meta">
+                            <strong>Giờ:</strong> {{ lich.gio_kham|time:"H\hi" }}
+                            ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                        </p>
                         <p class="meta"><strong>Khoa:</strong> {{ lich.bac_si.khoa.ten }}</p>
                         <p class="meta"><strong>Bệnh viện:</strong> {{ lich.bac_si.benh_vien.ten }}</p>
                         <span class="badge danger">{{ lich.get_trang_thai_display }}</span>

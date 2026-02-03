@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang chủ</title>
+    <title>Trang ch&#7911;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -19,9 +19,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -34,352 +32,108 @@
             min-height: 100vh;
         }
 
-        .page {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 28px 20px 60px;
-        }
+        .page { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
 
         .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 18px 22px;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            border-radius: 18px;
-            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
-            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            padding: 18px 22px; background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08); border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06); backdrop-filter: blur(10px);
         }
 
-        .brand {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .brand { display: flex; flex-direction: column; gap: 4px; }
+        .brand h1 { font-family: "Playfair Display", serif; font-size: 26px; margin: 0; letter-spacing: 0.4px; }
+        .brand span { font-size: 13px; color: var(--muted); }
 
-        .brand h1 {
-            font-family: "Playfair Display", serif;
-            font-size: 24px;
-            margin: 0;
-            letter-spacing: 0.4px;
-        }
-
-        .brand span {
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: var(--primary);
-        }
+        .user-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .user-name { font-weight: 600; color: var(--primary); }
 
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 16px;
-            border-radius: 999px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 10px 16px; border-radius: 999px; text-decoration: none;
+            font-weight: 600; font-size: 14px; border: 1px solid transparent;
             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             white-space: nowrap;
         }
+        .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25); }
+        .btn.primary:hover { background: var(--primary-2); transform: translateY(-1px); }
+        .btn.ghost { color: var(--primary); border-color: rgba(11, 107, 91, 0.3); background: rgba(255, 255, 255, 0.9); }
+        .btn.ghost:hover { box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12); transform: translateY(-1px); }
 
-        .btn.primary {
-            background: var(--primary);
-            color: #fff;
-            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
-        }
+        .notif-badge { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(242, 197, 124, 0.35); color: #8a5a10; font-size: 12px; font-weight: 700; }
 
-        .btn.primary:hover {
-            background: var(--primary-2);
-            transform: translateY(-1px);
-        }
+        .hero { margin: 28px 0 18px; display: grid; gap: 18px; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: center; }
+        .hero h2 { font-family: "Playfair Display", serif; font-size: 36px; margin: 0 0 10px; }
+        .hero p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
 
-        .btn.ghost {
-            color: var(--primary);
-            border-color: rgba(11, 107, 91, 0.3);
-            background: rgba(255, 255, 255, 0.9);
-        }
+        .hero-card { background: var(--card); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); border: 1px solid rgba(11, 107, 91, 0.12); }
+        .hero-card h3 { margin: 0 0 12px; font-size: 18px; }
+        .hero-card .meta { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
 
-        .btn.ghost:hover {
-            box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
-            transform: translateY(-1px);
-        }
-
-        .notif-badge {
-            margin-left: 6px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            background: rgba(242, 197, 124, 0.35);
-            color: #8a5a10;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .hero {
-            margin: 30px 0 22px;
-            display: grid;
-            gap: 18px;
-            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-            align-items: center;
-        }
-
-        .hero h2 {
-            font-family: "Playfair Display", serif;
-            font-size: 36px;
-            margin: 0 0 10px;
-        }
-
-        .hero p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .hero-card {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 18px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(11, 107, 91, 0.12);
-        }
-
-        .hero-card h3 {
-            margin: 0 0 12px;
-            font-size: 18px;
-        }
-
-        .hero-card .meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: var(--muted);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 16px;
-            margin-top: 16px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
 
         .card {
-            background: var(--card);
-            padding: 18px;
-            border-radius: 18px;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
-            animation: fadeIn 0.6s ease both;
+            background: var(--card); padding: 18px; border-radius: 18px; border: 1px solid rgba(31, 42, 43, 0.08);
+            text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; animation: fadeIn 0.6s ease both;
         }
+        .card:hover { transform: translateY(-3px); border-color: rgba(11, 107, 91, 0.3); box-shadow: 0 18px 30px rgba(15, 30, 28, 0.14); }
+        .card-title { font-weight: 600; font-size: 17px; }
+        .card-meta { color: var(--muted); font-size: 14px; }
 
-        .card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(11, 107, 91, 0.3);
-            box-shadow: 0 18px 30px rgba(15, 30, 28, 0.14);
-        }
+        .card-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(11, 107, 91, 0.1); color: var(--primary); font-size: 12px; font-weight: 600; }
+        .badge.warn { background: rgba(242, 197, 124, 0.28); color: #8a5a10; }
+        .card-cta { margin-top: auto; font-weight: 600; color: var(--primary); font-size: 14px; }
 
-        .card-title {
-            font-weight: 600;
-            font-size: 17px;
-        }
+        .empty-state { background: rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 22px; text-align: center; color: var(--muted); border: 1px dashed rgba(31, 42, 43, 0.2); }
 
-        .card-meta {
-            color: var(--muted);
-            font-size: 14px;
-        }
+        .tools { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+        .tool-card { background: var(--card); padding: 18px; border-radius: 18px; border: 1px solid rgba(31, 42, 43, 0.08); box-shadow: var(--shadow); }
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+        .tool-field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+        .tool-field input, .tool-field select { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(31, 42, 43, 0.18); font-family: inherit; font-size: 14px; }
 
-        .card-badges {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .map-box { border-radius: 18px; overflow: hidden; border: 1px solid rgba(31, 42, 43, 0.08); min-height: 320px; }
+        #home-map { width: 100%; height: 100%; min-height: 320px; }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(11, 107, 91, 0.1);
-            color: var(--primary);
-            font-size: 12px;
-            font-weight: 600;
-        }
+        .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(11, 107, 91, 0.1); color: var(--primary); }
+        .status.closed { background: rgba(180, 52, 52, 0.15); color: #9d2c2c; }
+        .status.warn { background: rgba(242, 197, 124, 0.28); color: #8a5a10; }
 
-        .badge.warn {
-            background: rgba(242, 197, 124, 0.28);
-            color: #8a5a10;
-        }
-
-        .card-cta {
-            margin-top: auto;
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 14px;
-        }
-
-        .empty-state {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 16px;
-            padding: 22px;
-            text-align: center;
-            color: var(--muted);
-            border: 1px dashed rgba(31, 42, 43, 0.2);
-        }
-
-        .tools {
-            margin-top: 16px;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-            gap: 16px;
-        }
-
-        .tool-card {
-            background: var(--card);
-            padding: 18px;
-            border-radius: 18px;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            box-shadow: var(--shadow);
-        }
-
-        .tool-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-
-        .tool-field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 14px;
-        }
-
-        .tool-field input {
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(31, 42, 43, 0.18);
-            font-family: inherit;
-            font-size: 14px;
-        }
-
-        .map-box {
-            border-radius: 18px;
-            overflow: hidden;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            min-height: 320px;
-        }
-
-        #home-map {
-            width: 100%;
-            height: 100%;
-            min-height: 320px;
-        }
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            background: rgba(11, 107, 91, 0.1);
-            color: var(--primary);
-        }
-
-        .status.closed {
-            background: rgba(180, 52, 52, 0.15);
-            color: #9d2c2c;
-        }
-
-        .status.warn {
-            background: rgba(242, 197, 124, 0.28);
-            color: #8a5a10;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 900px) {
-            .hero {
-                grid-template-columns: 1fr;
-            }
-            .tools {
-                grid-template-columns: 1fr;
-            }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .tools { grid-template-columns: 1fr; } }
     </style>
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
-    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 <body>
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Bản đồ y tế</h1>
-                <span>Tra cứu bệnh viện nhanh, rõ, trực quan</span>
+                <h1>B&#7843;n &#273;&#7891; y t&#7871;</h1>
+                <span>Tra c&#7913;u b&#7879;nh vi&#7879;n nhanh, r&#245;, tr&#7921;c quan</span>
             </div>
             <div class="user-area">
                 {% if user.is_authenticated %}
                     <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
-                        <span class="user-name">Xin chào {{ display_name }}</span>
+                        <span class="user-name">Xin ch&#224;o {{ display_name }}</span>
                         {% if doctor_info %}
-                            <span style="font-size:12px; color:var(--muted);">
-                                {{ doctor_info.khoa }} - {{ doctor_info.benh_vien }}
-                            </span>
+                            <span style="font-size:12px; color:var(--muted);">{{ doctor_info.khoa }} - {{ doctor_info.benh_vien }}</span>
                         {% endif %}
                     </div>
                     {% if doctor_info %}
-                        <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang bác sĩ</a>
-                        <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Thông báo</a>
+                        <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang b&#225;c s&#297;</a>
+                        <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
                     {% else %}
-                        <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Lịch khám</a>
-                        <a class="btn ghost" href="{% url 'medical_history' %}">Lịch sử khám</a>
-                        <a class="btn ghost" href="{% url 'profile' %}">Hồ sơ của tôi</a>
-                        <a class="btn ghost" href="{% url 'notifications' %}">
-                            Thông báo
-                            {% if unread_count > 0 %}
-                                <span class="notif-badge">{{ unread_count }}</span>
-                            {% endif %}
-                        </a>
+                        <a class="btn ghost" href="{% url 'upcoming_appointments' %}">L&#7883;ch kh&#225;m</a>
+                        <a class="btn ghost" href="{% url 'medical_history' %}">L&#7883;ch s&#7917; kh&#225;m</a>
+                        <a class="btn ghost" href="{% url 'profile' %}">H&#7891; s&#417; c&#7911;a t&#244;i</a>
+                        <a class="btn ghost" href="{% url 'notifications' %}">Th&#244;ng b&#225;o{% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
                     {% endif %}
-                    <a class="btn primary" href="{% url 'logout' %}">Đăng xuất</a>
+                    <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
                 {% else %}
-                    <a class="btn ghost" href="{% url 'login' %}">Đăng nhập</a>
-                    <a class="btn primary" href="{% url 'register' %}">Đăng ký</a>
+                    <a class="btn ghost" href="{% url 'login' %}">&#272;&#259;ng nh&#7853;p</a>
+                    <a class="btn primary" href="{% url 'register' %}">&#272;&#259;ng k&#253;</a>
                 {% endif %}
             </div>
         </header>
@@ -394,16 +148,16 @@
 
         <section class="hero">
             <div>
-                <h2>Danh sách bệnh viện</h2>
+                <h2>Danh s&#225;ch b&#7879;nh vi&#7879;n</h2>
                 <p>
-                    Chọn bệnh viện để xem thông tin chi tiết, giờ hoạt động và vị trí trên bản đồ.
-                    Dữ liệu được cập nhật từ hệ thống quản lý bệnh viện.
+                    Ch&#7885;n b&#7879;nh vi&#7879;n &#273;&#7875; xem th&#244;ng tin chi ti&#7871;t, gi&#7901; ho&#7841;t &#273;&#7897;ng v&#224; v&#7883; tr&#237; tr&#234;n b&#7843;n &#273;&#7891;.
+                    D&#7919; li&#7879;u &#273;&#432;&#7907;c c&#7853;p nh&#7853;t t&#7915; h&#7879; th&#7889;ng qu&#7843;n l&#253; b&#7879;nh vi&#7879;n.
                 </p>
             </div>
             <div class="hero-card">
-                <h3>Tổng quan nhanh</h3>
+                <h3>T&#7893;ng quan nhanh</h3>
                 <div class="meta">
-                    <span>Số lượng hiện có</span>
+                    <span>S&#7889; l&#432;&#7907;ng hi&#7879;n c&#243;</span>
                     <strong>{{ bvs|length }}</strong>
                 </div>
             </div>
@@ -411,91 +165,91 @@
 
         {% if doctor_info %}
             <section>
-                <h2 style="font-family: 'Playfair Display', serif; font-size: 28px; margin: 0 0 12px;">Lịch hôm nay</h2>
+                <h2 style="font-family: 'Playfair Display', serif; font-size: 28px; margin: 0 0 12px;">L&#7883;ch h&#244;m nay</h2>
                 {% if doctor_today %}
                     <div class="grid">
                         {% for lich in doctor_today %}
                             <div class="card">
                                 <div class="card-title">{{ lich.benh_nhan.ho_ten }}</div>
                                 <div class="card-meta">
-                                    Giờ {{ lich.gio_kham|time:"H\hi" }}
-                                    ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
-                                    · {{ lich.ca_label }} · {{ lich.get_trang_thai_display }}
+                                    Gi&#7901; {{ lich.gio_kham|time:"H\\hi" }}
+                                    ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
+                                    &#183; {{ lich.ca_label }} &#183; {{ lich.get_trang_thai_display }}
                                 </div>
                                 <div class="card-cta">
-                                    <a href="{% url 'doctor_exam' lich.id %}" style="color: var(--primary); text-decoration: none;">Khám bệnh</a>
+                                    <a href="{% url 'doctor_exam' lich.id %}" style="color: var(--primary); text-decoration: none;">Kh&#225;m b&#7879;nh</a>
                                 </div>
                             </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="empty-state">Hôm nay chưa có lịch khám nào.</div>
+                    <div class="empty-state">H&#244;m nay ch&#432;a c&#243; l&#7883;ch kh&#225;m n&#224;o.</div>
                 {% endif %}
             </section>
         {% endif %}
 
         <section class="tools">
             <div class="tool-card">
-                <h3 style="margin: 0 0 12px;">Tìm bệnh viện gần bạn</h3>
+                <h3 style="margin: 0 0 12px;">T&#236;m b&#7879;nh vi&#7879;n g&#7847;n b&#7841;n</h3>
                 <form method="get" id="geo-form">
                     <div class="tool-grid">
                         <div class="tool-field">
-                            <label for="radius">Bán kính (km)</label>
+                            <label for="radius">B&#225;n k&#237;nh (km)</label>
                             <input id="radius" name="radius" type="number" min="1" step="1" value="{{ radius_km|default:5 }}">
                         </div>
                         <div class="tool-field">
-                            <label for="loai_hinh">Loại hình BV</label>
+                            <label for="loai_hinh">Lo&#7841;i h&#236;nh BV</label>
                             <select id="loai_hinh" name="loai_hinh" class="form-control">
-                                <option value="">Tất cả</option>
-                                <option value="cong" {% if loai_hinh == "cong" %}selected{% endif %}>Công</option>
-                                <option value="tu" {% if loai_hinh == "tu" %}selected{% endif %}>Tư</option>
-                                <option value="qt" {% if loai_hinh == "qt" %}selected{% endif %}>Quốc tế</option>
+                                <option value="">T&#7845;t c&#7843;</option>
+                                <option value="cong" {% if loai_hinh == "cong" %}selected{% endif %}>C&#244;ng</option>
+                                <option value="tu" {% if loai_hinh == "tu" %}selected{% endif %}>T&#432;</option>
+                                <option value="qt" {% if loai_hinh == "qt" %}selected{% endif %}>Qu&#7889;c t&#7871;</option>
                             </select>
                         </div>
                         <div class="tool-field">
-                            <label>Vị trí hiện tại</label>
-                            <input id="lat" name="lat" type="text" placeholder="Vĩ độ" value="{{ user_lat|default:'' }}">
+                            <label>V&#7883; tr&#237; hi&#7879;n t&#7841;i</label>
+                            <input id="lat" name="lat" type="text" placeholder="V&#297; &#273;&#7897;" value="{{ user_lat|default:'' }}">
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
-                            <input id="lon" name="lon" type="text" placeholder="Kinh độ" value="{{ user_lon|default:'' }}">
+                            <input id="lon" name="lon" type="text" placeholder="Kinh &#273;&#7897;" value="{{ user_lon|default:'' }}">
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="open" value="1" {% if filter_open %}checked{% endif %}>
-                                BV đang mở
+                                BV &#273;ang m&#7903;
                             </label>
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
-                                Cấp cứu hoạt động
+                                C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng
                             </label>
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="bhyt" value="1" {% if filter_bhyt %}checked{% endif %}>
-                                Có BHYT
+                                C&#243; BHYT
                             </label>
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="cap_cuu" value="1" {% if filter_cap_cuu %}checked{% endif %}>
-                                Có cấp cứu
+                                C&#243; c&#7845;p c&#7913;u
                             </label>
                         </div>
                     </div>
                     <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn ghost" id="locate-btn">Lấy vị trí</button>
-                        <button class="btn primary" type="submit">Áp dụng lọc</button>
+                        <button class="btn ghost" id="locate-btn">L&#7845;y v&#7883; tr&#237;</button>
+                        <button class="btn primary" type="submit">&#193;p d&#7909;ng l&#7885;c</button>
                     </div>
                 </form>
                 <p style="margin: 10px 0 0; color: var(--muted); font-size: 13px;">
-                    Hệ thống sẽ tính khoảng cách, lọc theo bán kính và sắp xếp theo gần nhất nếu có vị trí.
+                    H&#7879; th&#7889;ng s&#7869; t&#237;nh kho&#7843;ng c&#225;ch, l&#7885;c theo b&#225;n k&#237;nh v&#224; s&#7855;p x&#7871;p theo g&#7847;n nh&#7845;t n&#7871;u c&#243; v&#7883; tr&#237;.
                 </p>
             </div>
             <div class="tool-card map-box">
@@ -511,49 +265,45 @@
                         <div class="card-meta">{{ bv.quan }}</div>
                         <div class="card-badges">
                             {% if bv.co_bhyt %}
-                                <span class="badge">Có BHYT</span>
+                                <span class="badge">C&#243; BHYT</span>
                             {% else %}
-                                <span class="badge warn">Không BHYT</span>
+                                <span class="badge warn">Kh&#244;ng BHYT</span>
                             {% endif %}
                             {% if bv.co_cap_cuu %}
-                                <span class="badge">Cấp cứu</span>
+                                <span class="badge">C&#7845;p c&#7913;u</span>
                             {% else %}
-                                <span class="badge warn">Không cấp cứu</span>
+                                <span class="badge warn">Kh&#244;ng c&#7845;p c&#7913;u</span>
                             {% endif %}
                             {% if bv.is_open %}
-                                <span class="status">Đang mở</span>
+                                <span class="status">&#272;ang m&#7903;</span>
                             {% else %}
-                                <span class="status closed">Đóng cửa</span>
+                                <span class="status closed">&#272;&#243;ng c&#7917;a</span>
                             {% endif %}
                             {% if bv.emergency_active %}
-                                <span class="status">Cấp cứu hoạt động</span>
+                                <span class="status">C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng</span>
                             {% else %}
-                                <span class="status warn">Cấp cứu nghỉ</span>
+                                <span class="status warn">C&#7845;p c&#7913;u ngh&#7881;</span>
                             {% endif %}
                         </div>
                         {% if bv.distance_km %}
-                            <div class="card-meta">Cách bạn khoảng {{ bv.distance_km }} km</div>
+                            <div class="card-meta">C&#225;ch b&#7841;n kho&#7843;ng {{ bv.distance_km }} km</div>
                         {% endif %}
                         {% if bv.map_lat and bv.map_lon %}
                             <div class="card-meta">
-                                <a class="btn ghost" href="https://www.google.com/maps/dir/?api=1&destination={{ bv.map_lat }},{{ bv.map_lon }}{% if user_lat and user_lon %}&origin={{ user_lat }},{{ user_lon }}{% endif %}">Chỉ đường</a>
+                                <a class="btn ghost" href="https://www.google.com/maps/dir/?api=1&destination={{ bv.map_lat }},{{ bv.map_lon }}{% if user_lat and user_lon %}&origin={{ user_lat }},{{ user_lon }}{% endif %}">Ch&#7881; &#273;&#432;&#7901;ng</a>
                             </div>
                         {% endif %}
-                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi tiết</a>
+                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi ti&#7871;t</a>
                     </div>
                 {% empty %}
-                    <div class="empty-state">Chưa có bệnh viện nào</div>
+                    <div class="empty-state">Ch&#432;a c&#243; b&#7879;nh vi&#7879;n n&#224;o</div>
                 {% endfor %}
             </div>
         </section>
     </div>
 
     {{ map_data|json_script:"map-data" }}
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
-    ></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         const map = L.map("home-map").setView([10.77, 106.7], 12);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -583,7 +333,7 @@
                     fillColor: "#0b6b5b",
                     fillOpacity: 0.8
                 }).addTo(map);
-                userMarker.bindPopup("Vị trí của bạn");
+                userMarker.bindPopup("V&#7883; tr&#237; c&#7911;a b&#7841;n");
                 map.setView([uLat, uLon], 12);
             }
         }
@@ -592,14 +342,14 @@
         locateBtn?.addEventListener("click", (event) => {
             event.preventDefault();
             if (!navigator.geolocation) {
-                alert("Trình duyệt không hỗ trợ định vị.");
+                alert("Tr&#236;nh duy&#7879;t kh&#244;ng h&#7895; tr&#7907; &#273;&#7883;nh v&#7883;.");
                 return;
             }
             navigator.geolocation.getCurrentPosition((pos) => {
                 document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
                 document.getElementById("lon").value = pos.coords.longitude.toFixed(6);
             }, () => {
-                alert("Không thể lấy vị trí. Vui lòng cho phép truy cập vị trí.");
+                alert("Kh&#244;ng th&#7875; l&#7845;y v&#7883; tr&#237;. Vui l&#242;ng cho ph&#233;p truy c&#7853;p v&#7883; tr&#237;.");
             });
         });
     </script>

@@ -16,6 +16,7 @@ urlpatterns = [
     path("login/", views.user_login, name="login"),
     path("register/", views.register, name="register"),
     path("logout/", views.user_logout, name="logout"),
+    path("quen-mat-khau/", views.forgot_password, name="forgot_password"),
     path("bac-si/kham/<int:lich_id>/", views.doctor_exam, name="doctor_exam"),
     path("bac-si/", views.bac_si_home, name="bac_si_home"),
     path("profile/", views.profile, name="profile"),

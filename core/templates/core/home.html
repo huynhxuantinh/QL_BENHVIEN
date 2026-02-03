@@ -3,41 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <title>Trang chủ</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+        :root {
+            --bg-1: #f6f3ee;
+            --bg-2: #eef4f0;
+            --ink: #1f2a2b;
+            --muted: #5b6b6a;
+            --primary: #0b6b5b;
+            --primary-2: #0f8a74;
+            --accent: #f2c57c;
+            --card: #ffffff;
+            --ring: rgba(11, 107, 91, 0.18);
+            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 24px;
+            margin: 0;
+            letter-spacing: 0.4px;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-2);
+            transform: translateY(-1px);
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(11, 107, 91, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn.ghost:hover {
+            box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .hero {
+            margin: 30px 0 22px;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            align-items: center;
+        }
+
+        .hero h2 {
+            font-family: "Playfair Display", serif;
+            font-size: 36px;
+            margin: 0 0 10px;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .hero-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(11, 107, 91, 0.12);
+        }
+
+        .hero-card h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+
+        .hero-card .meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+            animation: fadeIn 0.6s ease both;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(11, 107, 91, 0.3);
+            box-shadow: 0 18px 30px rgba(15, 30, 28, 0.14);
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 17px;
+        }
+
+        .card-meta {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .card-cta {
+            margin-top: auto;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .empty-state {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 16px;
+            padding: 22px;
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed rgba(31, 42, 43, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>Bản đồ y tế</h1>
+                <span>Tra cứu bệnh viện nhanh, rõ, trực quan</span>
+            </div>
+            <div class="user-area">
+                {% if user.is_authenticated %}
+                    <span class="user-name">Xin chào {{ user.username }}</span>
+                    <a class="btn ghost" href="{% url 'profile' %}">Hồ sơ của tôi</a>
+                    <a class="btn primary" href="{% url 'logout' %}">Đăng xuất</a>
+                {% else %}
+                    <a class="btn ghost" href="{% url 'login' %}">Đăng nhập</a>
+                    <a class="btn primary" href="{% url 'register' %}">Đăng ký</a>
+                {% endif %}
+            </div>
+        </header>
 
-<!-- HEADER -->
-<div style="border-bottom:1px solid #ccc; padding-bottom:10px; margin-bottom:20px;">
+        <section class="hero">
+            <div>
+                <h2>Danh sách bệnh viện</h2>
+                <p>
+                    Chọn bệnh viện để xem thông tin chi tiết, giờ hoạt động và vị trí trên bản đồ.
+                    Dữ liệu được cập nhật từ hệ thống quản lý bệnh viện.
+                </p>
+            </div>
+            <div class="hero-card">
+                <h3>Tổng quan nhanh</h3>
+                <div class="meta">
+                    <span>Số lượng hiện có</span>
+                    <strong>{{ bvs|length }}</strong>
+                </div>
+            </div>
+        </section>
 
-{% if user.is_authenticated %}
-    <p>
-        Xin chào {{ user.username }} |
-        <a href="{% url 'profile' %}">Hồ sơ của tôi</a> |
-        <a href="{% url 'logout' %}">Đăng xuất</a>
-    </p>
-{% else %}
-    <a href="{% url 'login' %}">Đăng nhập</a> |
-    <a href="{% url 'register' %}">Đăng ký</a>
-{% endif %}
-
-</div>
-
-
-<h1>Danh sách bệnh viện</h1>
-
-<ul>
-    {% for bv in bvs %}
-        <li>
-            <a href="{% url 'hospital_detail' bv.id %}">
-                {{ bv.ten }} - {{ bv.quan }}
-            </a>
-        </li>
-    {% empty %}
-        <li>Chưa có bệnh viện nào</li>
-    {% endfor %}
-</ul>
-
-
-
+        <section>
+            <div class="grid">
+                {% for bv in bvs %}
+                    <a class="card" href="{% url 'hospital_detail' bv.id %}">
+                        <div class="card-title">{{ bv.ten }}</div>
+                        <div class="card-meta">{{ bv.quan }}</div>
+                        <div class="card-cta">Xem chi tiết</div>
+                    </a>
+                {% empty %}
+                    <div class="empty-state">Chưa có bệnh viện nào</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
 </body>
 </html>

@@ -189,7 +189,15 @@ def register(request):
         username = request.POST["username"]
         password = request.POST["password"]
         name = request.POST["name"]
+        email = request.POST.get("email", "").strip()
 
+        if not email:
+            messages.error(request, "Vui lòng nhập email")
+            return redirect("register")
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email đã được sử dụng")
+            return redirect("register")
 
         if User.objects.filter(username=username).exists():
 
@@ -200,7 +208,8 @@ def register(request):
 
         user = User.objects.create_user(
             username=username,
-            password=password
+            password=password,
+            email=email,
         )
 
 
@@ -260,6 +269,37 @@ def user_logout(request):
     return redirect("login")
 
 # ==========================
+# QUÊN MẬT KHẨU (SĐT + EMAIL)
+# ==========================
+def forgot_password(request):
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
+        new_password = request.POST.get("new_password", "").strip()
+        confirm_password = request.POST.get("confirm_password", "").strip()
+
+        if not username or not email or not new_password or not confirm_password:
+            messages.error(request, "Vui lòng nhập đầy đủ thông tin")
+            return redirect("forgot_password")
+
+        if new_password != confirm_password:
+            messages.error(request, "Mật khẩu xác nhận không khớp")
+            return redirect("forgot_password")
+
+        user = User.objects.filter(username=username, email=email).first()
+        if not user:
+            messages.error(request, "SĐT hoặc email không đúng")
+            return redirect("forgot_password")
+
+        user.set_password(new_password)
+        user.save()
+
+        messages.success(request, "Đổi mật khẩu thành công. Vui lòng đăng nhập lại")
+        return redirect("login")
+
+    return render(request, "core/forgot_password.html")
+
+# ==========================
 # TRANG CHỦ BÁC SĨ
 # ==========================
 @login_required
@@ -294,25 +334,45 @@ def profile(request):
 
     if request.method == "POST":
 
+        so_dien_thoai_moi = request.POST.get("so_dien_thoai", "").strip()
+        if so_dien_thoai_moi and so_dien_thoai_moi != request.user.username:
+            if User.objects.filter(username=so_dien_thoai_moi).exclude(pk=request.user.pk).exists():
+                messages.error(request, "Số điện thoại đã được sử dụng cho tài khoản khác")
+                return redirect("profile")
+            request.user.username = so_dien_thoai_moi
+            request.user.save()
+
         benh_nhan.ho_ten = request.POST["ho_ten"]
         benh_nhan.ngay_sinh = request.POST["ngay_sinh"]
         benh_nhan.gioi_tinh = request.POST["gioi_tinh"]
         benh_nhan.dia_chi = request.POST["dia_chi"]
+        if so_dien_thoai_moi:
+            benh_nhan.so_dien_thoai = so_dien_thoai_moi
 
         # BHYT
-        ma_bhyt = request.POST.get("ma_bhyt")
-        ngay_cap = request.POST.get("ngay_cap")
-        ngay_het_han = request.POST.get("ngay_het_han")
+        ma_bhyt = request.POST.get("ma_bhyt", "").strip()
+        ngay_cap = request.POST.get("ngay_cap", "").strip()
+        ngay_het_han = request.POST.get("ngay_het_han", "").strip()
 
         if ma_bhyt:
+            if not ngay_cap or not ngay_het_han:
+                messages.error(request, "Vui lòng nhập ngày cấp và ngày hết hạn của BHYT")
+                return redirect("profile")
 
             bhyt, created = BaoHiemYTe.objects.get_or_create(
                 ma_bhyt=ma_bhyt,
                 defaults={
                     "ngay_cap": ngay_cap,
-                    "ngay_het_han": ngay_het_han
-                }
+                    "ngay_het_han": ngay_het_han,
+                },
             )
+
+            if not created and (
+                str(bhyt.ngay_cap) != ngay_cap or str(bhyt.ngay_het_han) != ngay_het_han
+            ):
+                bhyt.ngay_cap = ngay_cap
+                bhyt.ngay_het_han = ngay_het_han
+                bhyt.save()
 
             benh_nhan.bhyt = bhyt
 

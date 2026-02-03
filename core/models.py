@@ -1,13 +1,29 @@
+import datetime
+import math
+
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
+from django.contrib.gis.geos import Point
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
+
+phone_validator = RegexValidator(
+    regex=r"^\d{9,15}$",
+    message="Số điện thoại phải gồm 9-15 chữ số."
+)
+name_validator = RegexValidator(
+    regex=r".*[A-Za-zÀ-ỹ].*",
+    message="Tên phải có ít nhất một chữ cái."
+)
 
 # ========================= 
 # BỆNH VIỆN
 # ========================= 
 class BenhVien(models.Model):
-    ten = models.CharField(max_length=255, db_index=True)
+    ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     dia_chi = models.TextField()
     quan = models.CharField(max_length=100, db_index=True)
     vi_tri = models.PointField(srid=4326, spatial_index=True)
@@ -32,8 +48,43 @@ class BenhVien(models.Model):
             models.Index(fields=['loai_hinh', 'co_bhyt']),
             models.Index(fields=['cap_cuu_24h', 'co_cap_cuu']),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(gio_mo__lt=models.F("gio_dong")),
+                name="benhvien_gio_mo_lt_gio_dong",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
+                name="benhvien_cap_cuu_24h_requires_cap_cuu",
+            ),
+        ]
         verbose_name = 'Bệnh viện'
         verbose_name_plural = 'Bệnh viện'
+
+    def clean(self):
+        super().clean()
+        if self.gio_mo and self.gio_dong and self.gio_mo >= self.gio_dong:
+            raise ValidationError({"gio_dong": "Giờ đóng phải sau giờ mở."})
+        if self.cap_cuu_24h and not self.co_cap_cuu:
+            raise ValidationError({"cap_cuu_24h": "Bệnh viện không có cấp cứu thì không thể là 24h."})
+        if self.vi_tri:
+            x = self.vi_tri.x
+            y = self.vi_tri.y
+            is_web_mercator = self.vi_tri.srid == 3857 or abs(x) > 180 or abs(y) > 90
+            if is_web_mercator:
+                max_merc = 20037508.34
+                world_width = max_merc * 2
+                if x > max_merc or x < -max_merc:
+                    x = ((x + max_merc) % world_width) - max_merc
+                if y > max_merc:
+                    y = max_merc
+                elif y < -max_merc:
+                    y = -max_merc
+                lon = x * 180.0 / 20037508.34
+                lat = y * 180.0 / 20037508.34
+                lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+                if abs(lat) <= 90 and abs(lon) <= 180:
+                    self.vi_tri = Point(lon, lat, srid=4326)
 
     def __str__(self):
         return self.ten
@@ -67,8 +118,19 @@ class GioLamViecBenhVien(models.Model):
     class Meta:
         unique_together = [['benh_vien', 'thu']]
         ordering = ['benh_vien', 'thu']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(nghi=True) | models.Q(gio_mo__lt=models.F("gio_dong")),
+                name="giolamviec_benhvien_gio_mo_lt_gio_dong",
+            ),
+        ]
         verbose_name = 'Giờ làm việc bệnh viện'
         verbose_name_plural = 'Giờ làm việc bệnh viện'
+
+    def clean(self):
+        super().clean()
+        if not self.nghi and self.gio_mo and self.gio_dong and self.gio_mo >= self.gio_dong:
+            raise ValidationError({"gio_dong": "Giờ đóng phải sau giờ mở."})
 
     def __str__(self):
         return f"{self.benh_vien.ten} - {self.get_thu_display()}"
@@ -78,7 +140,7 @@ class GioLamViecBenhVien(models.Model):
 # KHOA
 # ========================= 
 class Khoa(models.Model):
-    ten = models.CharField(max_length=200, db_index=True)
+    ten = models.CharField(max_length=200, db_index=True, validators=[name_validator])
     benh_vien = models.ForeignKey(
         BenhVien,
         on_delete=models.CASCADE,
@@ -106,7 +168,7 @@ class BacSi(models.Model):
         null=True,
         blank=True
     )
-    ho_ten = models.CharField(max_length=255, db_index=True)
+    ho_ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     chuyen_khoa = models.CharField(max_length=200, db_index=True)
     khoa = models.ForeignKey(
         Khoa,
@@ -118,14 +180,26 @@ class BacSi(models.Model):
         on_delete=models.CASCADE,
         related_name='bac_sis'
     )
-    so_dien_thoai = models.CharField(max_length=15)
+    so_dien_thoai = models.CharField(max_length=15, validators=[phone_validator], unique=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['benh_vien', 'chuyen_khoa']),
         ]
+        constraints = [
+            models.UniqueConstraint(fields=["so_dien_thoai"], name="bacsi_so_dien_thoai_unique"),
+        ]
         verbose_name = 'Bác sĩ'
         verbose_name_plural = 'Bác sĩ'
+
+    def clean(self):
+        super().clean()
+        if self.khoa_id and self.benh_vien_id:
+            if self.khoa.benh_vien_id != self.benh_vien_id:
+                raise ValidationError({
+                    "khoa": "Khoa không thuộc bệnh viện đã chọn.",
+                    "benh_vien": "Bệnh viện không khớp với khoa."
+                })
 
     def __str__(self):
         return self.ho_ten
@@ -159,8 +233,19 @@ class GioLamViecBacSi(models.Model):
     class Meta:
         unique_together = [['bac_si', 'thu']]
         ordering = ['bac_si', 'thu']
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(nghi=True) | models.Q(gio_bat_dau__lt=models.F("gio_ket_thuc")),
+                name="giolamviec_bacsi_gio_bat_dau_lt_gio_ket_thuc",
+            ),
+        ]
         verbose_name = 'Giờ làm việc bác sĩ'
         verbose_name_plural = 'Giờ làm việc bác sĩ'
+
+    def clean(self):
+        super().clean()
+        if not self.nghi and self.gio_bat_dau and self.gio_ket_thuc and self.gio_bat_dau >= self.gio_ket_thuc:
+            raise ValidationError({"gio_ket_thuc": "Giờ kết thúc phải sau giờ bắt đầu."})
 
     def __str__(self):
         return f"{self.bac_si.ho_ten} - {self.get_thu_display()}"
@@ -175,8 +260,21 @@ class BaoHiemYTe(models.Model):
     ngay_het_han = models.DateField(db_index=True)
 
     class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(ngay_cap__lte=models.F("ngay_het_han")),
+                name="bhyt_ngay_cap_lte_ngay_het_han",
+            ),
+        ]
         verbose_name = 'Bảo hiểm y tế'
         verbose_name_plural = 'Bảo hiểm y tế'
+
+    def clean(self):
+        super().clean()
+        if self.ngay_cap and self.ngay_het_han and self.ngay_cap > self.ngay_het_han:
+            raise ValidationError({"ngay_het_han": "Ngày hết hạn phải sau hoặc bằng ngày cấp."})
+        if self.ngay_het_han and self.ngay_het_han < timezone.localdate():
+            raise ValidationError({"ngay_het_han": "BHYT đã hết hạn."})
 
     def __str__(self):
         return self.ma_bhyt
@@ -192,7 +290,7 @@ class BenhNhan(models.Model):
         blank=True,
         related_name='benh_nhan'
     )
-    ho_ten = models.CharField(max_length=255, db_index=True)
+    ho_ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     ngay_sinh = models.DateField()
     gioi_tinh = models.CharField(
         max_length=10,
@@ -202,7 +300,12 @@ class BenhNhan(models.Model):
             ('khac', 'Khác')
         ]
     )
-    so_dien_thoai = models.CharField(max_length=15, db_index=True)
+    so_dien_thoai = models.CharField(
+        max_length=15,
+        db_index=True,
+        validators=[phone_validator],
+        unique=True,
+    )
     dia_chi = models.TextField()
     bhyt = models.OneToOneField(
         BaoHiemYTe,
@@ -213,8 +316,16 @@ class BenhNhan(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["so_dien_thoai"], name="benhnhan_so_dien_thoai_unique"),
+        ]
         verbose_name = 'Bệnh nhân'
         verbose_name_plural = 'Bệnh nhân'
+
+    def clean(self):
+        super().clean()
+        if self.ngay_sinh and self.ngay_sinh > timezone.localdate():
+            raise ValidationError({"ngay_sinh": "Ngày sinh không hợp lệ."})
 
     def __str__(self):
         return self.ho_ten
@@ -256,9 +367,73 @@ class LichKham(models.Model):
             models.Index(fields=['benh_nhan', 'ngay_kham']),
         ]
         unique_together = [['bac_si', 'ngay_kham', 'gio_kham']]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["benh_nhan", "ngay_kham", "gio_kham"],
+                name="lichkham_benhnhan_ngay_gio_unique",
+            ),
+        ]
         ordering = ['-ngay_kham', '-gio_kham']
         verbose_name = 'Lịch khám'
         verbose_name_plural = 'Lịch khám'
+
+    def clean(self):
+        super().clean()
+        if self.ngay_kham and self.ngay_kham < timezone.localdate():
+            raise ValidationError({"ngay_kham": "Không thể đặt lịch ở ngày quá khứ."})
+
+        if self.gio_kham and self.gio_kham.minute % 30 != 0:
+            raise ValidationError({"gio_kham": "Giờ khám chỉ nhận các mốc 30 phút (00 hoặc 30)."})
+
+        if self.benh_nhan_id and self.ngay_kham:
+            qs = LichKham.objects.filter(
+                benh_nhan=self.benh_nhan,
+                ngay_kham=self.ngay_kham
+            ).exclude(trang_thai="huy")
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError({"ngay_kham": "Bệnh nhân đã có lịch trong ngày này."})
+
+        if self.bac_si_id and self.ngay_kham and self.gio_kham:
+            thu = (self.ngay_kham.weekday() + 1) % 7
+            gio_lv = GioLamViecBacSi.objects.filter(bac_si=self.bac_si, thu=thu).first()
+            if gio_lv:
+                if gio_lv.nghi:
+                    raise ValidationError({"gio_kham": "Bác sĩ nghỉ vào ngày đã chọn."})
+                if not (gio_lv.gio_bat_dau <= self.gio_kham <= gio_lv.gio_ket_thuc):
+                    raise ValidationError({"gio_kham": "Giờ khám ngoài khung giờ làm việc của bác sĩ."})
+            else:
+                raise ValidationError({"gio_kham": "Bác sĩ chưa có lịch làm việc cho ngày này."})
+
+            benh_vien = self.bac_si.benh_vien
+            if not benh_vien.cap_cuu_24h:
+                gio_lv_bv = GioLamViecBenhVien.objects.filter(benh_vien=benh_vien, thu=thu).first()
+                if gio_lv_bv:
+                    if gio_lv_bv.nghi:
+                        raise ValidationError({"gio_kham": "Bệnh viện nghỉ vào ngày đã chọn."})
+                    if not (gio_lv_bv.gio_mo <= self.gio_kham <= gio_lv_bv.gio_dong):
+                        raise ValidationError({"gio_kham": "Giờ khám ngoài giờ làm việc của bệnh viện."})
+                else:
+                    if benh_vien.gio_mo and benh_vien.gio_dong:
+                        if not (benh_vien.gio_mo <= self.gio_kham <= benh_vien.gio_dong):
+                            raise ValidationError({"gio_kham": "Giờ khám ngoài giờ làm việc của bệnh viện."})
+
+            existing = LichKham.objects.filter(
+                bac_si=self.bac_si,
+                ngay_kham=self.ngay_kham,
+            )
+            if self.pk:
+                existing = existing.exclude(pk=self.pk)
+            if existing.exists():
+                current_dt = datetime.datetime.combine(self.ngay_kham, self.gio_kham)
+                for other in existing:
+                    other_dt = datetime.datetime.combine(other.ngay_kham, other.gio_kham)
+                    diff_minutes = abs((current_dt - other_dt).total_seconds()) / 60
+                    if diff_minutes < 30:
+                        raise ValidationError({
+                            "gio_kham": "Giờ khám phải cách các lịch khác ít nhất 30 phút."
+                        })
 
     def __str__(self):
         return f"{self.benh_nhan.ho_ten} - {self.ngay_kham}"
@@ -287,6 +462,12 @@ class PhieuKham(models.Model):
         ordering = ['-ngay_lap']
         verbose_name = 'Phiếu khám'
         verbose_name_plural = 'Phiếu khám'
+
+    def clean(self):
+        super().clean()
+        if self.lich_kham_id and self.benh_nhan_id:
+            if self.lich_kham.benh_nhan_id != self.benh_nhan_id:
+                raise ValidationError({"benh_nhan": "Bệnh nhân không khớp với lịch khám."})
 
     def __str__(self):
         return f"Phiếu {self.benh_nhan.ho_ten} - {self.ngay_lap.date()}"
@@ -337,6 +518,16 @@ class LichSuKhamBenh(models.Model):
         ordering = ['-ngay_kham', '-ngay_tao']
         verbose_name = 'Lịch sử khám bệnh'
         verbose_name_plural = 'Lịch sử khám bệnh'
+
+    def clean(self):
+        super().clean()
+        if self.phieu_kham_id:
+            if self.phieu_kham.benh_nhan_id != self.benh_nhan_id:
+                raise ValidationError({"benh_nhan": "Bệnh nhân không khớp với phiếu khám."})
+            if self.bac_si_id and self.phieu_kham.lich_kham.bac_si_id != self.bac_si_id:
+                raise ValidationError({"bac_si": "Bác sĩ không khớp với phiếu khám."})
+            if self.benh_vien_id and self.phieu_kham.lich_kham.bac_si.benh_vien_id != self.benh_vien_id:
+                raise ValidationError({"benh_vien": "Bệnh viện không khớp với phiếu khám."})
 
     def __str__(self):
         return f"{self.benh_nhan.ho_ten} - {self.ngay_kham}"

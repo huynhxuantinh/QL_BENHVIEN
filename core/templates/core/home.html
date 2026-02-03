@@ -76,6 +76,7 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .user-name {
@@ -117,6 +118,16 @@
         .btn.ghost:hover {
             box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
             transform: translateY(-1px);
+        }
+
+        .notif-badge {
+            margin-left: 6px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(242, 197, 124, 0.35);
+            color: #8a5a10;
+            font-size: 12px;
+            font-weight: 700;
         }
 
         .hero {
@@ -197,6 +208,29 @@
             font-size: 14px;
         }
 
+        .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(11, 107, 91, 0.1);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge.warn {
+            background: rgba(242, 197, 124, 0.28);
+            color: #8a5a10;
+        }
+
         .card-cta {
             margin-top: auto;
             font-weight: 600;
@@ -211,6 +245,77 @@
             text-align: center;
             color: var(--muted);
             border: 1px dashed rgba(31, 42, 43, 0.2);
+        }
+
+        .tools {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .tool-card {
+            background: var(--card);
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .tool-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .tool-field input {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(31, 42, 43, 0.18);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .map-box {
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            min-height: 320px;
+        }
+
+        #home-map {
+            width: 100%;
+            height: 100%;
+            min-height: 320px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(11, 107, 91, 0.1);
+            color: var(--primary);
+        }
+
+        .status.closed {
+            background: rgba(180, 52, 52, 0.15);
+            color: #9d2c2c;
+        }
+
+        .status.warn {
+            background: rgba(242, 197, 124, 0.28);
+            color: #8a5a10;
         }
 
         @keyframes fadeIn {
@@ -228,8 +333,17 @@
             .hero {
                 grid-template-columns: 1fr;
             }
+            .tools {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
 </head>
 <body>
     <div class="page">
@@ -240,8 +354,16 @@
             </div>
             <div class="user-area">
                 {% if user.is_authenticated %}
-                    <span class="user-name">Xin chào {{ user.username }}</span>
+                    <span class="user-name">Xin chào {{ display_name }}</span>
+                    <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Lịch khám</a>
+                    <a class="btn ghost" href="{% url 'medical_history' %}">Lịch sử khám</a>
                     <a class="btn ghost" href="{% url 'profile' %}">Hồ sơ của tôi</a>
+                    <a class="btn ghost" href="{% url 'notifications' %}">
+                        Thông báo
+                        {% if unread_count > 0 %}
+                            <span class="notif-badge">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
                     <a class="btn primary" href="{% url 'logout' %}">Đăng xuất</a>
                 {% else %}
                     <a class="btn ghost" href="{% url 'login' %}">Đăng nhập</a>
@@ -249,6 +371,14 @@
                 {% endif %}
             </div>
         </header>
+
+        {% if messages %}
+            <div class="hero-card" style="margin-top: 16px;">
+                {% for message in messages %}
+                    <div style="font-weight: 600;">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
         <section class="hero">
             <div>
@@ -267,19 +397,151 @@
             </div>
         </section>
 
+        <section class="tools">
+            <div class="tool-card">
+                <h3 style="margin: 0 0 12px;">Tìm bệnh viện gần bạn</h3>
+                <form method="get" id="geo-form">
+                    <div class="tool-grid">
+                        <div class="tool-field">
+                            <label for="radius">Bán kính (km)</label>
+                            <input id="radius" name="radius" type="number" min="1" step="1" value="{{ radius_km|default:5 }}">
+                        </div>
+                        <div class="tool-field">
+                            <label>Vị trí hiện tại</label>
+                            <input id="lat" name="lat" type="text" placeholder="Vĩ độ" value="{{ user_lat|default:'' }}">
+                        </div>
+                        <div class="tool-field">
+                            <label>&nbsp;</label>
+                            <input id="lon" name="lon" type="text" placeholder="Kinh độ" value="{{ user_lon|default:'' }}">
+                        </div>
+                        <div class="tool-field">
+                            <label>&nbsp;</label>
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="open" value="1" {% if filter_open %}checked{% endif %}>
+                                BV đang mở
+                            </label>
+                        </div>
+                        <div class="tool-field">
+                            <label>&nbsp;</label>
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
+                                Cấp cứu hoạt động
+                            </label>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn ghost" id="locate-btn">Lấy vị trí</button>
+                        <button class="btn primary" type="submit">Áp dụng lọc</button>
+                    </div>
+                </form>
+                <p style="margin: 10px 0 0; color: var(--muted); font-size: 13px;">
+                    Hệ thống sẽ tính khoảng cách, lọc theo bán kính và sắp xếp theo gần nhất nếu có vị trí.
+                </p>
+            </div>
+            <div class="tool-card map-box">
+                <div id="home-map"></div>
+            </div>
+        </section>
+
         <section>
             <div class="grid">
                 {% for bv in bvs %}
-                    <a class="card" href="{% url 'hospital_detail' bv.id %}">
+                    <div class="card">
                         <div class="card-title">{{ bv.ten }}</div>
                         <div class="card-meta">{{ bv.quan }}</div>
-                        <div class="card-cta">Xem chi tiết</div>
-                    </a>
+                        <div class="card-badges">
+                            {% if bv.co_bhyt %}
+                                <span class="badge">Có BHYT</span>
+                            {% else %}
+                                <span class="badge warn">Không BHYT</span>
+                            {% endif %}
+                            {% if bv.co_cap_cuu %}
+                                <span class="badge">Cấp cứu</span>
+                            {% else %}
+                                <span class="badge warn">Không cấp cứu</span>
+                            {% endif %}
+                            {% if bv.is_open %}
+                                <span class="status">Đang mở</span>
+                            {% else %}
+                                <span class="status closed">Đóng cửa</span>
+                            {% endif %}
+                            {% if bv.emergency_active %}
+                                <span class="status">Cấp cứu hoạt động</span>
+                            {% else %}
+                                <span class="status warn">Cấp cứu nghỉ</span>
+                            {% endif %}
+                        </div>
+                        {% if bv.distance_km %}
+                            <div class="card-meta">Cách bạn khoảng {{ bv.distance_km }} km</div>
+                        {% endif %}
+                        {% if bv.map_lat and bv.map_lon %}
+                            <div class="card-meta">
+                                <a class="btn ghost" href="https://www.google.com/maps/dir/?api=1&destination={{ bv.map_lat }},{{ bv.map_lon }}{% if user_lat and user_lon %}&origin={{ user_lat }},{{ user_lon }}{% endif %}">Chỉ đường</a>
+                            </div>
+                        {% endif %}
+                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi tiết</a>
+                    </div>
                 {% empty %}
                     <div class="empty-state">Chưa có bệnh viện nào</div>
                 {% endfor %}
             </div>
         </section>
     </div>
+
+    {{ map_data|json_script:"map-data" }}
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script>
+        const map = L.map("home-map").setView([10.77, 106.7], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }).addTo(map);
+
+        const mapData = JSON.parse(document.getElementById("map-data").textContent || "[]");
+        mapData.forEach(item => {
+            const marker = L.marker([item.lat, item.lon]).addTo(map);
+            let label = `${item.name}`;
+            if (typeof item.distance_km === "number") {
+                label += ` (${item.distance_km} km)`;
+            }
+            marker.bindPopup(label);
+        });
+
+        const userLat = "{{ user_lat|default:'' }}";
+        const userLon = "{{ user_lon|default:'' }}";
+        if (userLat && userLon) {
+            const uLat = parseFloat(userLat);
+            const uLon = parseFloat(userLon);
+            if (Number.isFinite(uLat) && Number.isFinite(uLon)) {
+                const userMarker = L.circleMarker([uLat, uLon], {
+                    radius: 6,
+                    color: "#0b6b5b",
+                    fillColor: "#0b6b5b",
+                    fillOpacity: 0.8
+                }).addTo(map);
+                userMarker.bindPopup("Vị trí của bạn");
+                map.setView([uLat, uLon], 12);
+            }
+        }
+
+        const locateBtn = document.getElementById("locate-btn");
+        locateBtn?.addEventListener("click", (event) => {
+            event.preventDefault();
+            if (!navigator.geolocation) {
+                alert("Trình duyệt không hỗ trợ định vị.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
+                document.getElementById("lon").value = pos.coords.longitude.toFixed(6);
+            }, () => {
+                alert("Không thể lấy vị trí. Vui lòng cho phép truy cập vị trí.");
+            });
+        });
+    </script>
 </body>
 </html>

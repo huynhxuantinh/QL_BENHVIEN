@@ -14,7 +14,10 @@ class DatLichForm(forms.ModelForm):
             }),
             'gio_kham': forms.TimeInput(attrs={
                 'type': 'time',
-                'class': 'form-control'
+                'class': 'form-control',
+                'step': '1800',
+                'min': '00:00',
+                'max': '23:30',
             }),
             'ghi_chu': forms.Textarea(attrs={
                 'rows': 3,

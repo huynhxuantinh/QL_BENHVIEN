@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiết phiếu khám</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+        :root {
+            --bg-1: #f6f3ee;
+            --bg-2: #eef4f0;
+            --ink: #1f2a2b;
+            --muted: #5b6b6a;
+            --primary: #0b6b5b;
+            --card: #ffffff;
+            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 26px;
+            margin: 0;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(11, 107, 91, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            box-shadow: var(--shadow);
+            margin-top: 18px;
+        }
+
+        .meta {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-family: "Playfair Display", serif;
+            font-size: 20px;
+            margin: 0 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>Phiếu khám</h1>
+                <span>{{ benh_nhan.ho_ten }} · {{ benh_nhan.so_dien_thoai }}</span>
+            </div>
+            <a class="btn ghost" href="{% url 'medical_history' %}">← Lịch sử khám</a>
+        </header>
+
+        <div class="card">
+            <p class="meta"><strong>Bệnh nhân:</strong> {{ phieu.benh_nhan.ho_ten }}</p>
+            <p class="meta"><strong>Bác sĩ:</strong> {{ phieu.lich_kham.bac_si.ho_ten }}</p>
+            <p class="meta"><strong>Bệnh viện:</strong> {{ phieu.lich_kham.bac_si.benh_vien.ten }}</p>
+            <p class="meta"><strong>Ngày khám:</strong> {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }}</p>
+            <p class="meta"><strong>Giờ khám:</strong> {{ phieu.lich_kham.gio_kham }}</p>
+            <p class="meta"><strong>Ngày lập:</strong> {{ phieu.ngay_lap|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Triệu chứng</h2>
+            <div>{{ phieu.trieu_chung }}</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Chẩn đoán</h2>
+            <div>{{ phieu.chan_doan }}</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Hướng điều trị</h2>
+            <div>{{ phieu.huong_dieu_tri }}</div>
+        </div>
+    </div>
+</body>
+</html>

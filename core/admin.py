@@ -39,6 +39,13 @@ class BenhVienOSMWidget(OSMWidget):
 @admin.register(BenhVien)
 class BenhVienAdmin(GISModelAdmin):
     gis_widget = BenhVienOSMWidget
+    gis_widget_kwargs = {
+        "attrs": {
+            "default_lat": 10.77,
+            "default_lon": 106.7,
+            "default_zoom": 12,
+        }
+    }
     list_display = (
         "ten",
         "quan",

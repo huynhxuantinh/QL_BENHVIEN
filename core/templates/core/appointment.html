@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt lịch khám</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+        :root {
+            --bg-1: #f6f3ee;
+            --bg-2: #eef4f0;
+            --ink: #1f2a2b;
+            --muted: #5b6b6a;
+            --primary: #0b6b5b;
+            --primary-2: #0f8a74;
+            --card: #ffffff;
+            --ring: rgba(11, 107, 91, 0.18);
+            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 26px;
+            margin: 0;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-2);
+            transform: translateY(-1px);
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(11, 107, 91, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn.ghost:hover {
+            box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-family: "Playfair Display", serif;
+            font-size: 22px;
+            margin: 22px 0 12px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-control,
+        select,
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(31, 42, 43, 0.18);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s ease, box-shadow 0.2s ease;
+            background: #fff;
+        }
+
+        .form-control:focus,
+        select:focus,
+        input:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--ring);
+        }
+
+        .meta {
+            font-size: 14px;
+            color: var(--muted);
+            margin: 0 0 6px;
+        }
+
+        .empty {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px dashed rgba(31, 42, 43, 0.2);
+            padding: 16px;
+            border-radius: 14px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>Đặt lịch khám</h1>
+                <span>{{ benh_vien.ten }} · {{ benh_vien.quan }}</span>
+            </div>
+            <a class="btn ghost" href="{% url 'hospital_detail' benh_vien.id %}">← Thông tin bệnh viện</a>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">Thông tin bệnh viện</h2>
+                <p class="meta"><strong>Địa chỉ:</strong> {{ benh_vien.dia_chi }}</p>
+                <p class="meta"><strong>Giờ mở cửa:</strong> {{ benh_vien.gio_mo }} - {{ benh_vien.gio_dong }}</p>
+                <p class="meta"><strong>BHYT:</strong> {% if benh_vien.co_bhyt %}Có{% else %}Không{% endif %}</p>
+                <p class="meta"><strong>Cấp cứu:</strong> {% if benh_vien.co_cap_cuu %}Có{% else %}Không{% endif %}</p>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">Thông tin bệnh nhân</h2>
+                <p class="meta"><strong>Họ tên:</strong> {{ benh_nhan.ho_ten }}</p>
+                <p class="meta"><strong>Số điện thoại:</strong> {{ benh_nhan.so_dien_thoai }}</p>
+                <p class="meta"><strong>Ngày sinh:</strong> {{ benh_nhan.ngay_sinh|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">Chọn khoa</h2>
+                <form method="get">
+                    <div class="field">
+                        <label>Khoa</label>
+                        <select name="khoa" onchange="this.form.submit()">
+                            <option value="">-- Chọn khoa --</option>
+                            {% for k in khoas %}
+                                <option value="{{ k.id }}"
+                                    {% if k.id|stringformat:"s" == khoa_id %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ k.ten }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">Tạo lịch khám</h2>
+                {% if messages %}
+                    <div style="margin-bottom: 12px;">
+                        {% for message in messages %}
+                            <div class="empty" style="border-style: solid; border-color: rgba(180, 52, 52, 0.4);">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% if form.errors %}
+                    <div class="empty" style="border-style: solid; border-color: rgba(180, 52, 52, 0.4);">
+                        Vui lòng kiểm tra lại:
+                        <ul style="margin: 8px 0 0 18px;">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                {% if bac_sis %}
+                    <form method="post" {% if khoa_id %}action="?khoa={{ khoa_id }}"{% endif %}>
+                        {% csrf_token %}
+
+                        <div class="field">
+                            <label>Bác sĩ</label>
+                            {{ form.bac_si }}
+                        </div>
+
+                        <div class="field">
+                            <label>Ngày khám</label>
+                            {{ form.ngay_kham }}
+                        </div>
+
+                        <div class="field">
+                            <label>Giờ khám</label>
+                            {{ form.gio_kham }}
+                            <small class="meta">Chỉ chọn phút 00 hoặc 30. Lịch cách nhau tối thiểu 30 phút.</small>
+                        </div>
+
+                        <div class="field">
+                            <label>Ghi chú</label>
+                            {{ form.ghi_chu }}
+                        </div>
+
+                        <button class="btn primary" type="submit">Đặt lịch</button>
+                    </form>
+                {% else %}
+                    <div class="empty">Vui lòng chọn khoa để hiển thị bác sĩ.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <h2 class="section-title">Lịch làm việc bác sĩ</h2>
+            {% if bac_si_schedules %}
+                <div class="grid">
+                    {% for item in bac_si_schedules %}
+                        <div class="card" style="box-shadow: none;">
+                            <h3 style="margin: 0 0 8px;">{{ item.bac_si.ho_ten }}</h3>
+                            {% if item.gio_lam_viecs %}
+                                {% for glv in item.gio_lam_viecs %}
+                                    <div class="meta">
+                                        {{ glv.get_thu_display }}:
+                                        {% if glv.nghi %}
+                                            Nghỉ
+                                        {% else %}
+                                            {{ glv.gio_bat_dau }} - {{ glv.gio_ket_thuc }}
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="meta">Chưa có lịch làm việc.</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">Chọn khoa để xem lịch làm việc của bác sĩ.</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

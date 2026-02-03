@@ -3,53 +3,344 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ bv.ten }}</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+        :root {
+            --bg-1: #f6f3ee;
+            --bg-2: #eef4f0;
+            --ink: #1f2a2b;
+            --muted: #5b6b6a;
+            --primary: #0b6b5b;
+            --primary-2: #0f8a74;
+            --accent: #f2c57c;
+            --card: #ffffff;
+            --ring: rgba(11, 107, 91, 0.18);
+            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
+                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 26px;
+            margin: 0;
+        }
+
+        .brand span {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-2);
+            transform: translateY(-1px);
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(11, 107, 91, 0.3);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn.ghost:hover {
+            box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .hero {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+            margin-top: 22px;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            box-shadow: var(--shadow);
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+        }
+
+        .meta {
+            background: rgba(11, 107, 91, 0.06);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+
+        .meta strong {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .section-title {
+            font-family: "Playfair Display", serif;
+            font-size: 22px;
+            margin: 24px 0 14px;
+        }
+
+        .list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .list-item {
+            background: var(--card);
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(11, 107, 91, 0.1);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .map-box {
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            min-height: 320px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 320px;
+        }
+
+        .hours {
+            display: grid;
+            gap: 10px;
+        }
+
+        .hours-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            font-size: 14px;
+        }
+
+        .hours-item span {
+            color: var(--muted);
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    />
 </head>
 
 <body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>{{ bv.ten }}</h1>
+                <span>Thông tin chi tiết bệnh viện</span>
+            </div>
+            <a class="btn ghost" href="{% url 'home' %}">← Trang chủ</a>
+        </header>
 
-<h1>{{ bv.ten }}</h1>
+        <section class="hero">
+            <div class="card">
+                <div class="meta-grid">
+                    <div class="meta">
+                        <strong>Quận</strong>
+                        {{ bv.quan }}
+                    </div>
+                    <div class="meta">
+                        <strong>Địa chỉ</strong>
+                        {{ bv.dia_chi }}
+                    </div>
+                    <div class="meta">
+                        <strong>Loại hình</strong>
+                        {{ bv.get_loai_hinh_display }}
+                    </div>
+                    <div class="meta">
+                        <strong>BHYT</strong>
+                        {% if bv.co_bhyt %}Có{% else %}Không{% endif %}
+                    </div>
+                    <div class="meta">
+                        <strong>Cấp cứu</strong>
+                        {% if bv.co_cap_cuu %}Có{% else %}Không{% endif %}
+                    </div>
+                    <div class="meta">
+                        <strong>Cấp cứu 24h</strong>
+                        {% if bv.cap_cuu_24h %}Có{% else %}Không{% endif %}
+                    </div>
+                    <div class="meta">
+                        <strong>Giờ mở cửa</strong>
+                        {{ bv.gio_mo }}
+                    </div>
+                    <div class="meta">
+                        <strong>Giờ đóng cửa</strong>
+                        {{ bv.gio_dong }}
+                    </div>
+                </div>
 
-<p><b>Quận:</b> {{ bv.quan }}</p>
-<p><b>Địa chỉ:</b> {{ bv.dia_chi }}</p>
+                <div style="margin-top: 18px;">
+                    <a class="btn primary" href="{% url 'dat_lich' bv.id %}">Đặt lịch khám</a>
+                </div>
+            </div>
 
-<hr>
+            <div class="map-box">
+                <div id="map"></div>
+            </div>
+        </section>
 
-<h2>Khoa</h2>
+        <section>
+            <h2 class="section-title">Giờ làm việc</h2>
+            <div class="card">
+                <div class="hours">
+                    {% for glv in gio_lam_viec %}
+                        <div class="hours-item">
+                            <div>{{ glv.get_thu_display }}</div>
+                            {% if glv.nghi %}
+                                <span>Nghỉ</span>
+                            {% else %}
+                                <span>{{ glv.gio_mo }} - {{ glv.gio_dong }}</span>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <div class="hours-item">
+                            <div>Chưa có lịch làm việc</div>
+                            <span>—</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
 
-<ul>
-    {% for k in khoas %}
-        <li>{{ k.ten }}</li>
-    {% empty %}
-        <li>Chưa có khoa</li>
-    {% endfor %}
-</ul>
+        <section>
+            <h2 class="section-title">Khoa</h2>
+            <ul class="list">
+                {% for k in khoas %}
+                    <li class="list-item">{{ k.ten }}</li>
+                {% empty %}
+                    <li class="list-item">Chưa có khoa</li>
+                {% endfor %}
+            </ul>
+        </section>
 
-<hr>
+        <section>
+            <h2 class="section-title">Bác sĩ</h2>
+            <ul class="list">
+                {% for bs in bac_sis %}
+                    <li class="list-item">
+                        <div><strong>{{ bs.ho_ten }}</strong></div>
+                        <div class="badge">{{ bs.chuyen_khoa }}</div>
+                    </li>
+                {% empty %}
+                    <li class="list-item">Chưa có bác sĩ</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
 
-<h2>Bác sĩ</h2>
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
+    <script>
+        const map = L.map("map").setView([10.77, 106.7], 13);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap"
+        }).addTo(map);
 
-<ul>
-    {% for bs in bac_sis %}
-        <li>
-            {{ bs.ho_ten }} - {{ bs.chuyen_khoa }}
-        </li>
-    {% empty %}
-        <li>Chưa có bác sĩ</li>
-    {% endfor %}
-</ul>
-
-<hr>
-
-<!-- NÚT ĐẶT LỊCH -->
-<h2>Đặt lịch khám</h2>
-
-<a href="{% url 'dat_lich' bv.id %}">
-    👉 Đặt lịch tại bệnh viện này
-</a>
-
-<hr>
-
-<a href="{% url 'home' %}">⬅ Quay về trang chủ</a>
-
+        const lat = {{ map_lat|default:"null" }};
+        const lon = {{ map_lon|default:"null" }};
+        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            const marker = L.marker([lat, lon]).addTo(map);
+            marker.bindPopup("{{ bv.ten|escapejs }}").openPopup();
+            map.setView([lat, lon], 15);
+        }
+    </script>
 </body>
 </html>

@@ -207,6 +207,15 @@
                             </select>
                         </div>
                         <div class="tool-field">
+                            <label for="quan">Qu&#7853;n</label>
+                            <select id="quan" name="quan" class="form-control">
+                                <option value="">T&#7845;t c&#7843;</option>
+                                {% for q in all_quan %}
+                                    <option value="{{ q }}" {% if quan_filter == q %}selected{% endif %}>{{ q }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="tool-field">
                             <label>V&#7883; tr&#237; hi&#7879;n t&#7841;i</label>
                             <input id="lat" name="lat" type="text" placeholder="V&#297; &#273;&#7897;" value="{{ user_lat|default:'' }}">
                         </div>

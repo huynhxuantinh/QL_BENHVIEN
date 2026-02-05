@@ -43,11 +43,19 @@ def home(request):
     user_lat = None
     user_lon = None
     radius_km = None
+    # GIS filters: open/emergency/BHYT + distance/radius + map markers
     filter_open = request.GET.get("open") == "1"
     filter_emergency = request.GET.get("emergency") == "1"
     filter_bhyt = request.GET.get("bhyt") == "1"
     filter_cap_cuu = request.GET.get("cap_cuu") == "1"
     loai_hinh = request.GET.get("loai_hinh")
+    quan_filter = request.GET.get("quan")
+
+    all_quan = (
+        BenhVien.objects.values_list("quan", flat=True)
+        .distinct()
+        .order_by("quan")
+    )
 
     lat_str = request.GET.get("lat")
     lon_str = request.GET.get("lon")
@@ -59,6 +67,7 @@ def home(request):
             user_lat = float(lat_str)
             user_lon = float(lon_str)
             if -90 <= user_lat <= 90 and -180 <= user_lon <= 180:
+                # GIS: build user location (SRID 4326) for distance/radius filtering
                 user_point = Point(user_lon, user_lat, srid=4326)
         except ValueError:
             user_point = None
@@ -75,6 +84,9 @@ def home(request):
         bvs = bvs.filter(loai_hinh=loai_hinh)
     else:
         loai_hinh = None
+
+    if quan_filter:
+        bvs = bvs.filter(quan=quan_filter)
 
     if request.user.is_authenticated:
         unread_count = ThongBao.objects.filter(
@@ -115,7 +127,7 @@ def home(request):
         f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
         f"open={int(filter_open)}|emg={int(filter_emergency)}|"
         f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
-        f"loai={loai_hinh or 'all'}|t={time_bucket}"
+        f"loai={loai_hinh or 'all'}|quan={quan_filter or 'all'}|t={time_bucket}"
     )
     cached = cache.get(cache_key)
     if cached:
@@ -165,6 +177,8 @@ def home(request):
             "filter_open": filter_open,
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
+            "quan_filter": quan_filter,
+            "all_quan": all_quan,
             "map_data": map_data,
         })
 
@@ -174,12 +188,14 @@ def home(request):
         bvs = bvs.filter(co_cap_cuu=True)
 
     if user_point:
+        # GIS: annotate distance from user, filter by radius, sort nearest first
         bvs = bvs.annotate(distance_m=Distance("vi_tri", user_point, spheroid=False))
         if radius_km:
             bvs = bvs.filter(distance_m__lte=radius_km * 1000)
         bvs = bvs.order_by("distance_m")
 
     def point_to_latlon(point):
+        # GIS: convert Point to lat/lon (handle Web Mercator or WGS84)
         if not point:
             return None, None
         x = point.x
@@ -301,6 +317,8 @@ def home(request):
         "filter_open": filter_open,
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
+        "quan_filter": quan_filter,
+        "all_quan": all_quan,
         "map_data": map_data,
     })
 

@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Trang bác sĩ</title>
+    <title>Trang b&#225;c s&#297;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -18,9 +18,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -74,6 +72,8 @@
             font-size: 14px;
             border: 1px solid transparent;
             white-space: nowrap;
+            cursor: pointer;
+            font-family: inherit;
         }
 
         .btn.primary {
@@ -136,12 +136,12 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Bác sĩ {{ bac_si.ho_ten }}</h1>
+                <h1>B&#225;c s&#297; {{ bac_si.ho_ten }}</h1>
                 <span>{{ bac_si.khoa.ten }} - {{ bac_si.benh_vien.ten }}</span>
             </div>
             <div>
-                <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Thông báo</a>
-                <a class="btn ghost" href="{% url 'bac_si_schedule' %}">Lịch làm việc</a>
+                <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
+                <a class="btn ghost" href="{% url 'bac_si_schedule' %}">L&#7883;ch l&#224;m vi&#7879;c</a>
             </div>
         </header>
 
@@ -155,12 +155,12 @@
 
         <div class="card" style="margin-top:16px;">
             <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-                <div style="font-weight:600;">Thống kê hôm nay</div>
-                <div class="badge">Tổng: {{ stats.tong }}</div>
-                <div class="badge">Chờ: {{ stats.cho }}</div>
-                <div class="badge warn">Đang: {{ stats.dang }}</div>
+                <div style="font-weight:600;">Th&#7889;ng k&#234; h&#244;m nay</div>
+                <div class="badge">T&#7893;ng: {{ stats.tong }}</div>
+                <div class="badge">Ch&#7901;: {{ stats.cho }}</div>
+                <div class="badge warn">&#272;ang: {{ stats.dang }}</div>
                 <div class="badge">Xong: {{ stats.xong }}</div>
-                <div class="badge danger">Hủy: {{ stats.huy }}</div>
+                <div class="badge danger">H&#7911;y: {{ stats.huy }}</div>
             </div>
         </div>
 
@@ -204,10 +204,10 @@
                 <div class="card">
                     <div style="font-weight:600;">{{ lich.benh_nhan.ho_ten }}</div>
                     <div class="meta">
-                        <span>Ngày {{ lich.ngay_kham|date:"d/m/Y" }}</span>
+                        <span>Ng&#224;y {{ lich.ngay_kham|date:"d/m/Y" }}</span>
                         <span>
-                            Giờ {{ lich.gio_kham|time:"H\hi" }}
-                            ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                            Gi&#7901; {{ lich.gio_kham|time:"H\hi" }}
+                            ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
                         </span>
                         <span>{{ lich.ca_label }}</span>
                         <span>Khoa: {{ lich.bac_si.khoa.ten }}</span>
@@ -215,39 +215,42 @@
                     <div class="meta">Tr&#7841;ng th&#225;i: <strong>{{ lich.get_trang_thai_display }}</strong></div>
                     <div>
                         {% if lich.trang_thai == "cho" %}
-                            <span class="badge">Chờ khám</span>
+                            <span class="badge">Ch&#7901; kh&#225;m</span>
                         {% elif lich.trang_thai == "dang" %}
-                            <span class="badge warn">Đang khám</span>
+                            <span class="badge warn">&#272;ang kh&#225;m</span>
                         {% elif lich.trang_thai == "xong" %}
-                            <span class="badge">Đã xong</span>
+                            <span class="badge">&#272;&#227; xong</span>
                         {% else %}
-                            <span class="badge danger">Đã hủy</span>
+                            <span class="badge danger">&#272;&#227; h&#7911;y</span>
                         {% endif %}
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         {% if lich.trang_thai == "cho" %}
-                            <a class="btn ghost" href="{% url 'start_exam' lich.id %}">Bắt đầu khám</a>
+                            <form method="post" action="{% url 'start_exam' lich.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <button class="btn ghost" type="submit">B&#7855;t &#273;&#7847;u kh&#225;m</button>
+                            </form>
                         {% endif %}
                         {% if lich.trang_thai != "huy" and lich.trang_thai != "xong" %}
                         <div>
-                            <a class="btn primary" href="{% url 'doctor_exam' lich.id %}">Khám bệnh</a>
+                            <a class="btn primary" href="{% url 'doctor_exam' lich.id %}">Kh&#225;m b&#7879;nh</a>
                         </div>
                         {% endif %}
                         {% if lich.phieu_kham_obj %}
                         <div>
-                            <a class="btn ghost" href="{% url 'phieu_kham_detail' lich.phieu_kham_obj.id %}">Xem phiếu khám</a>
+                            <a class="btn ghost" href="{% url 'phieu_kham_detail' lich.phieu_kham_obj.id %}">Xem phi&#7871;u kh&#225;m</a>
                         </div>
                         <div>
-                            <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' lich.phieu_kham_obj.id %}">Sửa phiếu khám</a>
+                            <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' lich.phieu_kham_obj.id %}">S&#7917;a phi&#7871;u kh&#225;m</a>
                         </div>
                         {% endif %}
                     </div>
                     <div>
-                        <a class="btn ghost" href="{% url 'bac_si_patient_detail' lich.benh_nhan.id %}">Hồ sơ bệnh nhân</a>
+                        <a class="btn ghost" href="{% url 'bac_si_patient_detail' lich.benh_nhan.id %}">H&#7891; s&#417; b&#7879;nh nh&#226;n</a>
                     </div>
                 </div>
             {% empty %}
-                <div class="card">Chưa có lịch khám nào.</div>
+                <div class="card">Ch&#432;a c&#243; l&#7883;ch kh&#225;m n&#224;o.</div>
             {% endfor %}
         </div>
     </div>

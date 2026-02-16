@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Lịch sử khám</title>
+    <title>L&#7883;ch s&#7917; kh&#225;m</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -149,36 +149,36 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Lịch sử khám</h1>
-                <span>{{ benh_nhan.ho_ten }} · {{ benh_nhan.so_dien_thoai }}</span>
+                <h1>L&#7883;ch s&#7917; kh&#225;m</h1>
+                <span>{{ benh_nhan.ho_ten }} &#183; {{ benh_nhan.so_dien_thoai }}</span>
             </div>
-            <a class="btn ghost" href="{% url 'home' %}">← Trang chủ</a>
+            <a class="btn ghost" href="{% url 'home' %}">&#8592; Trang ch&#7911;</a>
         </header>
 
         {% if lich_su %}
             <div class="grid">
                 {% for item in lich_su %}
                     <div class="card">
-                        <h3>{{ item.bac_si.ho_ten|default:"Bác sĩ" }}</h3>
-                        <p class="meta"><strong>Ngày khám:</strong> {{ item.ngay_kham|date:"d/m/Y" }}</p>
-                        <p class="meta"><strong>Bệnh viện:</strong> {{ item.benh_vien.ten|default:"—" }}</p>
-                        <span class="badge">Đã khám</span>
+                        <h3>{{ item.bac_si.ho_ten|default:"B&#225;c s&#297;" }}</h3>
+                        <p class="meta"><strong>Ng&#224;y kh&#225;m:</strong> {{ item.ngay_kham|date:"d/m/Y" }}</p>
+                        <p class="meta"><strong>B&#7879;nh vi&#7879;n:</strong> {{ item.benh_vien.ten|default:"&#8212;" }}</p>
+                        <span class="badge">&#272;&#227; kh&#225;m</span>
 
                         <div class="section">
-                            <div><span class="label">Triệu chứng:</span> {{ item.trieu_chung }}</div>
-                            <div><span class="label">Chẩn đoán:</span> {{ item.chan_doan }}</div>
-                            <div><span class="label">Hướng điều trị:</span> {{ item.huong_dieu_tri }}</div>
+                            <div><span class="label">Tri&#7879;u ch&#7913;ng:</span> {{ item.trieu_chung }}</div>
+                            <div><span class="label">Ch&#7849;n &#273;o&#225;n:</span> {{ item.chan_doan }}</div>
+                            <div><span class="label">H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;:</span> {{ item.huong_dieu_tri }}</div>
                         </div>
                         {% if item.phieu_kham %}
                             <div class="section">
-                                <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}">Xem phiếu khám</a>
+                                <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}">Xem phi&#7871;u kh&#225;m</a>
                             </div>
                         {% endif %}
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty">Bạn chưa có lịch sử khám.</div>
+            <div class="empty">B&#7841;n ch&#432;a c&#243; l&#7883;ch s&#7917; kh&#225;m.</div>
         {% endif %}
     </div>
 </body>

@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Sửa phiếu khám</title>
+    <title>S&#7917;a phi&#7871;u kh&#225;m</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -16,9 +16,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -96,34 +94,34 @@
 <body>
     <div class="page">
         <div class="card">
-            <h2 style="margin-top:0;">Sửa phiếu khám</h2>
+            <h2 style="margin-top:0;">S&#7917;a phi&#7871;u kh&#225;m</h2>
             <p style="color:var(--muted);">
-                Bệnh nhân: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> —
-                Ngày {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }} lúc {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
-                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                B&#7879;nh nh&#226;n: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> &#8212;
+                Ng&#224;y {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }} l&#250;c {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
+                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
             </p>
 
             <form method="post">
                 {% csrf_token %}
 
                 <div class="field">
-                    <label>Triệu chứng</label>
+                    <label>Tri&#7879;u ch&#7913;ng</label>
                     <textarea name="trieu_chung" required>{{ phieu.trieu_chung }}</textarea>
                 </div>
 
                 <div class="field">
-                    <label>Chẩn đoán</label>
+                    <label>Ch&#7849;n &#273;o&#225;n</label>
                     <textarea name="chan_doan" required>{{ phieu.chan_doan }}</textarea>
                 </div>
 
                 <div class="field">
-                    <label>Hướng điều trị</label>
+                    <label>H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</label>
                     <textarea name="huong_dieu_tri" required>{{ phieu.huong_dieu_tri }}</textarea>
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn primary" type="submit">Lưu thay đổi</button>
-                    <a class="btn ghost" href="{% url 'phieu_kham_detail' phieu.id %}">Quay lại</a>
+                    <button class="btn primary" type="submit">L&#432;u thay &#273;&#7893;i</button>
+                    <a class="btn ghost" href="{% url 'phieu_kham_detail' phieu.id %}">Quay l&#7841;i</a>
                 </div>
             </form>
         </div>

@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký</title>
+    <title>&#272;&#259;ng k&#253;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -142,8 +142,8 @@
 </head>
 <body>
     <div class="card">
-        <h2>Đăng ký</h2>
-        <p class="subtitle">Tạo tài khoản bằng số điện thoại</p>
+        <h2>&#272;&#259;ng k&#253;</h2>
+        <p class="subtitle">T&#7841;o t&#224;i kho&#7843;n b&#7857;ng s&#7889; &#273;i&#7879;n tho&#7841;i</p>
 
         {% if messages %}
             <div class="messages">
@@ -157,30 +157,30 @@
             {% csrf_token %}
 
             <div class="field">
-                <label>Họ tên</label>
-                <input name="name" placeholder="Nhập họ tên">
+                <label>H&#7885; t&#234;n</label>
+                <input name="name" placeholder="Nh&#7853;p h&#7885; t&#234;n">
             </div>
 
             <div class="field">
-                <label>Số điện thoại</label>
-                <input name="username" placeholder="Nhập số điện thoại" autocomplete="tel">
+                <label>S&#7889; &#273;i&#7879;n tho&#7841;i</label>
+                <input name="username" placeholder="Nh&#7853;p s&#7889; &#273;i&#7879;n tho&#7841;i" autocomplete="tel">
             </div>
 
             <div class="field">
                 <label>Email</label>
-                <input name="email" type="email" placeholder="Nhập email" autocomplete="email">
+                <input name="email" type="email" placeholder="Nh&#7853;p email" autocomplete="email">
             </div>
 
             <div class="field">
-                <label>Mật khẩu</label>
-                <input name="password" type="password" placeholder="Tạo mật khẩu" autocomplete="new-password">
+                <label>M&#7853;t kh&#7849;u</label>
+                <input name="password" type="password" placeholder="T&#7841;o m&#7853;t kh&#7849;u" autocomplete="new-password">
             </div>
 
-            <button class="btn" type="submit">Đăng ký</button>
+            <button class="btn" type="submit">&#272;&#259;ng k&#253;</button>
         </form>
 
         <div class="footer">
-            Đã có tài khoản? <a href="/login/">Đăng nhập</a>
+            &#272;&#227; c&#243; t&#224;i kho&#7843;n? <a href="/login/">&#272;&#259;ng nh&#7853;p</a>
         </div>
     </div>
 </body>

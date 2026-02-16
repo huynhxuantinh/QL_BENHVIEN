@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Chi tiết phiếu khám</title>
+    <title>Chi ti&#7871;t phi&#7871;u kh&#225;m</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -106,71 +106,71 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Phiếu khám</h1>
-                <span>{{ benh_nhan.ho_ten }} · {{ benh_nhan.so_dien_thoai }}</span>
+                <h1>Phi&#7871;u kh&#225;m</h1>
+                <span>{{ benh_nhan.ho_ten }} &#183; {{ benh_nhan.so_dien_thoai }}</span>
             </div>
             {% if request.user.bac_si %}
-                <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' phieu.id %}">Sửa phiếu</a>
+                <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' phieu.id %}">S&#7917;a phi&#7871;u</a>
             {% endif %}
-            <a class="btn ghost" href="{% url 'medical_history' %}">← Lịch sử khám</a>
+            <a class="btn ghost" href="{% url 'medical_history' %}">&#8592; L&#7883;ch s&#7917; kh&#225;m</a>
         </header>
 
         <div class="card">
-            <p class="meta"><strong>Bệnh nhân:</strong> {{ phieu.benh_nhan.ho_ten }}</p>
-            <p class="meta"><strong>Bác sĩ:</strong> {{ phieu.lich_kham.bac_si.ho_ten }}</p>
-            <p class="meta"><strong>Bệnh viện:</strong> {{ phieu.lich_kham.bac_si.benh_vien.ten }}</p>
-            <p class="meta"><strong>Ngày khám:</strong> {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }}</p>
+            <p class="meta"><strong>B&#7879;nh nh&#226;n:</strong> {{ phieu.benh_nhan.ho_ten }}</p>
+            <p class="meta"><strong>B&#225;c s&#297;:</strong> {{ phieu.lich_kham.bac_si.ho_ten }}</p>
+            <p class="meta"><strong>B&#7879;nh vi&#7879;n:</strong> {{ phieu.lich_kham.bac_si.benh_vien.ten }}</p>
+            <p class="meta"><strong>Ng&#224;y kh&#225;m:</strong> {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }}</p>
             <p class="meta">
-                <strong>Giờ khám:</strong> {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
-                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                <strong>Gi&#7901; kh&#225;m:</strong> {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
+                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
             </p>
             <p class="meta">
-                <strong>Ngày lập:</strong> {{ phieu.ngay_lap|date:"d/m/Y H\hi" }}
-                ({% with h=phieu.ngay_lap|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                <strong>Ng&#224;y l&#7853;p:</strong> {{ phieu.ngay_lap|date:"d/m/Y H\hi" }}
+                ({% with h=phieu.ngay_lap|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
             </p>
         </div>
 
         <div class="card">
-            <h2 class="section-title">Triệu chứng</h2>
+            <h2 class="section-title">Tri&#7879;u ch&#7913;ng</h2>
             <div>{{ phieu.trieu_chung }}</div>
         </div>
 
         <div class="card">
-            <h2 class="section-title">Chẩn đoán</h2>
+            <h2 class="section-title">Ch&#7849;n &#273;o&#225;n</h2>
             <div>{{ phieu.chan_doan }}</div>
         </div>
 
         <div class="card">
-            <h2 class="section-title">Hướng điều trị</h2>
+            <h2 class="section-title">H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</h2>
             <div>{{ phieu.huong_dieu_tri }}</div>
         </div>
 
         <div class="card">
-            <h2 class="section-title">Lịch sử chỉnh sửa</h2>
+            <h2 class="section-title">L&#7883;ch s&#7917; ch&#7881;nh s&#7917;a</h2>
             {% if edit_logs %}
                 {% for log in edit_logs %}
                     <div style="margin-bottom:12px;">
                         <div class="meta">
                             {{ log.thoi_gian|date:"d/m/Y H\hi" }}
-                            ({% with h=log.thoi_gian|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %}) ·
-                            {% if log.nguoi_thuc_hien %}{{ log.nguoi_thuc_hien.username }}{% else %}Hệ thống{% endif %}
+                            ({% with h=log.thoi_gian|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %}) &#183;
+                            {% if log.nguoi_thuc_hien %}{{ log.nguoi_thuc_hien.username }}{% else %}H&#7879; th&#7889;ng{% endif %}
                         </div>
-                        <div><strong>Triệu chứng:</strong></div>
-                        <div class="meta">Cũ: {{ log.du_lieu_cu.trieu_chung }}</div>
-                        <div class="meta">Mới: {{ log.du_lieu_moi.trieu_chung }}</div>
-                        <div><strong>Chẩn đoán:</strong></div>
-                        <div class="meta">Cũ: {{ log.du_lieu_cu.chan_doan }}</div>
-                        <div class="meta">Mới: {{ log.du_lieu_moi.chan_doan }}</div>
-                        <div><strong>Hướng điều trị:</strong></div>
-                        <div class="meta">Cũ: {{ log.du_lieu_cu.huong_dieu_tri }}</div>
-                        <div class="meta">Mới: {{ log.du_lieu_moi.huong_dieu_tri }}</div>
+                        <div><strong>Tri&#7879;u ch&#7913;ng:</strong></div>
+                        <div class="meta">C&#361;: {{ log.du_lieu_cu.trieu_chung }}</div>
+                        <div class="meta">M&#7899;i: {{ log.du_lieu_moi.trieu_chung }}</div>
+                        <div><strong>Ch&#7849;n &#273;o&#225;n:</strong></div>
+                        <div class="meta">C&#361;: {{ log.du_lieu_cu.chan_doan }}</div>
+                        <div class="meta">M&#7899;i: {{ log.du_lieu_moi.chan_doan }}</div>
+                        <div><strong>H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;:</strong></div>
+                        <div class="meta">C&#361;: {{ log.du_lieu_cu.huong_dieu_tri }}</div>
+                        <div class="meta">M&#7899;i: {{ log.du_lieu_moi.huong_dieu_tri }}</div>
                     </div>
                     {% if not forloop.last %}
                         <hr style="border:none; border-top:1px solid rgba(31,42,43,0.12); margin:14px 0;">
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <div class="meta">Chưa có chỉnh sửa nào.</div>
+                <div class="meta">Ch&#432;a c&#243; ch&#7881;nh s&#7917;a n&#224;o.</div>
             {% endif %}
         </div>
     </div>

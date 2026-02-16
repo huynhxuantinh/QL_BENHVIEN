@@ -26,6 +26,6 @@ class DatLichForm(forms.ModelForm):
         }
 
     bac_si = forms.ModelChoiceField(
-        queryset=BacSi.objects.all(),
+        queryset=BacSi.objects.none(),
         widget=forms.Select(attrs={'class': 'form-control'})
     )

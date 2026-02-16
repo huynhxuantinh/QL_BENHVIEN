@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hồ sơ của tôi</title>
+    <title>H&#7891; s&#417; c&#7911;a t&#244;i</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -223,10 +223,10 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Hồ sơ của tôi</h1>
-                <span>Cập nhật thông tin cá nhân và bảo hiểm y tế</span>
+                <h1>H&#7891; s&#417; c&#7911;a t&#244;i</h1>
+                <span>C&#7853;p nh&#7853;t th&#244;ng tin c&#225; nh&#226;n v&#224; b&#7843;o hi&#7875;m y t&#7871;</span>
             </div>
-            <a class="btn ghost" href="/">← Trang chủ</a>
+            <a class="btn ghost" href="/">&#8592; Trang ch&#7911;</a>
         </header>
 
         {% if messages %}
@@ -237,7 +237,7 @@
             </div>
         {% endif %}
 
-        <h2 class="section-title">Thông tin cá nhân</h2>
+        <h2 class="section-title">Th&#244;ng tin c&#225; nh&#226;n</h2>
 
         <form method="post" class="card">
             {% csrf_token %}
@@ -245,90 +245,90 @@
 
             <div class="grid">
                 <div class="field">
-                    <label>Họ tên</label>
+                    <label>H&#7885; t&#234;n</label>
                     <input type="text" name="ho_ten" value="{{ bn.ho_ten }}">
                 </div>
 
                 <div class="field">
-                    <label>Số điện thoại</label>
+                    <label>S&#7889; &#273;i&#7879;n tho&#7841;i</label>
                     <input type="text" name="so_dien_thoai" value="{{ bn.so_dien_thoai }}">
                 </div>
 
                 <div class="field">
-                    <label>Ngày sinh</label>
+                    <label>Ng&#224;y sinh</label>
                     <input type="date" name="ngay_sinh" value="{{ bn.ngay_sinh|date:'Y-m-d' }}">
                 </div>
 
                 <div class="field">
-                    <label>Giới tính</label>
+                    <label>Gi&#7899;i t&#237;nh</label>
                     <select name="gioi_tinh">
                         <option value="nam" {% if bn.gioi_tinh == "nam" %}selected{% endif %}>Nam</option>
-                        <option value="nu" {% if bn.gioi_tinh == "nu" %}selected{% endif %}>Nữ</option>
-                        <option value="khac" {% if bn.gioi_tinh == "khac" %}selected{% endif %}>Khác</option>
+                        <option value="nu" {% if bn.gioi_tinh == "nu" %}selected{% endif %}>N&#7919;</option>
+                        <option value="khac" {% if bn.gioi_tinh == "khac" %}selected{% endif %}>Kh&#225;c</option>
                     </select>
                 </div>
 
                 <div class="field">
-                    <label>Địa chỉ</label>
+                    <label>&#272;&#7883;a ch&#7881;</label>
                     <textarea name="dia_chi">{{ bn.dia_chi }}</textarea>
                 </div>
             </div>
 
             <hr class="divider">
 
-            <h3>Bảo hiểm y tế</h3>
-            <p class="subtle">Điền thông tin BHYT nếu bạn có.</p>
+            <h3>B&#7843;o hi&#7875;m y t&#7871;</h3>
+            <p class="subtle">&#272;i&#7873;n th&#244;ng tin BHYT n&#7871;u b&#7841;n c&#243;.</p>
 
             <div class="grid">
                 <div class="field">
-                    <label>Mã BHYT</label>
+                    <label>M&#227; BHYT</label>
                     <input type="text" name="ma_bhyt"
                            value="{% if bn.bhyt %}{{ bn.bhyt.ma_bhyt }}{% endif %}">
                 </div>
 
                 <div class="field">
-                    <label>Ngày cấp</label>
+                    <label>Ng&#224;y c&#7845;p</label>
                     <input type="date" name="ngay_cap"
                            value="{% if bn.bhyt %}{{ bn.bhyt.ngay_cap|date:'Y-m-d' }}{% endif %}">
                 </div>
 
                 <div class="field">
-                    <label>Ngày hết hạn</label>
+                    <label>Ng&#224;y h&#7871;t h&#7841;n</label>
                     <input type="date" name="ngay_het_han"
                            value="{% if bn.bhyt %}{{ bn.bhyt.ngay_het_han|date:'Y-m-d' }}{% endif %}">
                 </div>
             </div>
 
             <div class="actions">
-                <button class="btn primary" type="submit">Lưu thay đổi</button>
-                <a class="btn ghost" href="/">Quay lại trang chủ</a>
+                <button class="btn primary" type="submit">L&#432;u thay &#273;&#7893;i</button>
+                <a class="btn ghost" href="/">Quay l&#7841;i trang ch&#7911;</a>
             </div>
         </form>
 
-        <h2 class="section-title">Đổi mật khẩu</h2>
+        <h2 class="section-title">&#272;&#7893;i m&#7853;t kh&#7849;u</h2>
         <form method="post" class="card">
             {% csrf_token %}
             <input type="hidden" name="action" value="change_password">
 
             <div class="grid">
                 <div class="field">
-                    <label>Mật khẩu hiện tại</label>
+                    <label>M&#7853;t kh&#7849;u hi&#7879;n t&#7841;i</label>
                     <input type="password" name="current_password" autocomplete="current-password">
                 </div>
 
                 <div class="field">
-                    <label>Mật khẩu mới</label>
+                    <label>M&#7853;t kh&#7849;u m&#7899;i</label>
                     <input type="password" name="new_password" autocomplete="new-password">
                 </div>
 
                 <div class="field">
-                    <label>Xác nhận mật khẩu mới</label>
+                    <label>X&#225;c nh&#7853;n m&#7853;t kh&#7849;u m&#7899;i</label>
                     <input type="password" name="confirm_password" autocomplete="new-password">
                 </div>
             </div>
 
             <div class="actions">
-                <button class="btn primary" type="submit">Đổi mật khẩu</button>
+                <button class="btn primary" type="submit">&#272;&#7893;i m&#7853;t kh&#7849;u</button>
             </div>
         </form>
     </div>

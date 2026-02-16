@@ -366,11 +366,16 @@ class LichKham(models.Model):
             models.Index(fields=['bac_si', 'ngay_kham', 'trang_thai']),
             models.Index(fields=['benh_nhan', 'ngay_kham']),
         ]
-        unique_together = [['bac_si', 'ngay_kham', 'gio_kham']]
         constraints = [
             models.UniqueConstraint(
                 fields=["benh_nhan", "ngay_kham", "gio_kham"],
-                name="lichkham_benhnhan_ngay_gio_unique",
+                condition=~models.Q(trang_thai="huy"),
+                name="lichkham_benhnhan_ngay_gio_active_unique",
+            ),
+            models.UniqueConstraint(
+                fields=["bac_si", "ngay_kham", "gio_kham"],
+                condition=~models.Q(trang_thai="huy"),
+                name="lichkham_bacsi_ngay_gio_active_unique",
             ),
         ]
         ordering = ['-ngay_kham', '-gio_kham']
@@ -422,7 +427,7 @@ class LichKham(models.Model):
             existing = LichKham.objects.filter(
                 bac_si=self.bac_si,
                 ngay_kham=self.ngay_kham,
-            )
+            ).exclude(trang_thai="huy")
             if self.pk:
                 existing = existing.exclude(pk=self.pk)
             if existing.exists():

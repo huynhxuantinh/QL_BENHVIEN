@@ -7,16 +7,17 @@
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
         :root {
-            --bg-1: #f6f3ee;
-            --bg-2: #eef4f0;
-            --ink: #1f2a2b;
-            --muted: #5b6b6a;
-            --primary: #0b6b5b;
-            --primary-2: #0f8a74;
-            --accent: #f2c57c;
+            --bg-1: #f5f7f4;
+            --bg-2: #edf3ef;
+            --ink: #1f2c2a;
+            --muted: #566563;
+            --primary: #0e6f60;
+            --primary-2: #13806f;
             --card: #ffffff;
-            --ring: rgba(11, 107, 91, 0.18);
-            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+            --ring: rgba(14, 111, 96, 0.2);
+            --border: rgba(18, 46, 42, 0.12);
+            --shadow-soft: 0 10px 28px rgba(16, 35, 31, 0.08);
+            --shadow-card: 0 14px 30px rgba(16, 35, 31, 0.1);
         }
 
         * { box-sizing: border-box; }
@@ -26,19 +27,22 @@
             font-family: "Work Sans", "Segoe UI", sans-serif;
             color: var(--ink);
             background:
-                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
-                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                radial-gradient(1200px 600px at 95% -10%, rgba(19, 128, 111, 0.13), transparent 58%),
+                radial-gradient(900px 500px at -10% 15%, rgba(110, 157, 143, 0.13), transparent 58%),
                 linear-gradient(120deg, var(--bg-1), var(--bg-2));
             min-height: 100vh;
         }
 
-        .page { max-width: 1160px; margin: 0 auto; padding: 28px 20px 60px; }
+        .page { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
 
         .topbar {
             display: flex; align-items: center; justify-content: space-between; gap: 16px;
-            padding: 18px 22px; background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(31, 42, 43, 0.08); border-radius: 18px;
-            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06); backdrop-filter: blur(10px);
+            padding: 18px 22px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(10px);
         }
 
         .brand { display: flex; flex-direction: column; gap: 4px; }
@@ -55,54 +59,133 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
             white-space: nowrap;
         }
-        .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25); }
+        .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 10px 18px rgba(14, 111, 96, 0.24); }
         .btn.primary:hover { background: var(--primary-2); transform: translateY(-1px); }
-        .btn.ghost { color: var(--primary); border-color: rgba(11, 107, 91, 0.3); background: rgba(255, 255, 255, 0.9); }
-        .btn.ghost:hover { box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12); transform: translateY(-1px); }
+        .btn.ghost { color: var(--primary); border-color: rgba(14, 111, 96, 0.35); background: rgba(255, 255, 255, 0.95); }
+        .btn.ghost:hover { box-shadow: 0 10px 16px rgba(14, 111, 96, 0.12); transform: translateY(-1px); }
 
-        .notif-badge { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(242, 197, 124, 0.35); color: #8a5a10; font-size: 12px; font-weight: 700; }
+        .notif-badge { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(255, 205, 121, 0.35); color: #7b5310; font-size: 12px; font-weight: 700; }
 
-        .hero { margin: 28px 0 18px; display: grid; gap: 18px; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); align-items: center; }
-        .hero h2 { font-family: "Playfair Display", serif; font-size: 36px; margin: 0 0 10px; }
-        .hero p { margin: 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
+        .hero {
+            margin: 22px 0 16px;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+            align-items: stretch;
+        }
+        .hero h2 { font-family: "Playfair Display", serif; font-size: 34px; margin: 0 0 8px; line-height: 1.18; }
+        .hero p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 780px; }
 
-        .hero-card { background: var(--card); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); border: 1px solid rgba(11, 107, 91, 0.12); }
+        .hero-card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: var(--shadow-soft); border: 1px solid var(--border); }
         .hero-card h3 { margin: 0 0 12px; font-size: 18px; }
         .hero-card .meta { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
 
         .card {
-            background: var(--card); padding: 18px; border-radius: 18px; border: 1px solid rgba(31, 42, 43, 0.08);
+            background: var(--card);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
             text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; animation: fadeIn 0.6s ease both;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border 0.18s ease;
+            animation: fadeIn 0.45s ease both;
         }
-        .card:hover { transform: translateY(-3px); border-color: rgba(11, 107, 91, 0.3); box-shadow: 0 18px 30px rgba(15, 30, 28, 0.14); }
+        .card:hover { transform: translateY(-3px); border-color: rgba(14, 111, 96, 0.3); box-shadow: var(--shadow-card); }
         .card-title { font-weight: 600; font-size: 17px; }
         .card-meta { color: var(--muted); font-size: 14px; }
 
         .card-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(11, 107, 91, 0.1); color: var(--primary); font-size: 12px; font-weight: 600; }
-        .badge.warn { background: rgba(242, 197, 124, 0.28); color: #8a5a10; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(14, 111, 96, 0.1); color: var(--primary); font-size: 12px; font-weight: 600; }
+        .badge.warn { background: rgba(255, 205, 121, 0.28); color: #7b5310; }
         .card-cta { margin-top: auto; font-weight: 600; color: var(--primary); font-size: 14px; }
 
-        .empty-state { background: rgba(255, 255, 255, 0.8); border-radius: 16px; padding: 22px; text-align: center; color: var(--muted); border: 1px dashed rgba(31, 42, 43, 0.2); }
+        .empty-state {
+            background: rgba(255, 255, 255, 0.86);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed rgba(31, 42, 43, 0.2);
+        }
 
-        .tools { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
-        .tool-card { background: var(--card); padding: 18px; border-radius: 18px; border: 1px solid rgba(31, 42, 43, 0.08); box-shadow: var(--shadow); }
-        .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-        .tool-field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
-        .tool-field input, .tool-field select { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(31, 42, 43, 0.18); font-family: inherit; font-size: 14px; }
+        .tools {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.8fr);
+            gap: 14px;
+            align-items: stretch;
+        }
+        .tool-card {
+            background: var(--card);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-soft);
+        }
+        .tool-card h3 {
+            margin: 0 0 12px;
+            font-size: 18px;
+            font-family: "Playfair Display", serif;
+        }
+        .tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .tool-field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+        .tool-field label { font-weight: 600; color: #23403b; }
+        .tool-field input, .tool-field select {
+            padding: 9px 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(31, 42, 43, 0.2);
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+        }
+        .tool-field input:focus, .tool-field select:focus {
+            outline: 2px solid var(--ring);
+            border-color: rgba(14, 111, 96, 0.4);
+        }
 
-        .map-box { border-radius: 18px; overflow: hidden; border: 1px solid rgba(31, 42, 43, 0.08); min-height: 320px; }
-        #home-map { width: 100%; height: 100%; min-height: 320px; }
+        .map-box {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            min-height: 560px;
+            padding: 0;
+        }
+        #home-map { width: 100%; height: 100%; min-height: 560px; }
 
-        .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(11, 107, 91, 0.1); color: var(--primary); }
-        .status.closed { background: rgba(180, 52, 52, 0.15); color: #9d2c2c; }
-        .status.warn { background: rgba(242, 197, 124, 0.28); color: #8a5a10; }
+        .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(14, 111, 96, 0.1); color: var(--primary); }
+        .status.closed { background: rgba(182, 55, 55, 0.14); color: #9d2c2c; }
+        .status.warn { background: rgba(255, 205, 121, 0.26); color: #7b5310; }
+
+        .pagination { margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .page-link {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 38px; height: 38px; padding: 0 12px;
+            border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 14px;
+            border: 1px solid rgba(14, 111, 96, 0.32); color: var(--primary); background: rgba(255, 255, 255, 0.95);
+        }
+        .page-link.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-link.disabled { opacity: 0.4; pointer-events: none; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .tools { grid-template-columns: 1fr; } }
+        @media (max-width: 1080px) {
+            .hero { grid-template-columns: 1fr; }
+            .tools { grid-template-columns: 1fr; }
+            #home-map, .map-box { min-height: 460px; }
+        }
+        @media (max-width: 700px) {
+            .page { padding: 14px 10px 26px; }
+            .topbar { padding: 14px; }
+            .hero h2 { font-size: 29px; }
+            .tool-grid { grid-template-columns: 1fr; }
+            .btn { width: 100%; }
+            .user-area { width: 100%; justify-content: flex-start; }
+        }
     </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
@@ -158,7 +241,7 @@
                 <h3>T&#7893;ng quan nhanh</h3>
                 <div class="meta">
                     <span>S&#7889; l&#432;&#7907;ng hi&#7879;n c&#243;</span>
-                    <strong>{{ bvs|length }}</strong>
+                    <strong>{{ total_bvs }}</strong>
                 </div>
             </div>
         </section>
@@ -193,6 +276,10 @@
                 <h3 style="margin: 0 0 12px;">T&#236;m b&#7879;nh vi&#7879;n g&#7847;n b&#7841;n</h3>
                 <form method="get" id="geo-form">
                     <div class="tool-grid">
+                        <div class="tool-field">
+                            <label for="q">T&#236;m nhanh</label>
+                            <input id="q" name="q" type="text" placeholder="T&#234;n, qu&#7853;n ho&#7863;c &#273;&#7883;a ch&#7881;" value="{{ q|default:'' }}">
+                        </div>
                         <div class="tool-field">
                             <label for="radius">B&#225;n k&#237;nh (km)</label>
                             <input id="radius" name="radius" type="number" min="1" step="1" value="{{ radius_km|default:5 }}">
@@ -253,7 +340,8 @@
                         </div>
                     </div>
                     <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="btn ghost" id="locate-btn">L&#7845;y v&#7883; tr&#237;</button>
+                        <button class="btn ghost" id="locate-btn" type="button">L&#7845;y v&#7883; tr&#237;</button>
+                        <a class="btn ghost" href="{% url 'home' %}">X&#243;a b&#7897; l&#7885;c</a>
                         <button class="btn primary" type="submit">&#193;p d&#7909;ng l&#7885;c</button>
                     </div>
                 </form>
@@ -297,17 +385,35 @@
                         {% if bv.distance_km %}
                             <div class="card-meta">C&#225;ch b&#7841;n kho&#7843;ng {{ bv.distance_km }} km</div>
                         {% endif %}
-                        {% if bv.map_lat and bv.map_lon %}
-                            <div class="card-meta">
-                                <a class="btn ghost" href="https://www.google.com/maps/dir/?api=1&destination={{ bv.map_lat }},{{ bv.map_lon }}{% if user_lat and user_lon %}&origin={{ user_lat }},{{ user_lon }}{% endif %}">Ch&#7881; &#273;&#432;&#7901;ng</a>
-                            </div>
-                        {% endif %}
-                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi ti&#7871;t</a>
+                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi tiết &amp; chỉ đường</a>
                     </div>
                 {% empty %}
                     <div class="empty-state">Ch&#432;a c&#243; b&#7879;nh vi&#7879;n n&#224;o</div>
                 {% endfor %}
             </div>
+            {% if page_obj and page_obj.paginator.num_pages > 1 %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a class="page-link" href="?{% if query_string_without_page %}{{ query_string_without_page }}&{% endif %}page={{ page_obj.previous_page_number }}">Tr&#432;&#7899;c</a>
+                    {% else %}
+                        <span class="page-link disabled">Tr&#432;&#7899;c</span>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if num == page_obj.number %}
+                            <span class="page-link active">{{ num }}</span>
+                        {% else %}
+                            <a class="page-link" href="?{% if query_string_without_page %}{{ query_string_without_page }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a class="page-link" href="?{% if query_string_without_page %}{{ query_string_without_page }}&{% endif %}page={{ page_obj.next_page_number }}">Sau</a>
+                    {% else %}
+                        <span class="page-link disabled">Sau</span>
+                    {% endif %}
+                </div>
+            {% endif %}
         </section>
     </div>
 
@@ -319,6 +425,7 @@
             maxZoom: 19,
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
+        let userMarker = null;
 
         const mapData = JSON.parse(document.getElementById("map-data").textContent || "[]");
         mapData.forEach(item => {
@@ -330,20 +437,33 @@
             marker.bindPopup(label);
         });
 
-        const userLat = "{{ user_lat|default:'' }}";
-        const userLon = "{{ user_lon|default:'' }}";
-        if (userLat && userLon) {
-            const uLat = parseFloat(userLat);
-            const uLon = parseFloat(userLon);
-            if (Number.isFinite(uLat) && Number.isFinite(uLon)) {
-                const userMarker = L.circleMarker([uLat, uLon], {
+        function setUserLocation(lat, lon, focusMap = false) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return;
+            }
+            if (userMarker) {
+                userMarker.setLatLng([lat, lon]);
+            } else {
+                userMarker = L.circleMarker([lat, lon], {
                     radius: 6,
                     color: "#0b6b5b",
                     fillColor: "#0b6b5b",
                     fillOpacity: 0.8
                 }).addTo(map);
                 userMarker.bindPopup("V&#7883; tr&#237; c&#7911;a b&#7841;n");
-                map.setView([uLat, uLon], 12);
+            }
+            if (focusMap) {
+                map.setView([lat, lon], 12);
+            }
+        }
+
+        const userLat = "{{ user_lat|default:'' }}";
+        const userLon = "{{ user_lon|default:'' }}";
+        if (userLat && userLon) {
+            const uLat = parseFloat(userLat);
+            const uLon = parseFloat(userLon);
+            if (Number.isFinite(uLat) && Number.isFinite(uLon)) {
+                setUserLocation(uLat, uLon, true);
             }
         }
 
@@ -357,6 +477,7 @@
             navigator.geolocation.getCurrentPosition((pos) => {
                 document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
                 document.getElementById("lon").value = pos.coords.longitude.toFixed(6);
+                setUserLocation(pos.coords.latitude, pos.coords.longitude, true);
             }, () => {
                 alert("Kh&#244;ng th&#7875; l&#7845;y v&#7883; tr&#237;. Vui l&#242;ng cho ph&#233;p truy c&#7853;p v&#7883; tr&#237;.");
             });

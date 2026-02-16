@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Lịch làm việc bác sĩ</title>
+    <title>L&#7883;ch l&#224;m vi&#7879;c b&#225;c s&#297;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -16,9 +16,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -120,10 +118,10 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Lịch làm việc</h1>
-                <span>Thiết lập giờ làm việc theo từng ngày</span>
+                <h1>L&#7883;ch l&#224;m vi&#7879;c</h1>
+                <span>Thi&#7871;t l&#7853;p gi&#7901; l&#224;m vi&#7879;c theo t&#7915;ng ng&#224;y</span>
             </div>
-            <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay lại</a>
+            <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay l&#7841;i</a>
         </header>
 
         {% if messages %}
@@ -139,10 +137,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Thứ</th>
-                        <th>Nghỉ</th>
-                        <th>Giờ bắt đầu</th>
-                        <th>Giờ kết thúc</th>
+                        <th>Th&#7913;</th>
+                        <th>Ngh&#7881;</th>
+                        <th>Gi&#7901; b&#7855;t &#273;&#7847;u</th>
+                        <th>Gi&#7901; k&#7871;t th&#250;c</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -164,8 +162,8 @@
             </table>
 
             <div style="margin-top:16px; display:flex; gap:10px;">
-                <button class="btn primary" type="submit">Lưu lịch làm việc</button>
-                <a class="btn ghost" href="{% url 'bac_si_home' %}">Hủy</a>
+                <button class="btn primary" type="submit">L&#432;u l&#7883;ch l&#224;m vi&#7879;c</button>
+                <a class="btn ghost" href="{% url 'bac_si_home' %}">H&#7911;y</a>
             </div>
         </form>
     </div>

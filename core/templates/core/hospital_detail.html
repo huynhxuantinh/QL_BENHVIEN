@@ -7,61 +7,71 @@
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
         :root {
-            --bg-1: #f6f3ee;
-            --bg-2: #eef4f0;
-            --ink: #1f2a2b;
-            --muted: #5b6b6a;
-            --primary: #0b6b5b;
-            --primary-2: #0f8a74;
-            --accent: #f2c57c;
+            --bg-1: #f5f7f4;
+            --bg-2: #edf3ef;
+            --ink: #1f2c2a;
+            --muted: #586664;
+            --primary: #0e6f60;
+            --primary-2: #13806f;
             --card: #ffffff;
-            --ring: rgba(11, 107, 91, 0.18);
-            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
+            --ring: rgba(14, 111, 96, 0.2);
+            --border: rgba(18, 46, 42, 0.12);
+            --shadow-soft: 0 10px 26px rgba(16, 35, 31, 0.08);
+            --shadow-card: 0 14px 30px rgba(16, 35, 31, 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
             font-family: "Work Sans", "Segoe UI", sans-serif;
             color: var(--ink);
             background:
-                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
-                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
+                radial-gradient(1200px 600px at 95% -10%, rgba(19, 128, 111, 0.13), transparent 58%),
+                radial-gradient(900px 500px at -10% 15%, rgba(110, 157, 143, 0.13), transparent 58%),
                 linear-gradient(120deg, var(--bg-1), var(--bg-2));
             min-height: 100vh;
         }
 
         .page {
-            max-width: 1100px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 28px 20px 60px;
+            padding: 24px 20px 44px;
         }
 
         .topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
-            padding: 18px 22px;
-            background: rgba(255, 255, 255, 0.7);
-            border: 1px solid rgba(31, 42, 43, 0.08);
+            gap: 12px;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid var(--border);
             border-radius: 18px;
-            box-shadow: 0 10px 25px rgba(17, 28, 27, 0.06);
+            box-shadow: var(--shadow-soft);
             backdrop-filter: blur(10px);
         }
 
         .brand h1 {
-            font-family: "Playfair Display", serif;
-            font-size: 26px;
             margin: 0;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
+            line-height: 1.15;
         }
 
         .brand span {
-            font-size: 13px;
+            display: block;
+            margin-top: 6px;
             color: var(--muted);
+            font-size: 14px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .btn {
@@ -74,14 +84,15 @@
             font-weight: 600;
             font-size: 14px;
             border: 1px solid transparent;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .btn.primary {
             background: var(--primary);
             color: #fff;
-            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
+            box-shadow: 0 10px 18px rgba(14, 111, 96, 0.24);
         }
 
         .btn.primary:hover {
@@ -91,41 +102,82 @@
 
         .btn.ghost {
             color: var(--primary);
-            border-color: rgba(11, 107, 91, 0.3);
-            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(14, 111, 96, 0.35);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .btn.ghost:hover {
-            box-shadow: 0 10px 16px rgba(11, 107, 91, 0.12);
+            box-shadow: 0 10px 16px rgba(14, 111, 96, 0.12);
             transform: translateY(-1px);
         }
 
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .hero {
+            margin-top: 14px;
             display: grid;
-            gap: 18px;
-            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-            margin-top: 22px;
+            gap: 14px;
+            grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.7fr);
+            align-items: start;
+        }
+
+        .info-col {
+            display: grid;
+            gap: 12px;
+            align-content: start;
         }
 
         .card {
             background: var(--card);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .info-card {
+            padding: 16px;
+        }
+
+        .service-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(14, 111, 96, 0.1);
+            color: var(--primary);
+        }
+
+        .status.warn {
+            background: rgba(176, 72, 72, 0.13);
+            color: #9d2c2c;
         }
 
         .meta-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
         }
 
         .meta {
-            background: rgba(11, 107, 91, 0.06);
-            border-radius: 14px;
-            padding: 12px 14px;
-            font-size: 14px;
+            background: rgba(14, 111, 96, 0.06);
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-height: 64px;
         }
 
         .meta strong {
@@ -133,64 +185,138 @@
             font-size: 12px;
             color: var(--muted);
             margin-bottom: 4px;
-        }
-
-        .section-title {
-            font-family: "Playfair Display", serif;
-            font-size: 22px;
-            margin: 24px 0 14px;
-        }
-
-        .list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 12px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .list-item {
-            background: var(--card);
-            padding: 14px 16px;
-            border-radius: 16px;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(11, 107, 91, 0.1);
-            color: var(--primary);
-            font-size: 12px;
             font-weight: 600;
         }
 
-        .map-box {
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            min-height: 320px;
+        .meta span {
+            font-size: 15px;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .map-col { min-width: 0; }
+
+        .map-card {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 500px;
+        }
+
+        .map-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 0;
+        }
+
+        .map-head h2 {
+            margin: 0;
+            font-size: 18px;
+            font-family: "Playfair Display", serif;
+        }
+
+        .map-head span {
+            font-size: 12px;
+            color: var(--muted);
         }
 
         #map {
             width: 100%;
-            height: 100%;
-            min-height: 320px;
+            min-height: 450px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .route-panel {
+            padding: 14px;
+        }
+
+        .route-panel h3 {
+            margin: 0 0 10px;
+            font-size: 17px;
+            font-family: "Playfair Display", serif;
+        }
+
+        .route-tools {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .route-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 13px;
+        }
+
+        .route-field label {
+            color: #23403b;
+            font-weight: 600;
+        }
+
+        .route-field input {
+            padding: 9px 11px;
+            border-radius: 10px;
+            border: 1px solid rgba(31, 42, 43, 0.2);
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .route-field input:focus {
+            outline: 2px solid var(--ring);
+            border-color: rgba(14, 111, 96, 0.4);
+        }
+
+        .route-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .route-status {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .content-grid {
+            margin-top: 14px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .wide {
+            grid-column: 1 / -1;
+        }
+
+        .section-card {
+            padding: 16px;
+        }
+
+        .section-title {
+            margin: 0 0 12px;
+            font-size: 22px;
+            font-family: "Playfair Display", serif;
         }
 
         .hours {
             display: grid;
-            gap: 10px;
+            gap: 9px;
         }
 
         .hours-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
             padding: 10px 12px;
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.9);
@@ -200,10 +326,84 @@
 
         .hours-item span {
             color: var(--muted);
+            text-align: right;
         }
 
-        @media (max-width: 900px) {
+        .list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 9px;
+        }
+
+        .list-item {
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(31, 42, 43, 0.08);
+            background: rgba(14, 111, 96, 0.04);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(14, 111, 96, 0.1);
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 1100px) {
             .hero {
+                grid-template-columns: 1fr;
+            }
+
+            .map-card {
+                min-height: 460px;
+            }
+
+            #map {
+                min-height: 410px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                padding: 14px 10px 28px;
+            }
+
+            .topbar {
+                padding: 14px;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .top-actions .btn {
+                width: 100%;
+            }
+
+            .brand h1 {
+                font-size: 26px;
+            }
+
+            .meta-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .route-tools {
+                grid-template-columns: 1fr;
+            }
+
+            .content-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -215,115 +415,137 @@
         crossorigin=""
     />
 </head>
-
 <body>
     <div class="page">
         <header class="topbar">
             <div class="brand">
                 <h1>{{ bv.ten }}</h1>
-                <span>Thông tin chi tiết bệnh viện</span>
+                <span>Th&#244;ng tin chi ti&#7871;t b&#7879;nh vi&#7879;n</span>
             </div>
-            <a class="btn ghost" href="{% url 'home' %}">← Trang chủ</a>
+            <div class="top-actions">
+                <a class="btn ghost" href="{% url 'home' %}">&#8592; Trang ch&#7911;</a>
+                <a class="btn primary" href="{% url 'dat_lich' bv.id %}">&#272;&#7863;t l&#7883;ch kh&#225;m</a>
+            </div>
         </header>
 
         <section class="hero">
-            <div class="card">
-                <div class="meta-grid">
-                    <div class="meta">
-                        <strong>Quận</strong>
-                        {{ bv.quan }}
+            <div class="info-col">
+                <aside class="card info-card">
+                    <div class="service-row">
+                        <span class="status">{% if bv.co_bhyt %}C&#243; BHYT{% else %}Kh&#244;ng BHYT{% endif %}</span>
+                        <span class="status {% if not bv.co_cap_cuu %}warn{% endif %}">{% if bv.co_cap_cuu %}C&#243; c&#7845;p c&#7913;u{% else %}Kh&#244;ng c&#7845;p c&#7913;u{% endif %}</span>
+                        <span class="status {% if not bv.cap_cuu_24h %}warn{% endif %}">{% if bv.cap_cuu_24h %}C&#7845;p c&#7913;u 24h{% else %}Kh&#244;ng c&#7845;p c&#7913;u 24h{% endif %}</span>
                     </div>
-                    <div class="meta">
-                        <strong>Địa chỉ</strong>
-                        {{ bv.dia_chi }}
+                    <div class="meta-grid">
+                        <div class="meta">
+                            <strong>Qu&#7853;n</strong>
+                            <span>{{ bv.quan }}</span>
+                        </div>
+                        <div class="meta">
+                            <strong>Lo&#7841;i h&#236;nh</strong>
+                            <span>{{ bv.get_loai_hinh_display }}</span>
+                        </div>
+                        <div class="meta" style="grid-column: 1 / -1;">
+                            <strong>&#272;&#7883;a ch&#7881;</strong>
+                            <span>{{ bv.dia_chi }}</span>
+                        </div>
+                        <div class="meta">
+                            <strong>Gi&#7901; m&#7903; c&#7917;a</strong>
+                            <span>
+                                {{ bv.gio_mo|time:"H\hi" }}
+                                ({% with h=bv.gio_mo|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
+                            </span>
+                        </div>
+                        <div class="meta">
+                            <strong>Gi&#7901; &#273;&#243;ng c&#7917;a</strong>
+                            <span>
+                                {{ bv.gio_dong|time:"H\hi" }}
+                                ({% with h=bv.gio_dong|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
+                            </span>
+                        </div>
                     </div>
-                    <div class="meta">
-                        <strong>Loại hình</strong>
-                        {{ bv.get_loai_hinh_display }}
-                    </div>
-                    <div class="meta">
-                        <strong>BHYT</strong>
-                        {% if bv.co_bhyt %}Có{% else %}Không{% endif %}
-                    </div>
-                    <div class="meta">
-                        <strong>Cấp cứu</strong>
-                        {% if bv.co_cap_cuu %}Có{% else %}Không{% endif %}
-                    </div>
-                    <div class="meta">
-                        <strong>Cấp cứu 24h</strong>
-                        {% if bv.cap_cuu_24h %}Có{% else %}Không{% endif %}
-                    </div>
-                    <div class="meta">
-                        <strong>Giờ mở cửa</strong>
-                        {{ bv.gio_mo|time:"H\hi" }}
-                        ({% with h=bv.gio_mo|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
-                    </div>
-                    <div class="meta">
-                        <strong>Giờ đóng cửa</strong>
-                        {{ bv.gio_dong|time:"H\hi" }}
-                        ({% with h=bv.gio_dong|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
-                    </div>
-                </div>
+                </aside>
 
-                <div style="margin-top: 18px;">
-                    <a class="btn primary" href="{% url 'dat_lich' bv.id %}">Đặt lịch khám</a>
+                <div class="card route-panel">
+                    <h3>Ch&#7881; &#273;&#432;&#7901;ng</h3>
+                    <div class="route-tools">
+                        <div class="route-field">
+                            <label for="route-lat">V&#297; &#273;&#7897; xu&#7845;t ph&#225;t</label>
+                            <input id="route-lat" type="text" placeholder="10.77">
+                        </div>
+                        <div class="route-field">
+                            <label for="route-lon">Kinh &#273;&#7897; xu&#7845;t ph&#225;t</label>
+                            <input id="route-lon" type="text" placeholder="106.70">
+                        </div>
+                    </div>
+                    <div class="route-actions">
+                        <button id="route-locate" type="button" class="btn ghost">L&#7845;y v&#7883; tr&#237;</button>
+                        <button id="route-draw" type="button" class="btn primary" {% if not map_lat or not map_lon %}disabled{% endif %}>Ch&#7881; &#273;&#432;&#7901;ng &#273;&#7871;n b&#7879;nh vi&#7879;n</button>
+                    </div>
+                    <div id="route-status" class="route-status">Nh&#7853;p v&#7883; tr&#237; xu&#7845;t ph&#225;t ho&#7863;c b&#7845;m L&#7845;y v&#7883; tr&#237; &#273;&#7875; v&#7869; &#273;&#432;&#7901;ng &#273;i.</div>
                 </div>
             </div>
 
-            <div class="map-box">
-                <div id="map"></div>
+            <div class="map-col">
+                <div class="card map-card">
+                    <div class="map-head">
+                        <h2>B&#7843;n &#273;&#7891; v&#7883; tr&#237;</h2>
+                        <span>Chi ti&#7871;t khu v&#7921;c b&#7879;nh vi&#7879;n</span>
+                    </div>
+                    <div id="map"></div>
+                </div>
             </div>
         </section>
 
-        <section>
-            <h2 class="section-title">Giờ làm việc</h2>
-            <div class="card">
+        <section class="content-grid">
+            <div class="card section-card wide">
+                <h2 class="section-title">Gi&#7901; l&#224;m vi&#7879;c</h2>
                 <div class="hours">
                     {% for glv in gio_lam_viec %}
                         <div class="hours-item">
                             <div>{{ glv.get_thu_display }}</div>
                             {% if glv.nghi %}
-                                <span>Nghỉ</span>
+                                <span>Ngh&#7881;</span>
                             {% else %}
                                 <span>
                                     {{ glv.gio_mo|time:"H\hi" }} - {{ glv.gio_dong|time:"H\hi" }}
-                                    ({% with h=glv.gio_mo|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                                    ({% with h=glv.gio_mo|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
                                 </span>
                             {% endif %}
                         </div>
                     {% empty %}
                         <div class="hours-item">
-                            <div>Chưa có lịch làm việc</div>
-                            <span>—</span>
+                            <div>Ch&#432;a c&#243; l&#7883;ch l&#224;m vi&#7879;c</div>
+                            <span>&#8212;</span>
                         </div>
                     {% endfor %}
                 </div>
             </div>
-        </section>
 
-        <section>
-            <h2 class="section-title">Khoa</h2>
-            <ul class="list">
-                {% for k in khoas %}
-                    <li class="list-item">{{ k.ten }}</li>
-                {% empty %}
-                    <li class="list-item">Chưa có khoa</li>
-                {% endfor %}
-            </ul>
-        </section>
+            <div class="card section-card">
+                <h2 class="section-title">Khoa</h2>
+                <ul class="list">
+                    {% for k in khoas %}
+                        <li class="list-item">{{ k.ten }}</li>
+                    {% empty %}
+                        <li class="list-item">Ch&#432;a c&#243; khoa</li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-        <section>
-            <h2 class="section-title">Bác sĩ</h2>
-            <ul class="list">
-                {% for bs in bac_sis %}
-                    <li class="list-item">
-                        <div><strong>{{ bs.ho_ten }}</strong></div>
-                        <div class="badge">{{ bs.chuyen_khoa }}</div>
-                    </li>
-                {% empty %}
-                    <li class="list-item">Chưa có bác sĩ</li>
-                {% endfor %}
-            </ul>
+            <div class="card section-card">
+                <h2 class="section-title">B&#225;c s&#297;</h2>
+                <ul class="list">
+                    {% for bs in bac_sis %}
+                        <li class="list-item">
+                            <div><strong>{{ bs.ho_ten }}</strong></div>
+                            <div class="badge">{{ bs.chuyen_khoa }}</div>
+                        </li>
+                    {% empty %}
+                        <li class="list-item">Ch&#432;a c&#243; b&#225;c s&#297;</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </section>
     </div>
 
@@ -339,13 +561,165 @@
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
 
-        const lat = {{ map_lat|default:"null" }};
-        const lon = {{ map_lon|default:"null" }};
-        if (Number.isFinite(lat) && Number.isFinite(lon)) {
-            const marker = L.marker([lat, lon]).addTo(map);
-            marker.bindPopup("{{ bv.ten|escapejs }}").openPopup();
-            map.setView([lat, lon], 15);
+        const hospitalName = "{{ bv.ten|escapejs }}";
+        const destLat = Number({{ map_lat|default:"null" }});
+        const destLon = Number({{ map_lon|default:"null" }});
+
+        let routeLayer = null;
+        let userMarker = null;
+        let currentUserCoords = null;
+
+        const routeStatusEl = document.getElementById("route-status");
+        const routeLatInput = document.getElementById("route-lat");
+        const routeLonInput = document.getElementById("route-lon");
+        const routeLocateBtn = document.getElementById("route-locate");
+        const routeDrawBtn = document.getElementById("route-draw");
+
+        function setRouteStatus(text) {
+            if (routeStatusEl) {
+                routeStatusEl.textContent = text;
+            }
         }
+
+        if (Number.isFinite(destLat) && Number.isFinite(destLon)) {
+            const marker = L.marker([destLat, destLon]).addTo(map);
+            marker.bindPopup(hospitalName).openPopup();
+            map.setView([destLat, destLon], 15);
+        } else {
+            setRouteStatus("Bệnh viện chưa có tọa độ hợp lệ để vẽ tuyến.");
+        }
+
+        function setUserLocation(lat, lon, focusMap = false) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return;
+            }
+            currentUserCoords = { lat, lon };
+            if (userMarker) {
+                userMarker.setLatLng([lat, lon]);
+            } else {
+                userMarker = L.circleMarker([lat, lon], {
+                    radius: 6,
+                    color: "#0b6b5b",
+                    fillColor: "#0b6b5b",
+                    fillOpacity: 0.8
+                }).addTo(map);
+                userMarker.bindPopup("Vị trí của bạn");
+            }
+            if (focusMap) {
+                map.setView([lat, lon], 13);
+            }
+        }
+
+        function clearRouteLayer() {
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+                routeLayer = null;
+            }
+        }
+
+        function getOriginFromInputs() {
+            const lat = parseFloat(routeLatInput?.value || "");
+            const lon = parseFloat(routeLonInput?.value || "");
+            if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                setUserLocation(lat, lon, false);
+                return { lat, lon };
+            }
+            return currentUserCoords;
+        }
+
+        async function ensureOriginCoords() {
+            const byInput = getOriginFromInputs();
+            if (byInput) {
+                return byInput;
+            }
+            if (!navigator.geolocation) {
+                return null;
+            }
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = Number(pos.coords.latitude.toFixed(6));
+                    const lon = Number(pos.coords.longitude.toFixed(6));
+                    routeLatInput.value = lat;
+                    routeLonInput.value = lon;
+                    setUserLocation(lat, lon, true);
+                    resolve({ lat, lon });
+                }, () => resolve(null));
+            });
+        }
+
+        async function drawRouteToHospital() {
+            if (!Number.isFinite(destLat) || !Number.isFinite(destLon)) {
+                alert("Bệnh viện chưa có tọa độ hợp lệ.");
+                return;
+            }
+
+            const origin = await ensureOriginCoords();
+            if (!origin) {
+                alert("Vui lòng bật vị trí hoặc nhập vĩ độ/kinh độ xuất phát.");
+                return;
+            }
+
+            clearRouteLayer();
+            setRouteStatus(`Đang tìm đường đến ${hospitalName}...`);
+
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destLon},${destLat}?overview=full&geometries=geojson`;
+            try {
+                const response = await fetch(osrmUrl);
+                if (!response.ok) {
+                    throw new Error("OSRM request failed");
+                }
+                const data = await response.json();
+                const route = data?.routes?.[0];
+                if (!route?.geometry?.coordinates?.length) {
+                    throw new Error("No route geometry");
+                }
+
+                const latLngs = route.geometry.coordinates.map((p) => [p[1], p[0]]);
+                routeLayer = L.polyline(latLngs, {
+                    color: "#0f8a74",
+                    weight: 5,
+                    opacity: 0.85
+                }).addTo(map);
+                map.fitBounds(routeLayer.getBounds(), { padding: [30, 30] });
+
+                const km = (route.distance / 1000).toFixed(1);
+                const mins = Math.round(route.duration / 60);
+                setRouteStatus(`Tuyến đến bệnh viện: ${km} km, ~${mins} phút.`);
+            } catch (err) {
+                routeLayer = L.polyline(
+                    [[origin.lat, origin.lon], [destLat, destLon]],
+                    {
+                        color: "#0f8a74",
+                        weight: 4,
+                        opacity: 0.75,
+                        dashArray: "8 8"
+                    }
+                ).addTo(map);
+                map.fitBounds(routeLayer.getBounds(), { padding: [30, 30] });
+                setRouteStatus("Không lấy được tuyến chi tiết. Đã vẽ đường thẳng tạm thời.");
+            }
+        }
+
+        routeLocateBtn?.addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                alert("Trình duyệt không hỗ trợ định vị.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = Number(pos.coords.latitude.toFixed(6));
+                const lon = Number(pos.coords.longitude.toFixed(6));
+                routeLatInput.value = lat;
+                routeLonInput.value = lon;
+                setUserLocation(lat, lon, true);
+                setRouteStatus("Đã cập nhật vị trí của bạn.");
+            }, () => {
+                alert("Không thể lấy vị trí. Vui lòng cho phép trình duyệt truy cập vị trí.");
+            });
+        });
+
+        routeDrawBtn?.addEventListener("click", async () => {
+            await drawRouteToHospital();
+        });
     </script>
 </body>
 </html>

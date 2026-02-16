@@ -8,8 +8,10 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
 from django.core.cache import cache
+from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.db.models import Q
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from .models import BaoHiemYTe
@@ -50,6 +52,7 @@ def home(request):
     filter_cap_cuu = request.GET.get("cap_cuu") == "1"
     loai_hinh = request.GET.get("loai_hinh")
     quan_filter = request.GET.get("quan")
+    search_query = request.GET.get("q", "").strip()
 
     all_quan = (
         BenhVien.objects.values_list("quan", flat=True)
@@ -87,6 +90,12 @@ def home(request):
 
     if quan_filter:
         bvs = bvs.filter(quan=quan_filter)
+    if search_query:
+        bvs = bvs.filter(
+            Q(ten__icontains=search_query)
+            | Q(dia_chi__icontains=search_query)
+            | Q(quan__icontains=search_query)
+        )
 
     if request.user.is_authenticated:
         unread_count = ThongBao.objects.filter(
@@ -95,7 +104,7 @@ def home(request):
         ).count()
         try:
             bac_si = request.user.bac_si
-        except:
+        except BacSi.DoesNotExist:
             bac_si = None
         if bac_si:
             display_name = bac_si.ho_ten
@@ -120,6 +129,15 @@ def home(request):
             ).only("ho_ten").first()
             display_name = benh_nhan.ho_ten if benh_nhan else request.user.username
 
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    query_string_without_page = query_params.urlencode()
+
+    def paginate_hospitals(items):
+        paginator = Paginator(items, 12)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        return paginator, page_obj, list(page_obj.object_list)
+
     now = timezone.localtime()
     time_bucket = now.strftime("%Y%m%d%H%M")
     cache_key = (
@@ -127,7 +145,7 @@ def home(request):
         f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
         f"open={int(filter_open)}|emg={int(filter_emergency)}|"
         f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
-        f"loai={loai_hinh or 'all'}|quan={quan_filter or 'all'}|t={time_bucket}"
+        f"loai={loai_hinh or 'all'}|quan={quan_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
     )
     cached = cache.get(cache_key)
     if cached:
@@ -149,8 +167,11 @@ def home(request):
             cached_bvs.append(bv)
         bvs = cached_bvs
 
+        total_bvs = len(bvs)
+        paginator, page_obj, paged_bvs = paginate_hospitals(bvs)
+
         map_data = []
-        for bv in bvs:
+        for bv in paged_bvs:
             if bv.map_lat is None or bv.map_lon is None:
                 continue
             map_data.append({
@@ -164,7 +185,11 @@ def home(request):
             })
 
         return render(request, "core/home.html", {
-            "bvs": bvs,
+            "bvs": paged_bvs,
+            "total_bvs": total_bvs,
+            "paginator": paginator,
+            "page_obj": page_obj,
+            "query_string_without_page": query_string_without_page,
             "unread_count": unread_count,
             "display_name": display_name,
             "doctor_info": doctor_info,
@@ -178,6 +203,7 @@ def home(request):
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
             "quan_filter": quan_filter,
+            "q": search_query,
             "all_quan": all_quan,
             "map_data": map_data,
         })
@@ -261,9 +287,9 @@ def home(request):
     if user_point:
         computed_bvs.sort(
             key=lambda item: (
-                not getattr(item, "is_open", False),
                 item.distance_km is None,
                 item.distance_km if item.distance_km is not None else 1e9,
+                item.ten.lower(),
             )
         )
     else:
@@ -275,8 +301,11 @@ def home(request):
         )
     bvs = computed_bvs
 
+    total_bvs = len(bvs)
+    paginator, page_obj, paged_bvs = paginate_hospitals(bvs)
+
     map_data = []
-    for bv in bvs:
+    for bv in paged_bvs:
         if bv.map_lat is None or bv.map_lon is None:
             continue
         map_data.append({
@@ -304,7 +333,11 @@ def home(request):
     }, timeout=60)
 
     return render(request, "core/home.html", {
-        "bvs": bvs,
+        "bvs": paged_bvs,
+        "total_bvs": total_bvs,
+        "paginator": paginator,
+        "page_obj": page_obj,
+        "query_string_without_page": query_string_without_page,
         "unread_count": unread_count,
         "display_name": display_name,
         "doctor_info": doctor_info,
@@ -318,6 +351,7 @@ def home(request):
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
         "quan_filter": quan_filter,
+        "q": search_query,
         "all_quan": all_quan,
         "map_data": map_data,
     })
@@ -385,36 +419,51 @@ def dat_lich(request, bv_id):
 
     if not benh_nhan:
         return render(request, "core/error.html", {
-            "msg": "Bạn chưa có hồ sơ bệnh nhân"
+            "msg": "B?n ch?a c? h? s? b?nh nh?n"
         })
 
-    khoas = benh_vien.khoas.all()
+    khoas = benh_vien.khoas.all().order_by("ten")
+    khoa_id = (request.POST.get("khoa") or request.GET.get("khoa") or "").strip()
 
-    khoa_id = request.GET.get("khoa")
-
-    bac_sis = None
-    bac_si_schedules = None
-
+    selected_khoa = None
     if khoa_id:
-        bac_sis = benh_vien.bac_sis.filter(khoa_id=khoa_id).prefetch_related("gio_lam_viecs")
-        bac_si_schedules = []
-        for bs in bac_sis:
-            bac_si_schedules.append({
+        selected_khoa = benh_vien.khoas.filter(id=khoa_id).first()
+        if not selected_khoa:
+            khoa_id = ""
+
+    bac_sis = benh_vien.bac_sis.none()
+    bac_si_schedules = []
+    if selected_khoa:
+        bac_sis = benh_vien.bac_sis.filter(khoa=selected_khoa).prefetch_related("gio_lam_viecs")
+        bac_si_schedules = [
+            {
                 "bac_si": bs,
                 "gio_lam_viecs": bs.gio_lam_viecs.all().order_by("thu"),
-            })
+            }
+            for bs in bac_sis
+        ]
 
     if request.method == "POST":
-
         form = DatLichForm(request.POST)
+        form.fields["bac_si"].queryset = bac_sis
 
-        if khoa_id:
-            form.fields["bac_si"].queryset = bac_sis
+        if not selected_khoa:
+            form.add_error(None, "Vui l?ng ch?n khoa tr??c khi ??t l?ch.")
+            messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
+            return render(request, "core/appointment.html", {
+                "form": form,
+                "benh_vien": benh_vien,
+                "benh_nhan": benh_nhan,
+                "khoas": khoas,
+                "bac_sis": bac_sis,
+                "bac_si_schedules": bac_si_schedules,
+                "khoa_id": khoa_id,
+            })
 
         if form.is_valid():
-
             lich = form.save(commit=False)
             lich.benh_nhan = benh_nhan
+
             try:
                 lich.full_clean()
                 lich.save()
@@ -426,7 +475,7 @@ def dat_lich(request, bv_id):
                     else:
                         for error in errors:
                             form.add_error(None, error)
-                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
+                messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
                 return render(request, "core/appointment.html", {
                     "form": form,
                     "benh_vien": benh_vien,
@@ -434,11 +483,11 @@ def dat_lich(request, bv_id):
                     "khoas": khoas,
                     "bac_sis": bac_sis,
                     "bac_si_schedules": bac_si_schedules,
-                    "khoa_id": khoa_id
+                    "khoa_id": khoa_id,
                 })
             except IntegrityError:
-                form.add_error("ngay_kham", "Bạn đã có lịch khám trong ngày này.")
-                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
+                form.add_error("ngay_kham", "B?n ?? c? l?ch kh?m trong ng?y n?y.")
+                messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
                 return render(request, "core/appointment.html", {
                     "form": form,
                     "benh_vien": benh_vien,
@@ -446,32 +495,25 @@ def dat_lich(request, bv_id):
                     "khoas": khoas,
                     "bac_sis": bac_sis,
                     "bac_si_schedules": bac_si_schedules,
-                    "khoa_id": khoa_id
+                    "khoa_id": khoa_id,
                 })
 
-            messages.success(request, "Đặt lịch thành công")
-
+            messages.success(request, "??t l?ch th?nh c?ng.")
             ThongBao.objects.create(
                 nguoi_nhan=request.user,
                 loai="lich_kham",
-                tieu_de="Đặt lịch thành công",
+                tieu_de="??t l?ch th?nh c?ng",
                 noi_dung=(
-                    f"Tạo lịch khám vào ngày {lich.ngay_kham} lúc {lich.gio_kham} với bác sĩ {lich.bac_si.ho_ten}."
+                    f"T?o l?ch kh?m v?o ng?y {lich.ngay_kham} l?c {lich.gio_kham} v?i b?c s? {lich.bac_si.ho_ten}."
                 ),
                 lien_ket="/lich-kham-sap-toi/",
             )
-            return redirect("home")
-        else:
-            messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
+            return redirect("upcoming_appointments")
 
+        messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
     else:
-
         form = DatLichForm()
-
-        if khoa_id:
-            form.fields["bac_si"].queryset = bac_sis
-        else:
-            form.fields["bac_si"].queryset = BacSi.objects.none()
+        form.fields["bac_si"].queryset = bac_sis
 
     return render(request, "core/appointment.html", {
         "form": form,
@@ -480,13 +522,10 @@ def dat_lich(request, bv_id):
         "khoas": khoas,
         "bac_sis": bac_sis,
         "bac_si_schedules": bac_si_schedules,
-        "khoa_id": khoa_id
+        "khoa_id": khoa_id,
     })
 
 
-# ==========================
-# LỊCH KHÁM SẮP TỚI (BỆNH NHÂN)
-# ==========================
 @login_required
 def upcoming_appointments(request):
     benh_nhan = BenhNhan.objects.filter(
@@ -615,7 +654,7 @@ def medical_history(request):
 def phieu_kham_detail(request, phieu_id):
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         bac_si = None
 
     if bac_si:
@@ -668,7 +707,7 @@ def doctor_dashboard(request):
 
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
 
@@ -691,7 +730,7 @@ def doctor_exam(request, lich_id):
 
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
 
@@ -708,9 +747,15 @@ def doctor_exam(request, lich_id):
 
     if request.method == "POST":
 
-        trieu_chung = request.POST["trieu_chung"]
-        chan_doan = request.POST["chan_doan"]
-        huong_dieu_tri = request.POST["huong_dieu_tri"]
+        trieu_chung = request.POST.get("trieu_chung", "").strip()
+        chan_doan = request.POST.get("chan_doan", "").strip()
+        huong_dieu_tri = request.POST.get("huong_dieu_tri", "").strip()
+
+        if not trieu_chung or not chan_doan or not huong_dieu_tri:
+            messages.error(request, "Vui lòng nhập đầy đủ thông tin phiếu khám.")
+            return render(request, "core/doctor_exam.html", {
+                "lich": lich
+            })
 
 
         PhieuKham.objects.create(
@@ -894,7 +939,7 @@ def bac_si_home(request):
 
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     status_filter = request.GET.get("status", "").strip()
@@ -962,7 +1007,7 @@ def bac_si_patient_detail(request, benh_nhan_id):
 
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     benh_nhan = get_object_or_404(BenhNhan, id=benh_nhan_id)
@@ -991,9 +1036,12 @@ def bac_si_patient_detail(request, benh_nhan_id):
 # ==========================
 @login_required
 def start_exam(request, lich_id):
+    if request.method != "POST":
+        return redirect("bac_si_home")
+
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     lich = get_object_or_404(
@@ -1025,7 +1073,7 @@ def start_exam(request, lich_id):
 def bac_si_notifications(request):
     try:
         request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     if request.method == "POST":
@@ -1055,17 +1103,13 @@ def bac_si_notifications(request):
     })
  
 # ==========================
-# HỒ SƠ NGƯỜI DÙNG
-# ==========================
-@login_required
-# ==========================
-# LịCH LÀM VIỆC BÁC SĨ
+# LỊCH LÀM VIỆC BÁC SĨ
 # ==========================
 @login_required
 def bac_si_schedule(request):
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     thu_labels = [
@@ -1146,13 +1190,13 @@ def bac_si_schedule(request):
 
 
 # ==========================
-# S?A PHI?U KH?M (B?C S?)
+# SỬA PHIẾU KHÁM (BÁC SĨ)
 # ==========================
 @login_required
 def bac_si_phieu_kham_edit(request, phieu_id):
     try:
         bac_si = request.user.bac_si
-    except:
+    except BacSi.DoesNotExist:
         return redirect("home")
 
     phieu = get_object_or_404(
@@ -1205,6 +1249,7 @@ def bac_si_phieu_kham_edit(request, phieu_id):
     })
 
 
+@login_required
 def profile(request):
 
     benh_nhan = BenhNhan.objects.filter(

@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thông báo bác sĩ</title>
+    <title>Th&#244;ng b&#225;o b&#225;c s&#297;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -17,9 +17,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -162,10 +160,10 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Thông báo bác sĩ</h1>
-                <span>Cập nhật lịch khám và nhắc lịch cho bác sĩ</span>
+                <h1>Th&#244;ng b&#225;o b&#225;c s&#297;</h1>
+                <span>C&#7853;p nh&#7853;t l&#7883;ch kh&#225;m v&#224; nh&#7855;c l&#7883;ch cho b&#225;c s&#297;</span>
             </div>
-            <a class="btn ghost" href="{% url 'bac_si_home' %}">← Trang bác sĩ</a>
+            <a class="btn ghost" href="{% url 'bac_si_home' %}">&#8592; Trang b&#225;c s&#297;</a>
         </header>
 
         {% if messages %}
@@ -183,7 +181,7 @@
                 <form method="post">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="mark_all">
-                    <button class="btn ghost" type="submit">Đánh dấu đã đọc</button>
+                    <button class="btn ghost" type="submit">&#272;&#225;nh d&#7845;u &#273;&#227; &#273;&#7885;c</button>
                 </form>
             </div>
 
@@ -196,19 +194,19 @@
                         </div>
                         <div class="item-meta">
                             {{ tb.thoi_gian|date:"d/m/Y H\hi" }}
-                            ({% with h=tb.thoi_gian|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
+                            ({% with h=tb.thoi_gian|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
                         </div>
                         <div class="item-content">{{ tb.noi_dung }}</div>
                         <div class="actions">
                             {% if tb.lien_ket %}
-                                <a class="btn primary" href="{{ tb.lien_ket }}">Xem chi tiết</a>
+                                <a class="btn primary" href="{{ tb.lien_ket }}">Xem chi ti&#7871;t</a>
                             {% endif %}
                             {% if not tb.da_doc %}
                                 <form method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="mark_one">
                                     <input type="hidden" name="tb_id" value="{{ tb.id }}">
-                                    <button class="btn ghost" type="submit">Đã đọc</button>
+                                    <button class="btn ghost" type="submit">&#272;&#227; &#273;&#7885;c</button>
                                 </form>
                             {% endif %}
                         </div>
@@ -216,7 +214,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty">Bạn chưa có thông báo nào.</div>
+            <div class="empty">B&#7841;n ch&#432;a c&#243; th&#244;ng b&#225;o n&#224;o.</div>
         {% endif %}
     </div>
 </body>

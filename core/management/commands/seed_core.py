@@ -66,12 +66,10 @@ class Command(BaseCommand):
             BacSi,
             GioLamViecBenhVien,
             Khoa,
-            BenhNhan,
-            BaoHiemYTe,
             BenhVien,
         ]:
             model.objects.all().delete()
-        self.stdout.write(self.style.SUCCESS("Core data deleted."))
+        self.stdout.write(self.style.SUCCESS("Core data deleted (patients preserved)."))
 
     def _seed(self):
         self.stdout.write("Seeding sample data...")
@@ -433,20 +431,24 @@ class Command(BaseCommand):
 
             bhyt = None
             if i <= 3:
-                bhyt = BaoHiemYTe.objects.create(
+                bhyt, _ = BaoHiemYTe.objects.update_or_create(
                     ma_bhyt=f"BHYT{i:04d}",
-                    ngay_cap=today - datetime.timedelta(days=30),
-                    ngay_het_han=today + datetime.timedelta(days=365),
+                    defaults={
+                        "ngay_cap": today - datetime.timedelta(days=30),
+                        "ngay_het_han": today + datetime.timedelta(days=365),
+                    },
                 )
 
-            benh_nhan = BenhNhan.objects.create(
-                user=user,
-                ho_ten=name,
-                ngay_sinh=birth,
-                gioi_tinh=gender,
+            benh_nhan, _ = BenhNhan.objects.update_or_create(
                 so_dien_thoai=phone,
-                dia_chi=address,
-                bhyt=bhyt,
+                defaults={
+                    "user": user,
+                    "ho_ten": name,
+                    "ngay_sinh": birth,
+                    "gioi_tinh": gender,
+                    "dia_chi": address,
+                    "bhyt": bhyt,
+                },
             )
             all_benh_nhan.append(benh_nhan)
 

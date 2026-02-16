@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Hồ sơ bệnh nhân</title>
+    <title>H&#7891; s&#417; b&#7879;nh nh&#226;n</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -16,9 +16,7 @@
             --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -115,65 +113,65 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Hồ sơ bệnh nhân</h1>
-                <span>Thông tin cơ bản và lịch sử khám</span>
+                <h1>H&#7891; s&#417; b&#7879;nh nh&#226;n</h1>
+                <span>Th&#244;ng tin c&#417; b&#7843;n v&#224; l&#7883;ch s&#7917; kh&#225;m</span>
             </div>
-            <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay lại</a>
+            <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay l&#7841;i</a>
         </header>
 
         <div class="card">
             <div class="grid">
                 <div>
-                    <div class="label">Họ tên</div>
+                    <div class="label">H&#7885; t&#234;n</div>
                     <div class="value">{{ benh_nhan.ho_ten }}</div>
                 </div>
                 <div>
-                    <div class="label">Ngày sinh</div>
+                    <div class="label">Ng&#224;y sinh</div>
                     <div class="value">{{ benh_nhan.ngay_sinh|date:"d/m/Y" }}</div>
                 </div>
                 <div>
-                    <div class="label">Giới tính</div>
+                    <div class="label">Gi&#7899;i t&#237;nh</div>
                     <div class="value">{{ benh_nhan.get_gioi_tinh_display }}</div>
                 </div>
                 <div>
-                    <div class="label">Số điện thoại</div>
+                    <div class="label">S&#7889; &#273;i&#7879;n tho&#7841;i</div>
                     <div class="value">{{ benh_nhan.so_dien_thoai }}</div>
                 </div>
                 <div>
-                    <div class="label">Địa chỉ</div>
+                    <div class="label">&#272;&#7883;a ch&#7881;</div>
                     <div class="value">{{ benh_nhan.dia_chi }}</div>
                 </div>
                 <div>
                     <div class="label">BHYT</div>
                     <div class="value">
-                        {% if benh_nhan.bhyt %}{{ benh_nhan.bhyt.ma_bhyt }}{% else %}Không có{% endif %}
+                        {% if benh_nhan.bhyt %}{{ benh_nhan.bhyt.ma_bhyt }}{% else %}Kh&#244;ng c&#243;{% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0;">Lịch sử khám</h3>
+            <h3 style="margin-top:0;">L&#7883;ch s&#7917; kh&#225;m</h3>
             {% for item in lich_su %}
                 <div class="history-item">
-                    <div class="label">Ngày khám</div>
+                    <div class="label">Ng&#224;y kh&#225;m</div>
                     <div class="value">{{ item.ngay_kham|date:"d/m/Y" }}</div>
-                    <div class="label">Chẩn đoán</div>
+                    <div class="label">Ch&#7849;n &#273;o&#225;n</div>
                     <div class="value">{{ item.chan_doan }}</div>
-                    <div class="label">Hướng điều trị</div>
+                    <div class="label">H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</div>
                     <div class="value">{{ item.huong_dieu_tri }}</div>
-                    <div class="label">Bác sĩ</div>
+                    <div class="label">B&#225;c s&#297;</div>
                     <div class="value">{% if item.bac_si %}{{ item.bac_si.ho_ten }}{% else %}--{% endif %}</div>
-                    <div class="label">Bệnh viện</div>
+                    <div class="label">B&#7879;nh vi&#7879;n</div>
                     <div class="value">{% if item.benh_vien %}{{ item.benh_vien.ten }}{% else %}--{% endif %}</div>
                     {% if item.phieu_kham %}
                         <div style="margin-top:8px;">
-                            <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}">Xem phiếu khám</a>
+                            <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}">Xem phi&#7871;u kh&#225;m</a>
                         </div>
                     {% endif %}
                 </div>
             {% empty %}
-                <div>Chưa có lịch sử khám.</div>
+                <div>Ch&#432;a c&#243; l&#7883;ch s&#7917; kh&#225;m.</div>
             {% endfor %}
         </div>
     </div>

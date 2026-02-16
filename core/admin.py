@@ -38,6 +38,9 @@ class BenhVienOSMWidget(OSMWidget):
 
 @admin.register(BenhVien)
 class BenhVienAdmin(GISModelAdmin):
+    class Media:
+        js = ("core/js/benhvien_admin_map.js",)
+
     gis_widget = BenhVienOSMWidget
     gis_widget_kwargs = {
         "attrs": {

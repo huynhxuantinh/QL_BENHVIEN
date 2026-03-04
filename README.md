@@ -39,6 +39,7 @@ GEOS_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\geos_c.dll
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
+venv\Scripts\python.exe -m pip install openpyxl
 ```
 
 ## 5. Khởi tạo database

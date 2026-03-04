@@ -472,3 +472,5 @@ class Command(BaseCommand):
             )
             lich.full_clean()
             lich.save()
+ 
+ 

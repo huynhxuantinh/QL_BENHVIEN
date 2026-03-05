@@ -319,3 +319,43 @@ class AppointmentBookingTests(TestCase):
             ).count(),
             2,
         )
+
+
+class AdminDashboardTests(TestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(
+            username="admin_demo",
+            password="pass12345",
+            email="admin@example.com",
+        )
+        self.normal_user = User.objects.create_user(
+            username="user_demo",
+            password="pass12345",
+        )
+
+    def test_admin_login_redirects_to_custom_dashboard(self):
+        response = self.client.post(
+            reverse("login"),
+            {"username": "admin_demo", "password": "pass12345"},
+        )
+        self.assertRedirects(response, reverse("custom_admin_dashboard"))
+
+    def test_custom_dashboard_requires_admin(self):
+        self.client.login(username="user_demo", password="pass12345")
+        response = self.client.get(reverse("custom_admin_dashboard"))
+        self.assertRedirects(response, reverse("home"))
+
+    def test_admin_can_open_custom_dashboard(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(reverse("custom_admin_dashboard"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_can_open_custom_management_pages(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        self.assertEqual(self.client.get(reverse("custom_admin_hospitals")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("custom_admin_departments")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("custom_admin_doctors")).status_code, 200)
+
+    def test_django_admin_url_enabled(self):
+        response = self.client.get("/admin/")
+        self.assertEqual(response.status_code, 302)

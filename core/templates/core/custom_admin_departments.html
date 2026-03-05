@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản trị khoa</title>
+    <style>
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f4f7f4; color: #1f2a27; }
+        .page { max-width: 1180px; margin: 0 auto; padding: 18px 14px 30px; }
+        .card { background: #fff; border: 1px solid #d8e5df; border-radius: 12px; }
+        .head { padding: 14px; border-bottom: 1px solid #e5efea; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        h1 { margin: 0; font-size: 24px; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 13px; border-radius: 999px; text-decoration: none; border: 1px solid #d0ddd8; color: #0f7d69; background: #fff; font-size: 13px; font-weight: 600; }
+        .btn.primary { background: #0f7d69; color: #fff; border-color: #0f7d69; }
+        .search { padding: 12px 14px; border-bottom: 1px solid #e5efea; display: flex; gap: 8px; flex-wrap: wrap; }
+        .search input { min-width: 280px; flex: 1; max-width: 420px; padding: 10px 11px; border-radius: 10px; border: 1px solid #ccdad4; }
+        .table-wrap { overflow: auto; max-height: 70vh; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 9px 10px; border-bottom: 1px solid #edf2ef; font-size: 13px; text-align: left; }
+        th { position: sticky; top: 0; background: #f7fbf9; }
+        .inline-form { display: inline; }
+        .danger { color: #8b2f2f; border-color: #e5c8c8; }
+        .msg { margin: 0; padding: 10px 14px; color: #0f7d69; font-size: 13px; border-bottom: 1px solid #e5efea; }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="card">
+            <div class="head">
+                <h1>Quản trị khoa</h1>
+                <div class="actions">
+                    <a class="btn primary" href="{% url 'custom_admin_department_create' %}">+ Tạo khoa</a>
+                    <a class="btn" href="{% url 'custom_admin_hospitals' %}">Quản lý bệnh viện</a>
+                    <a class="btn" href="{% url 'custom_admin_doctors' %}">Quản lý bác sĩ</a>
+                    <a class="btn" href="{% url 'custom_admin_dashboard' %}">B&#7843;ng &#273;i&#7873;u khi&#7875;n</a>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="msg">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+
+            <form class="search" method="get">
+                <input type="text" name="q" value="{{ q }}" placeholder="Tìm theo tên khoa hoặc bệnh viện">
+                <button class="btn" type="submit">Tìm</button>
+                <a class="btn" href="{% url 'custom_admin_departments' %}">Xóa lọc</a>
+            </form>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên khoa</th>
+                            <th>Bệnh viện</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for khoa in departments %}
+                            <tr>
+                                <td>{{ khoa.id }}</td>
+                                <td>{{ khoa.ten }}</td>
+                                <td>{{ khoa.benh_vien.ten }}</td>
+                                <td>
+                                    <a class="btn" href="{% url 'custom_admin_department_edit' khoa.id %}">Sửa</a>
+                                    <form class="inline-form" method="post" action="{% url 'custom_admin_department_delete' khoa.id %}" onsubmit="return confirm('Xóa khoa này?')">
+                                        {% csrf_token %}
+                                        <button class="btn danger" type="submit">Xóa</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4">Không có dữ liệu.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

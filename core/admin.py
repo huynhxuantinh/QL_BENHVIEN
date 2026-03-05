@@ -18,6 +18,10 @@ from .models import (
     ThongBao,
 )
 
+admin.site.site_header = "Quản trị QL Bệnh viện"
+admin.site.site_title = "QL Bệnh viện Admin"
+admin.site.index_title = "Bảng điều khiển quản trị"
+
 
 class GioLamViecBenhVienInline(admin.TabularInline):
     model = GioLamViecBenhVien

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Qu&#7843;n tr&#7883; h&#7879; th&#7889;ng</title>
+    <style>
+        :root {
+            --bg: #f4f7f4;
+            --card: #ffffff;
+            --line: #d8e5df;
+            --text: #1e2a27;
+            --muted: #5f716d;
+            --primary: #0f7d69;
+            --primary-dark: #0b6958;
+            --ok: #1f7a4f;
+            --warn: #9b5c18;
+            --danger: #8b2f2f;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--text);
+            background: linear-gradient(140deg, #f7faf7 0%, var(--bg) 100%);
+        }
+        .page { max-width: 1260px; margin: 0 auto; padding: 22px 16px 36px; }
+        .topbar {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .title { margin: 0; font-size: 28px; line-height: 1.2; }
+        .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: 1px solid var(--line);
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--primary);
+            background: #fff;
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn.primary { color: #fff; border-color: var(--primary); background: var(--primary); }
+        .btn.primary:hover { background: var(--primary-dark); }
+
+        .admin-layout {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        .model-sidebar {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px;
+            position: sticky;
+            top: 10px;
+        }
+        .model-title { margin: 4px 6px 8px; font-size: 14px; color: #35524c; font-weight: 700; }
+        .model-links { display: flex; flex-direction: column; gap: 8px; }
+        .model-links .btn { width: 100%; justify-content: flex-start; }
+
+        .admin-main { min-width: 0; }
+        .stats {
+            margin-top: 0;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+        .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+        .stat .k { color: var(--muted); font-size: 12px; }
+        .stat .v { margin-top: 4px; font-size: 26px; font-weight: 700; }
+
+        .status-row { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .pill {
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            background: #eef6f2;
+        }
+        .pill.wait { color: #0f6b58; border-color: #cae5dd; }
+        .pill.run { color: var(--warn); border-color: #edd8bf; background: #fdf5e8; }
+        .pill.done { color: var(--ok); border-color: #bfdfcd; background: #ebf8f0; }
+        .pill.cancel { color: var(--danger); border-color: #e7c5c5; background: #fdf0f0; }
+
+        .grid {
+            margin-top: 14px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+        .card h2 { margin: 0; padding: 12px 14px; font-size: 16px; border-bottom: 1px solid var(--line); background: #f9fcfa; }
+        .table-wrap { max-height: 360px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #edf2ef;
+            text-align: left;
+            vertical-align: top;
+            font-size: 13px;
+        }
+        th { position: sticky; top: 0; background: #f7fbf9; z-index: 1; color: #35524c; font-size: 12px; }
+        .muted { color: var(--muted); }
+
+        @media (max-width: 1100px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .model-sidebar { position: static; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div>
+                <h1 class="title">Qu&#7843;n tr&#7883; h&#7879; th&#7889;ng</h1>
+                <p class="subtitle">Trang qu&#7843;n tr&#7883; ri&#234;ng cho t&#224;i kho&#7843;n admin/staff</p>
+            </div>
+            <div class="actions">
+                <a class="btn" href="{% url 'home' %}">V&#7873; trang ch&#7911;</a>
+                <a class="btn" href="{% url 'custom_admin_hospitals' %}">Qu&#7843;n l&#253; b&#7879;nh vi&#7879;n</a>
+                <a class="btn" href="{% url 'custom_admin_departments' %}">Qu&#7843;n l&#253; khoa</a>
+                <a class="btn" href="{% url 'custom_admin_doctors' %}">Qu&#7843;n l&#253; b&#225;c s&#297;</a>
+                <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+            </div>
+        </header>
+
+        <div class="admin-layout">
+            <aside class="model-sidebar">
+                <div class="model-title">D&#7919; li&#7879;u qu&#7843;n tr&#7883;</div>
+                <div class="model-links">
+                    {% for m in admin_models %}
+                        <a class="btn" href="{% url 'custom_admin_model_list' m.key %}">{{ m.label }} ({{ m.count }})</a>
+                    {% endfor %}
+                </div>
+            </aside>
+
+            <main class="admin-main">
+                <section class="stats">
+                    <article class="stat"><div class="k">B&#7879;nh vi&#7879;n</div><div class="v">{{ stats.benh_vien }}</div></article>
+                    <article class="stat"><div class="k">Khoa</div><div class="v">{{ stats.khoa }}</div></article>
+                    <article class="stat"><div class="k">B&#225;c s&#297;</div><div class="v">{{ stats.bac_si }}</div></article>
+                    <article class="stat"><div class="k">B&#7879;nh nh&#226;n</div><div class="v">{{ stats.benh_nhan }}</div></article>
+                    <article class="stat"><div class="k">L&#7883;ch kh&#225;m</div><div class="v">{{ stats.lich_kham }}</div></article>
+                    <article class="stat"><div class="k">Phi&#7871;u kh&#225;m</div><div class="v">{{ stats.phieu_kham }}</div></article>
+                </section>
+
+                <div class="status-row">
+                    <span class="pill wait">Ch&#7901; kh&#225;m: {{ status_counts.cho }}</span>
+                    <span class="pill run">&#272;ang kh&#225;m: {{ status_counts.dang }}</span>
+                    <span class="pill done">&#272;&#227; xong: {{ status_counts.xong }}</span>
+                    <span class="pill cancel">&#272;&#227; h&#7911;y: {{ status_counts.huy }}</span>
+                </div>
+
+                <section class="grid">
+                    <section class="card">
+                        <h2>L&#7883;ch kh&#225;m g&#7847;n &#273;&#226;y</h2>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Ng&#224;y</th>
+                                        <th>B&#7879;nh nh&#226;n</th>
+                                        <th>B&#225;c s&#297;</th>
+                                        <th>Tr&#7841;ng th&#225;i</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for lich in latest_appointments %}
+                                        <tr>
+                                            <td>{{ lich.ngay_kham|date:"d/m/Y" }}<br><span class="muted">{{ lich.gio_kham|time:"H\hi" }}</span></td>
+                                            <td>{{ lich.benh_nhan.ho_ten }}</td>
+                                            <td>{{ lich.bac_si.ho_ten }}<br><span class="muted">{{ lich.bac_si.benh_vien.ten }}</span></td>
+                                            <td>{{ lich.get_trang_thai_display }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="4" class="muted">Ch&#432;a c&#243; d&#7919; li&#7879;u.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>B&#7879;nh vi&#7879;n g&#7847;n &#273;&#226;y</h2>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>T&#234;n</th>
+                                        <th>Qu&#7853;n</th>
+                                        <th>M&#7903;</th>
+                                        <th>&#272;&#243;ng</th>
+                                        <th>Lo&#7841;i</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bv in latest_hospitals %}
+                                        <tr>
+                                            <td>{{ bv.ten }}</td>
+                                            <td>{{ bv.quan }}</td>
+                                            <td>{{ bv.gio_mo|time:"H:i" }}</td>
+                                            <td>{{ bv.gio_dong|time:"H:i" }}</td>
+                                            <td>{{ bv.get_loai_hinh_display }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="5" class="muted">Ch&#432;a c&#243; d&#7919; li&#7879;u.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="card">
+                        <h2>B&#225;c s&#297; g&#7847;n &#273;&#226;y</h2>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>B&#225;c s&#297;</th>
+                                        <th>Khoa</th>
+                                        <th>B&#7879;nh vi&#7879;n</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bs in latest_doctors %}
+                                        <tr>
+                                            <td>{{ bs.ho_ten }}</td>
+                                            <td>{{ bs.khoa.ten }}</td>
+                                            <td>{{ bs.benh_vien.ten }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="3" class="muted">Ch&#432;a c&#243; d&#7919; li&#7879;u.</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

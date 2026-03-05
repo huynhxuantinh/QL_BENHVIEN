@@ -7,11 +7,15 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
+from django.conf import settings
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.forms import modelform_factory
+from django.http import Http404
+from django.db import IntegrityError, transaction
 from django.db.models import Q
+from django.db import models as db_models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from .models import BaoHiemYTe
@@ -20,16 +24,18 @@ from .models import (
     BenhVien,
     BenhNhan,
     BacSi,
+    Khoa,
     GioLamViecBenhVien,
     GioLamViecBacSi,
     LichKham,
     LichSuKhamBenh,
     PhieuKham,
+    LogLichKham,
     LogHeThong,
     ThongBao,
 )
 
-from .forms import DatLichForm
+from .forms import AdminBacSiForm, AdminBenhVienForm, AdminKhoaForm, DatLichForm
 
 
 # ==========================
@@ -419,7 +425,7 @@ def dat_lich(request, bv_id):
 
     if not benh_nhan:
         return render(request, "core/error.html", {
-            "msg": "B?n ch?a c? h? s? b?nh nh?n"
+            "msg": "Bạn chưa có hồ sơ bệnh nhân"
         })
 
     khoas = benh_vien.khoas.all().order_by("ten")
@@ -448,8 +454,8 @@ def dat_lich(request, bv_id):
         form.fields["bac_si"].queryset = bac_sis
 
         if not selected_khoa:
-            form.add_error(None, "Vui l?ng ch?n khoa tr??c khi ??t l?ch.")
-            messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
+            form.add_error(None, "Vui lòng chọn khoa trước khi đặt lịch.")
+            messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
             return render(request, "core/appointment.html", {
                 "form": form,
                 "benh_vien": benh_vien,
@@ -475,7 +481,7 @@ def dat_lich(request, bv_id):
                     else:
                         for error in errors:
                             form.add_error(None, error)
-                messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
+                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
                 return render(request, "core/appointment.html", {
                     "form": form,
                     "benh_vien": benh_vien,
@@ -486,8 +492,8 @@ def dat_lich(request, bv_id):
                     "khoa_id": khoa_id,
                 })
             except IntegrityError:
-                form.add_error("ngay_kham", "B?n ?? c? l?ch kh?m trong ng?y n?y.")
-                messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
+                form.add_error("ngay_kham", "Bạn đã có lịch khám trong ngày này.")
+                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
                 return render(request, "core/appointment.html", {
                     "form": form,
                     "benh_vien": benh_vien,
@@ -498,19 +504,19 @@ def dat_lich(request, bv_id):
                     "khoa_id": khoa_id,
                 })
 
-            messages.success(request, "??t l?ch th?nh c?ng.")
+            messages.success(request, "Đặt lịch thành công.")
             ThongBao.objects.create(
                 nguoi_nhan=request.user,
                 loai="lich_kham",
-                tieu_de="??t l?ch th?nh c?ng",
+                tieu_de="Đặt lịch thành công",
                 noi_dung=(
-                    f"T?o l?ch kh?m v?o ng?y {lich.ngay_kham} l?c {lich.gio_kham} v?i b?c s? {lich.bac_si.ho_ten}."
+                    f"Tạo lịch khám vào ngày {lich.ngay_kham} lúc {lich.gio_kham} với bác sĩ {lich.bac_si.ho_ten}."
                 ),
                 lien_ket="/lich-kham-sap-toi/",
             )
             return redirect("upcoming_appointments")
 
-        messages.error(request, "Kh?ng th? ??t l?ch. Vui l?ng ki?m tra l?i th?ng tin.")
+        messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
     else:
         form = DatLichForm()
         form.fields["bac_si"].queryset = bac_sis
@@ -879,6 +885,9 @@ def user_login(request):
         if user:
             login(request, user)
 
+
+            if user.is_superuser or user.is_staff:
+                return redirect("custom_admin_dashboard")
             # Nếu là bác sĩ
             if hasattr(user, "bac_si"):
                 return redirect("bac_si_home")
@@ -894,6 +903,634 @@ def user_login(request):
 # ==========================
 # ĐĂNG XUẤT
 # ==========================
+@login_required
+def custom_admin_dashboard(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return redirect("home")
+
+    status_counts = {
+        "cho": LichKham.objects.filter(trang_thai="cho").count(),
+        "dang": LichKham.objects.filter(trang_thai="dang").count(),
+        "xong": LichKham.objects.filter(trang_thai="xong").count(),
+        "huy": LichKham.objects.filter(trang_thai="huy").count(),
+    }
+
+    latest_appointments = (
+        LichKham.objects.select_related("benh_nhan", "bac_si", "bac_si__benh_vien")
+        .order_by("-ngay_tao", "-id")[:10]
+    )
+    latest_hospitals = BenhVien.objects.order_by("-id")[:10]
+    latest_doctors = BacSi.objects.select_related("benh_vien", "khoa").order_by("-id")[:10]
+    admin_models = [
+        {"key": key, "label": cfg["title"], "count": cfg["model"].objects.count()}
+        for key, cfg in ADMIN_MODEL_CONFIG.items()
+    ]
+
+    context = {
+        "stats": {
+            "benh_vien": BenhVien.objects.count(),
+            "khoa": Khoa.objects.count(),
+            "bac_si": BacSi.objects.count(),
+            "benh_nhan": BenhNhan.objects.count(),
+            "lich_kham": LichKham.objects.count(),
+            "phieu_kham": PhieuKham.objects.count(),
+        },
+        "status_counts": status_counts,
+        "latest_appointments": latest_appointments,
+        "latest_hospitals": latest_hospitals,
+        "latest_doctors": latest_doctors,
+        "admin_models": admin_models,
+    }
+    return render(request, "core/custom_admin_dashboard.html", context)
+
+
+ADMIN_MODEL_CONFIG = {
+    "benh-vien": {
+        "title": "Bệnh viện",
+        "model": BenhVien,
+        "form_class": AdminBenhVienForm,
+        "list_display": ("ten", "quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
+        "search_fields": ("ten", "dia_chi", "quan"),
+        "list_filter": ("quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
+        "ordering": ("ten",),
+    },
+    "gio-lam-viec-benh-vien": {
+        "title": "Giờ làm việc bệnh viện",
+        "model": GioLamViecBenhVien,
+        "list_display": ("benh_vien", "thu", "gio_mo", "gio_dong", "nghi"),
+        "list_filter": ("thu", "nghi", "benh_vien"),
+        "ordering": ("benh_vien", "thu"),
+    },
+    "khoa": {
+        "title": "Khoa",
+        "model": Khoa,
+        "form_class": AdminKhoaForm,
+        "list_display": ("ten", "benh_vien"),
+        "search_fields": ("ten", "benh_vien__ten"),
+        "list_filter": ("benh_vien",),
+        "ordering": ("ten",),
+    },
+    "bac-si": {
+        "title": "Bác sĩ",
+        "model": BacSi,
+        "form_class": AdminBacSiForm,
+        "list_display": ("ho_ten", "chuyen_khoa", "khoa", "benh_vien", "so_dien_thoai"),
+        "search_fields": ("ho_ten", "chuyen_khoa", "so_dien_thoai", "khoa__ten", "benh_vien__ten"),
+        "list_filter": ("benh_vien", "khoa", "chuyen_khoa"),
+        "ordering": ("ho_ten",),
+    },
+    "gio-lam-viec-bac-si": {
+        "title": "Giờ làm việc bác sĩ",
+        "model": GioLamViecBacSi,
+        "list_display": ("bac_si", "thu", "gio_bat_dau", "gio_ket_thuc", "nghi"),
+        "list_filter": ("thu", "nghi", "bac_si"),
+        "ordering": ("bac_si", "thu"),
+    },
+    "bao-hiem-y-te": {
+        "title": "Bảo hiểm y tế",
+        "model": BaoHiemYTe,
+        "list_display": ("ma_bhyt", "ngay_cap", "ngay_het_han"),
+        "search_fields": ("ma_bhyt",),
+        "list_filter": ("ngay_het_han",),
+        "ordering": ("-ngay_het_han",),
+    },
+    "benh-nhan": {
+        "title": "Bệnh nhân",
+        "model": BenhNhan,
+        "list_display": ("ho_ten", "ngay_sinh", "gioi_tinh", "so_dien_thoai", "bhyt"),
+        "search_fields": ("ho_ten", "so_dien_thoai", "dia_chi", "bhyt__ma_bhyt"),
+        "list_filter": ("gioi_tinh",),
+        "ordering": ("ho_ten",),
+    },
+    "lich-kham": {
+        "title": "Lịch khám",
+        "model": LichKham,
+        "list_display": ("benh_nhan", "bac_si", "ngay_kham", "gio_kham", "trang_thai"),
+        "search_fields": ("benh_nhan__ho_ten", "bac_si__ho_ten", "ghi_chu"),
+        "list_filter": ("trang_thai", "ngay_kham", "bac_si", "benh_nhan"),
+        "ordering": ("-ngay_kham", "-gio_kham"),
+    },
+    "phieu-kham": {
+        "title": "Phiếu khám",
+        "model": PhieuKham,
+        "list_display": ("benh_nhan", "lich_kham", "ngay_lap"),
+        "search_fields": ("benh_nhan__ho_ten", "chan_doan", "trieu_chung"),
+        "list_filter": ("ngay_lap",),
+        "ordering": ("-ngay_lap",),
+    },
+    "lich-su-kham-benh": {
+        "title": "Lịch sử khám bệnh",
+        "model": LichSuKhamBenh,
+        "list_display": ("benh_nhan", "bac_si", "benh_vien", "ngay_kham", "ngay_tao"),
+        "search_fields": ("benh_nhan__ho_ten", "bac_si__ho_ten", "chan_doan", "trieu_chung"),
+        "list_filter": ("benh_vien", "bac_si", "ngay_kham"),
+        "ordering": ("-ngay_kham", "-ngay_tao"),
+    },
+    "log-lich-kham": {
+        "title": "Log lịch khám",
+        "model": LogLichKham,
+        "list_display": ("lich_kham", "hanh_dong", "trang_thai_cu", "trang_thai_moi", "nguoi_thuc_hien", "thoi_gian"),
+        "search_fields": ("mo_ta", "lich_kham__benh_nhan__ho_ten", "lich_kham__bac_si__ho_ten"),
+        "list_filter": ("hanh_dong", "thoi_gian"),
+        "ordering": ("-thoi_gian",),
+    },
+    "log-he-thong": {
+        "title": "Log hệ thống",
+        "model": LogHeThong,
+        "list_display": ("model_name", "object_id", "hanh_dong", "nguoi_thuc_hien", "thoi_gian"),
+        "search_fields": ("model_name", "object_id", "ghi_chu"),
+        "list_filter": ("model_name", "hanh_dong", "thoi_gian"),
+        "ordering": ("-thoi_gian",),
+    },
+    "thong-bao": {
+        "title": "Thông báo",
+        "model": ThongBao,
+        "list_display": ("tieu_de", "loai", "nguoi_nhan", "da_doc", "thoi_gian"),
+        "search_fields": ("tieu_de", "noi_dung", "nguoi_nhan__username"),
+        "list_filter": ("loai", "da_doc", "thoi_gian"),
+        "ordering": ("-thoi_gian",),
+    },
+}
+
+
+def _admin_access_or_redirect(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return redirect("home")
+    return None
+
+
+def _get_admin_config(model_key):
+    config = ADMIN_MODEL_CONFIG.get(model_key)
+    if not config:
+        raise Http404("Model không tồn tại")
+    return config
+
+
+def _get_admin_form_class(config):
+    form_class = config.get("form_class")
+    if form_class:
+        return form_class
+    return modelform_factory(config["model"], fields="__all__")
+
+
+def _format_admin_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, bool):
+        return "Có" if value else "Không"
+    if isinstance(value, datetime.datetime):
+        if timezone.is_aware(value):
+            value = timezone.localtime(value)
+        return value.strftime("%d/%m/%Y %H:%M")
+    if isinstance(value, datetime.date):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, datetime.time):
+        return value.strftime("%H:%M")
+    return str(value)
+
+
+def _resolve_path_value(obj, path):
+    current = obj
+    for part in path.split("__"):
+        current = getattr(current, part, None)
+        if current is None:
+            return None
+    return current
+
+
+ADMIN_FIELD_LABELS = {
+    "id": "ID",
+    "ten": "Tên",
+    "dia_chi": "Địa chỉ",
+    "quan": "Quận",
+    "loai_hinh": "Loại hình",
+    "co_cap_cuu": "Có cấp cứu",
+    "cap_cuu_24h": "Cấp cứu 24h",
+    "co_bhyt": "Có BHYT",
+    "gio_mo": "Giờ mở",
+    "gio_dong": "Giờ đóng",
+    "benh_vien": "Bệnh viện",
+    "khoa": "Khoa",
+    "bac_si": "Bác sĩ",
+    "benh_nhan": "Bệnh nhân",
+    "chuyen_khoa": "Chuyên khoa",
+    "so_dien_thoai": "Số điện thoại",
+    "thu": "Thứ",
+    "gio_bat_dau": "Giờ bắt đầu",
+    "gio_ket_thuc": "Giờ kết thúc",
+    "nghi": "Nghỉ",
+    "ma_bhyt": "Mã BHYT",
+    "ngay_cap": "Ngày cấp",
+    "ngay_het_han": "Ngày hết hạn",
+    "ngay_sinh": "Ngày sinh",
+    "gioi_tinh": "Giới tính",
+    "bhyt": "BHYT",
+    "ngay_kham": "Ngày khám",
+    "gio_kham": "Giờ khám",
+    "trang_thai": "Trạng thái",
+    "lich_kham": "Lịch khám",
+    "ngay_lap": "Ngày lập",
+    "ngay_tao": "Ngày tạo",
+    "hanh_dong": "Hành động",
+    "trang_thai_cu": "Trạng thái cũ",
+    "trang_thai_moi": "Trạng thái mới",
+    "nguoi_thuc_hien": "Người thực hiện",
+    "thoi_gian": "Thời gian",
+    "model_name": "Tên model",
+    "object_id": "ID đối tượng",
+    "ghi_chu": "Ghi chú",
+    "tieu_de": "Tiêu đề",
+    "loai": "Loại",
+    "nguoi_nhan": "Người nhận",
+    "da_doc": "Đã đọc",
+    "user": "Tài khoản",
+    "ho_ten": "Họ tên",
+}
+
+
+def _label_from_path(path):
+    parts = path.split("__")
+    labels = [ADMIN_FIELD_LABELS.get(part, part.replace("_", " ").capitalize()) for part in parts]
+    return " / ".join(labels)
+
+
+def _list_column_label(model, field_name):
+    if "__" in field_name:
+        return _label_from_path(field_name)
+    try:
+        if field_name in ADMIN_FIELD_LABELS:
+            return ADMIN_FIELD_LABELS[field_name]
+        return str(model._meta.get_field(field_name).verbose_name).replace("_", " ").capitalize()
+    except Exception:
+        return ADMIN_FIELD_LABELS.get(field_name, field_name.replace("_", " ").capitalize())
+
+
+def _list_column_value(obj, field_name):
+    if "__" not in field_name:
+        display_fn = f"get_{field_name}_display"
+        if hasattr(obj, display_fn):
+            try:
+                return _format_admin_value(getattr(obj, display_fn)())
+            except Exception:
+                pass
+    return _format_admin_value(_resolve_path_value(obj, field_name))
+
+
+def _apply_admin_filters(queryset, model, list_filter, params):
+    for filter_name in list_filter:
+        raw_value = params.get(filter_name, "").strip()
+        if not raw_value:
+            continue
+        try:
+            field = model._meta.get_field(filter_name)
+        except Exception:
+            continue
+        try:
+            if isinstance(field, db_models.BooleanField):
+                value = raw_value.lower() in {"1", "true", "yes", "co"}
+                queryset = queryset.filter(**{filter_name: value})
+            elif field.is_relation:
+                queryset = queryset.filter(**{f"{filter_name}_id": raw_value})
+            elif isinstance(field, db_models.DateTimeField):
+                queryset = queryset.filter(**{f"{filter_name}__date": raw_value})
+            else:
+                queryset = queryset.filter(**{filter_name: raw_value})
+        except Exception:
+            continue
+    return queryset
+
+
+def _build_filter_meta(model, list_filter, params):
+    filter_meta = []
+    for filter_name in list_filter:
+        try:
+            field = model._meta.get_field(filter_name)
+        except Exception:
+            continue
+        selected = params.get(filter_name, "").strip()
+        item = {
+            "name": filter_name,
+            "label": _list_column_label(model, filter_name),
+            "selected": selected,
+            "type": "text",
+            "options": [],
+        }
+        if isinstance(field, db_models.BooleanField):
+            item["type"] = "select"
+            item["options"] = [
+                {"value": "1", "label": "Có"},
+                {"value": "0", "label": "Không"},
+            ]
+        elif field.choices:
+            item["type"] = "select"
+            item["options"] = [{"value": str(v), "label": str(l)} for v, l in field.choices]
+        elif field.is_relation:
+            item["type"] = "select"
+            rel_qs = field.related_model.objects.all().order_by("id")[:300]
+            item["options"] = [{"value": str(obj.pk), "label": str(obj)} for obj in rel_qs]
+        elif isinstance(field, (db_models.DateField, db_models.DateTimeField)):
+            item["type"] = "date"
+        filter_meta.append(item)
+    return filter_meta
+
+
+HOSPITAL_WEEKDAY_CHOICES = [
+    (1, "Thứ 2"),
+    (2, "Thứ 3"),
+    (3, "Thứ 4"),
+    (4, "Thứ 5"),
+    (5, "Thứ 6"),
+    (6, "Thứ 7"),
+    (0, "Chủ nhật"),
+]
+
+
+def _parse_hhmm(value):
+    if not value:
+        return None
+    for fmt in ("%H:%M", "%H:%M:%S"):
+        try:
+            return datetime.datetime.strptime(value, fmt).time()
+        except ValueError:
+            continue
+    return None
+
+
+def _build_hospital_schedule_rows(request, hospital=None):
+    existing = {}
+    if hospital and hospital.pk:
+        existing = {item.thu: item for item in hospital.gio_lam_viecs.all()}
+
+    fallback_open = hospital.gio_mo if hospital and hospital.gio_mo else datetime.time(7, 0)
+    fallback_close = hospital.gio_dong if hospital and hospital.gio_dong else datetime.time(17, 0)
+
+    rows = []
+    errors = []
+    is_post = request.method == "POST"
+
+    for thu, label in HOSPITAL_WEEKDAY_CHOICES:
+        current = existing.get(thu)
+        default_open = current.gio_mo if current else fallback_open
+        default_close = current.gio_dong if current else fallback_close
+        default_nghi = current.nghi if current else False
+
+        if is_post:
+            gio_mo_raw = request.POST.get(f"schedule_{thu}_gio_mo", "").strip() or default_open.strftime("%H:%M")
+            gio_dong_raw = request.POST.get(f"schedule_{thu}_gio_dong", "").strip() or default_close.strftime("%H:%M")
+            nghi = request.POST.get(f"schedule_{thu}_nghi") in {"1", "on", "true", "True"}
+        else:
+            gio_mo_raw = default_open.strftime("%H:%M")
+            gio_dong_raw = default_close.strftime("%H:%M")
+            nghi = default_nghi
+
+        gio_mo = _parse_hhmm(gio_mo_raw)
+        gio_dong = _parse_hhmm(gio_dong_raw)
+
+        if not gio_mo or not gio_dong:
+            errors.append(f"{label}: Giờ mở/giờ đóng không hợp lệ.")
+        elif not nghi and gio_mo >= gio_dong:
+            errors.append(f"{label}: Giờ đóng phải sau giờ mở.")
+
+        rows.append({
+            "thu": thu,
+            "label": label,
+            "gio_mo_raw": gio_mo_raw,
+            "gio_dong_raw": gio_dong_raw,
+            "nghi": nghi,
+            "gio_mo": gio_mo,
+            "gio_dong": gio_dong,
+        })
+
+    return rows, errors
+
+
+def _save_hospital_schedule_rows(hospital, rows):
+    for row in rows:
+        GioLamViecBenhVien.objects.update_or_create(
+            benh_vien=hospital,
+            thu=row["thu"],
+            defaults={
+                "gio_mo": row["gio_mo"],
+                "gio_dong": row["gio_dong"],
+                "nghi": row["nghi"],
+            },
+        )
+
+
+@login_required
+def custom_admin_model_list(request, model_key):
+    denied = _admin_access_or_redirect(request)
+    if denied:
+        return denied
+
+    config = _get_admin_config(model_key)
+    model = config["model"]
+    queryset = model.objects.all()
+
+    keyword = request.GET.get("q", "").strip()
+    search_fields = config.get("search_fields", ())
+    if keyword and search_fields:
+        search_q = Q()
+        for field_name in search_fields:
+            search_q |= Q(**{f"{field_name}__icontains": keyword})
+        queryset = queryset.filter(search_q)
+
+    list_filter = config.get("list_filter", ())
+    queryset = _apply_admin_filters(queryset, model, list_filter, request.GET)
+
+    ordering = config.get("ordering", ("-id",))
+    queryset = queryset.order_by(*ordering)
+
+    page_obj = Paginator(queryset, 25).get_page(request.GET.get("page"))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    query_string = query_params.urlencode()
+    list_display = config.get("list_display", ("id",))
+    columns = [{"name": c, "label": _list_column_label(model, c)} for c in list_display]
+    rows = [
+        {
+            "id": obj.pk,
+            "values": [_list_column_value(obj, col) for col in list_display],
+        }
+        for obj in page_obj.object_list
+    ]
+
+    context = {
+        "title": f"Quản trị {config['title']}",
+        "model_key": model_key,
+        "model_label": config["title"],
+        "q": keyword,
+        "columns": columns,
+        "rows": rows,
+        "filter_meta": _build_filter_meta(model, list_filter, request.GET),
+        "page_obj": page_obj,
+        "query_string": query_string,
+        "admin_models": [
+            {"key": key, "label": cfg["title"]}
+            for key, cfg in ADMIN_MODEL_CONFIG.items()
+        ],
+    }
+    return render(request, "core/custom_admin_model_list.html", context)
+
+
+@login_required
+def custom_admin_model_create(request, model_key):
+    denied = _admin_access_or_redirect(request)
+    if denied:
+        return denied
+    config = _get_admin_config(model_key)
+    form_class = _get_admin_form_class(config)
+    is_hospital = model_key == "benh-vien"
+
+    form = form_class(request.POST or None)
+    schedule_rows = []
+    schedule_errors = []
+    if is_hospital:
+        schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, None)
+
+    if request.method == "POST" and form.is_valid():
+        if schedule_errors:
+            for err in schedule_errors:
+                form.add_error(None, err)
+        else:
+            with transaction.atomic():
+                obj = form.save()
+                if is_hospital:
+                    _save_hospital_schedule_rows(obj, schedule_rows)
+            messages.success(request, f"Đã tạo {config['title'].lower()}.")
+            return redirect("custom_admin_model_list", model_key=model_key)
+
+    return render(request, "core/custom_admin_form.html", {
+        "title": f"Tạo {config['title']}",
+        "form": form,
+        "back_href": f"/quan-tri/du-lieu/{model_key}/",
+        "show_map_picker": is_hospital,
+        "show_hospital_layout": is_hospital,
+        "show_hospital_schedule": is_hospital,
+        "schedule_rows": schedule_rows,
+        "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
+    })
+
+
+@login_required
+def custom_admin_model_edit(request, model_key, pk):
+    denied = _admin_access_or_redirect(request)
+    if denied:
+        return denied
+    config = _get_admin_config(model_key)
+    model = config["model"]
+    obj = get_object_or_404(model, pk=pk)
+    form_class = _get_admin_form_class(config)
+    is_hospital = model_key == "benh-vien"
+
+    form = form_class(request.POST or None, instance=obj)
+    schedule_rows = []
+    schedule_errors = []
+    if is_hospital:
+        schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, obj)
+
+    if request.method == "POST" and form.is_valid():
+        if schedule_errors:
+            for err in schedule_errors:
+                form.add_error(None, err)
+        else:
+            with transaction.atomic():
+                updated_obj = form.save()
+                if is_hospital:
+                    _save_hospital_schedule_rows(updated_obj, schedule_rows)
+            messages.success(request, f"Đã cập nhật {config['title'].lower()}.")
+            return redirect("custom_admin_model_list", model_key=model_key)
+
+    return render(request, "core/custom_admin_form.html", {
+        "title": f"Sửa {config['title']}",
+        "form": form,
+        "object_name": str(obj),
+        "back_href": f"/quan-tri/du-lieu/{model_key}/",
+        "show_map_picker": is_hospital,
+        "show_hospital_layout": is_hospital,
+        "show_hospital_schedule": is_hospital,
+        "schedule_rows": schedule_rows,
+        "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
+    })
+
+
+@login_required
+def custom_admin_model_delete(request, model_key, pk):
+    denied = _admin_access_or_redirect(request)
+    if denied:
+        return denied
+    if request.method != "POST":
+        return redirect("custom_admin_model_list", model_key=model_key)
+    config = _get_admin_config(model_key)
+    obj = get_object_or_404(config["model"], pk=pk)
+    try:
+        obj.delete()
+        messages.success(request, f"Đã xóa {config['title'].lower()}.")
+    except Exception as exc:
+        messages.error(request, f"Không thể xóa: {exc}")
+    return redirect("custom_admin_model_list", model_key=model_key)
+
+
+@login_required
+def custom_admin_hospitals(request):
+    return custom_admin_model_list(request, "benh-vien")
+
+
+@login_required
+def custom_admin_hospital_create(request):
+    return custom_admin_model_create(request, "benh-vien")
+
+
+@login_required
+def custom_admin_hospital_edit(request, pk):
+    return custom_admin_model_edit(request, "benh-vien", pk)
+
+
+@login_required
+def custom_admin_hospital_delete(request, pk):
+    return custom_admin_model_delete(request, "benh-vien", pk)
+
+
+@login_required
+def custom_admin_departments(request):
+    return custom_admin_model_list(request, "khoa")
+
+
+@login_required
+def custom_admin_department_create(request):
+    return custom_admin_model_create(request, "khoa")
+
+
+@login_required
+def custom_admin_department_edit(request, pk):
+    return custom_admin_model_edit(request, "khoa", pk)
+
+
+@login_required
+def custom_admin_department_delete(request, pk):
+    return custom_admin_model_delete(request, "khoa", pk)
+
+
+@login_required
+def custom_admin_doctors(request):
+    return custom_admin_model_list(request, "bac-si")
+
+
+@login_required
+def custom_admin_doctor_create(request):
+    return custom_admin_model_create(request, "bac-si")
+
+
+@login_required
+def custom_admin_doctor_edit(request, pk):
+    return custom_admin_model_edit(request, "bac-si", pk)
+
+
+@login_required
+def custom_admin_doctor_delete(request, pk):
+    return custom_admin_model_delete(request, "bac-si", pk)
+
+
 def user_logout(request):
 
     logout(request)

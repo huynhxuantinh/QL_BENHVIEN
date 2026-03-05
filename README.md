@@ -12,8 +12,9 @@ Web quản lý bệnh viện có GIS (Django + PostGIS): tìm bệnh viện trê
   - Xem dashboard lịch khám theo trạng thái.
   - Bắt đầu khám, hoàn thành khám, tạo/sửa phiếu khám.
   - Xem thông báo và lịch sử bệnh nhân.
-- Admin:
-  - Quản lý dữ liệu bệnh viện/bác sĩ/khoa/lịch qua Django Admin.
+- Quản trị:
+  - Có thể dùng Django Admin tại `/admin/`.
+  - Trang quản trị giao diện mới vẫn dùng được tại `/quan-tri/`.
   - Nhập dữ liệu hàng loạt từ file Excel.
 
 ## 2. Yêu cầu môi trường
@@ -32,6 +33,8 @@ DB_HOST=localhost
 DB_PORT=5432
 GDAL_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\gdal312.dll
 GEOS_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\geos_c.dll
+# Tuỳ chọn: bật tìm địa chỉ kiểu Google Maps trong form tạo bệnh viện
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 ## 4. Cài đặt dự án
@@ -106,7 +109,8 @@ venv\Scripts\python.exe manage.py runserver
 
 Truy cập:
 - Web: `http://127.0.0.1:8000/`
-- Admin: `http://127.0.0.1:8000/admin/`
+- Django Admin: `http://127.0.0.1:8000/admin/`
+- Quản trị giao diện mới: `http://127.0.0.1:8000/quan-tri/`
 
 ## 9. Tạo tài khoản admin (tùy chọn)
 ```powershell

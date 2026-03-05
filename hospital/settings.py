@@ -139,3 +139,6 @@ STATIC_URL = 'static/'
 import os
 GDAL_LIBRARY_PATH = os.getenv('GDAL_PATH')
 GEOS_LIBRARY_PATH = os.getenv('GEOS_PATH')
+
+# Optional: for better geocoding search (Google Maps)
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')

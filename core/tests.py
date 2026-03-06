@@ -332,6 +332,29 @@ class AdminDashboardTests(TestCase):
             username="user_demo",
             password="pass12345",
         )
+        self.hospital = BenhVien.objects.create(
+            ten="BV Admin Test",
+            dia_chi="1 Duong Test",
+            quan="Quan 1",
+            vi_tri=Point(106.7, 10.77, srid=4326),
+            co_cap_cuu=True,
+            cap_cuu_24h=False,
+            co_bhyt=True,
+            gio_mo=datetime.time(7, 0),
+            gio_dong=datetime.time(17, 0),
+            loai_hinh="cong",
+        )
+        self.department = Khoa.objects.create(
+            ten="Khoa Admin Test",
+            benh_vien=self.hospital,
+        )
+        self.doctor = BacSi.objects.create(
+            ho_ten="Bac Si Admin Test",
+            chuyen_khoa="Noi tong quat",
+            khoa=self.department,
+            benh_vien=self.hospital,
+            so_dien_thoai="0909555666",
+        )
 
     def test_admin_login_redirects_to_custom_dashboard(self):
         response = self.client.post(
@@ -355,6 +378,75 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(self.client.get(reverse("custom_admin_hospitals")).status_code, 200)
         self.assertEqual(self.client.get(reverse("custom_admin_departments")).status_code, 200)
         self.assertEqual(self.client.get(reverse("custom_admin_doctors")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("custom_admin_model_list", args=["tai-khoan"])).status_code, 200)
+
+    def test_admin_department_api_returns_departments_by_hospital(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(
+            reverse("custom_admin_departments_api"),
+            {"benh_vien_id": self.hospital.id},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("results", data)
+        self.assertEqual(len(data["results"]), 1)
+        self.assertEqual(data["results"][0]["id"], self.department.id)
+
+    def test_non_admin_cannot_use_department_api(self):
+        self.client.login(username="user_demo", password="pass12345")
+        response = self.client.get(
+            reverse("custom_admin_departments_api"),
+            {"benh_vien_id": self.hospital.id},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_doctor_schedule_form_shows_hospital_in_doctor_option(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(reverse("custom_admin_model_create", args=["gio-lam-viec-bac-si"]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Bac Si Admin Test - BV Admin Test")
+
+    def test_admin_can_create_user_from_custom_admin(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.post(
+            reverse("custom_admin_model_create", args=["tai-khoan"]),
+            {
+                "username": "staff_from_custom",
+                "email": "staff@example.com",
+                "first_name": "Staff",
+                "last_name": "Custom",
+                "is_active": "on",
+                "is_staff": "on",
+                "is_superuser": "",
+                "password": "Staff@123456",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        created_user = User.objects.get(username="staff_from_custom")
+        self.assertTrue(created_user.check_password("Staff@123456"))
+        self.assertTrue(created_user.is_staff)
+
+    def test_admin_edit_own_password_keeps_session(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.post(
+            reverse("custom_admin_model_edit", args=["tai-khoan", self.admin_user.id]),
+            {
+                "username": "admin_demo",
+                "email": "admin@example.com",
+                "first_name": "",
+                "last_name": "",
+                "is_active": "on",
+                "is_staff": "on",
+                "is_superuser": "on",
+                "password": "NewPass@12345",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        # Still authenticated after changing own password.
+        follow = self.client.get(reverse("custom_admin_model_list", args=["tai-khoan"]))
+        self.assertEqual(follow.status_code, 200)
+        self.admin_user.refresh_from_db()
+        self.assertTrue(self.admin_user.check_password("NewPass@12345"))
 
     def test_django_admin_url_enabled(self):
         response = self.client.get("/admin/")

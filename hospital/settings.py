@@ -142,3 +142,8 @@ GEOS_LIBRARY_PATH = os.getenv('GEOS_PATH')
 
 # Optional: for better geocoding search (Google Maps)
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
+
+# Auth redirects
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'

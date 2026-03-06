@@ -1,7 +1,8 @@
 from django import forms
+from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 
-from .models import BacSi, BenhVien, Khoa, LichKham
+from .models import BacSi, BenhVien, GioLamViecBacSi, Khoa, LichKham
 
 
 class DatLichForm(forms.ModelForm):
@@ -124,6 +125,8 @@ class AdminBacSiForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["khoa"].queryset = Khoa.objects.none()
+        self.fields["user"].required = False
+        self.fields["user"].label = "Tài khoản liên kết (tùy chọn)"
 
         benh_vien_id = None
         if self.is_bound:
@@ -144,3 +147,71 @@ class AdminBacSiForm(forms.ModelForm):
         if benh_vien and khoa and khoa.benh_vien_id != benh_vien.id:
             self.add_error("khoa", "Khoa kh\u00f4ng thu\u1ed9c b\u1ec7nh vi\u1ec7n \u0111\u00e3 ch\u1ecdn.")
         return cleaned_data
+
+
+class AdminGioLamViecBacSiForm(forms.ModelForm):
+    class Meta:
+        model = GioLamViecBacSi
+        fields = "__all__"
+        widgets = {
+            "bac_si": forms.Select(attrs={"class": "form-control"}),
+            "thu": forms.Select(attrs={"class": "form-control"}),
+            "gio_bat_dau": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
+            "gio_ket_thuc": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
+            "nghi": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["bac_si"].queryset = BacSi.objects.select_related("benh_vien").order_by("ho_ten")
+        self.fields["bac_si"].label_from_instance = (
+            lambda obj: f"{obj.ho_ten} - {obj.benh_vien.ten}"
+        )
+
+
+class AdminUserForm(forms.ModelForm):
+    password = forms.CharField(
+        required=False,
+        label="Mật khẩu mới",
+        widget=forms.PasswordInput(render_value=False, attrs={"class": "form-control"}),
+        help_text="Để trống nếu không đổi mật khẩu.",
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "password",
+        ]
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance or not self.instance.pk:
+            self.fields["password"].required = True
+            self.fields["password"].help_text = "Bắt buộc khi tạo tài khoản."
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        raw_password = self.cleaned_data.get("password", "").strip()
+        if raw_password:
+            user.set_password(raw_password)
+        elif not user.pk:
+            user.set_unusable_password()
+        if commit:
+            user.save()
+        return user

@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.forms import modelform_factory
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.db import models as db_models
@@ -35,7 +35,14 @@ from .models import (
     ThongBao,
 )
 
-from .forms import AdminBacSiForm, AdminBenhVienForm, AdminKhoaForm, DatLichForm
+from .forms import (
+    AdminBacSiForm,
+    AdminBenhVienForm,
+    AdminGioLamViecBacSiForm,
+    AdminKhoaForm,
+    AdminUserForm,
+    DatLichForm,
+)
 
 
 # ==========================
@@ -979,9 +986,19 @@ ADMIN_MODEL_CONFIG = {
         "list_filter": ("benh_vien", "khoa", "chuyen_khoa"),
         "ordering": ("ho_ten",),
     },
+    "tai-khoan": {
+        "title": "Tài khoản",
+        "model": User,
+        "form_class": AdminUserForm,
+        "list_display": ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "is_active"),
+        "search_fields": ("username", "email", "first_name", "last_name"),
+        "list_filter": ("is_staff", "is_superuser", "is_active"),
+        "ordering": ("-date_joined",),
+    },
     "gio-lam-viec-bac-si": {
         "title": "Giờ làm việc bác sĩ",
         "model": GioLamViecBacSi,
+        "form_class": AdminGioLamViecBacSiForm,
         "list_display": ("bac_si", "thu", "gio_bat_dau", "gio_ket_thuc", "nghi"),
         "list_filter": ("thu", "nghi", "bac_si"),
         "ordering": ("bac_si", "thu"),
@@ -1145,6 +1162,15 @@ ADMIN_FIELD_LABELS = {
     "da_doc": "Đã đọc",
     "user": "Tài khoản",
     "ho_ten": "Họ tên",
+    "username": "Tên đăng nhập",
+    "email": "Email",
+    "first_name": "Tên",
+    "last_name": "Họ",
+    "is_staff": "Nhân viên",
+    "is_superuser": "Quản trị cao nhất",
+    "is_active": "Đang hoạt động",
+    "date_joined": "Ngày tạo",
+    "password": "Mật khẩu",
 }
 
 
@@ -1438,6 +1464,9 @@ def custom_admin_model_edit(request, model_key, pk):
                 updated_obj = form.save()
                 if is_hospital:
                     _save_hospital_schedule_rows(updated_obj, schedule_rows)
+            if isinstance(updated_obj, User) and request.user.pk == updated_obj.pk and form.cleaned_data.get("password"):
+                # Keep current admin session alive when changing own password.
+                update_session_auth_hash(request, updated_obj)
             messages.success(request, f"Đã cập nhật {config['title'].lower()}.")
             return redirect("custom_admin_model_list", model_key=model_key)
 
@@ -1529,6 +1558,23 @@ def custom_admin_doctor_edit(request, pk):
 @login_required
 def custom_admin_doctor_delete(request, pk):
     return custom_admin_model_delete(request, "bac-si", pk)
+
+
+@login_required
+def custom_admin_departments_api(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return JsonResponse({"results": []}, status=403)
+
+    benh_vien_id = (request.GET.get("benh_vien_id") or "").strip()
+    if not benh_vien_id.isdigit():
+        return JsonResponse({"results": []})
+
+    departments = (
+        Khoa.objects.filter(benh_vien_id=int(benh_vien_id))
+        .order_by("ten")
+        .values("id", "ten")
+    )
+    return JsonResponse({"results": list(departments)})
 
 
 def user_logout(request):

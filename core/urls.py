@@ -27,6 +27,7 @@ urlpatterns = [
     path("quan-tri/bac-si/tao/", views.custom_admin_doctor_create, name="custom_admin_doctor_create"),
     path("quan-tri/bac-si/<int:pk>/sua/", views.custom_admin_doctor_edit, name="custom_admin_doctor_edit"),
     path("quan-tri/bac-si/<int:pk>/xoa/", views.custom_admin_doctor_delete, name="custom_admin_doctor_delete"),
+    path("quan-tri/api/khoa/", views.custom_admin_departments_api, name="custom_admin_departments_api"),
     path("quan-tri/du-lieu/<slug:model_key>/", views.custom_admin_model_list, name="custom_admin_model_list"),
     path("quan-tri/du-lieu/<slug:model_key>/tao/", views.custom_admin_model_create, name="custom_admin_model_create"),
     path("quan-tri/du-lieu/<slug:model_key>/<int:pk>/sua/", views.custom_admin_model_edit, name="custom_admin_model_edit"),

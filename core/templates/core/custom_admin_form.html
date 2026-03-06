@@ -233,6 +233,60 @@
         </div>
     </div>
 
+    <script>
+        (function () {
+            var hospitalSelect = document.getElementById("id_benh_vien");
+            var departmentSelect = document.getElementById("id_khoa");
+            if (!hospitalSelect || !departmentSelect) return;
+
+            var initialDepartmentId = departmentSelect.value || "";
+
+            function setDepartmentOptions(items, selectedId) {
+                departmentSelect.innerHTML = "";
+
+                var emptyOption = document.createElement("option");
+                emptyOption.value = "";
+                emptyOption.textContent = "---------";
+                departmentSelect.appendChild(emptyOption);
+
+                items.forEach(function (item) {
+                    var option = document.createElement("option");
+                    option.value = String(item.id);
+                    option.textContent = item.ten;
+                    if (selectedId && String(item.id) === String(selectedId)) {
+                        option.selected = true;
+                    }
+                    departmentSelect.appendChild(option);
+                });
+            }
+
+            async function loadDepartments(selectedId) {
+                var hospitalId = (hospitalSelect.value || "").trim();
+                if (!hospitalId) {
+                    setDepartmentOptions([], "");
+                    return;
+                }
+
+                try {
+                    var url = "{% url 'custom_admin_departments_api' %}?benh_vien_id=" + encodeURIComponent(hospitalId);
+                    var response = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+                    if (!response.ok) throw new Error("department fetch failed");
+                    var data = await response.json();
+                    var items = Array.isArray(data.results) ? data.results : [];
+                    setDepartmentOptions(items, selectedId);
+                } catch (error) {
+                    setDepartmentOptions([], "");
+                }
+            }
+
+            hospitalSelect.addEventListener("change", function () {
+                loadDepartments("");
+            });
+
+            loadDepartments(initialDepartmentId);
+        })();
+    </script>
+
     {% if show_map_picker %}
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         {% if google_maps_api_key %}

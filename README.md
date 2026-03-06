@@ -49,8 +49,6 @@ DB_PORT=5432
 GDAL_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\gdal312.dll
 GEOS_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\geos_c.dll
 
-# Tùy chọn (tìm địa chỉ bệnh viện bằng Google Maps trong form admin)
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 ```
 
 ---
@@ -62,17 +60,12 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 venv\Scripts\python.exe -m pip install python-dotenv openpyxl
+venv\Scripts\python.exe -m pip install openpyxl
 ```
 
 ---
 
 ## 5) Khởi tạo database
-
-Đảm bảo DB đã bật PostGIS:
-
-```sql
-CREATE EXTENSION IF NOT EXISTS postgis;
-```
 
 Chạy migrate:
 
@@ -101,10 +94,6 @@ Truy cập:
 ```powershell
 venv\Scripts\python.exe manage.py createsuperuser
 ```
-
-Sau khi đăng nhập bằng tài khoản `is_staff` hoặc `is_superuser`, hệ thống chuyển vào `/quan-tri/`.
-
----
 
 ## 8) Seed dữ liệu mẫu
 
@@ -207,31 +196,3 @@ venv\Scripts\python.exe manage.py test
 7. Đăng nhập admin vào `/quan-tri/`, xem dashboard và danh mục “Tài khoản”.
 
 ---
-
-## 13) Lỗi thường gặp
-
-### 1) `Page not found /accounts/login/`
-- Dự án dùng route đăng nhập là `/login/`.
-- Settings đã cấu hình:
-  - `LOGIN_URL = '/login/'`
-  - `LOGOUT_REDIRECT_URL = '/login/'`
-
-### 2) `Missing dependency openpyxl`
-```powershell
-venv\Scripts\python.exe -m pip install openpyxl
-```
-
-### 3) Lỗi GIS/GDAL/GEOS
-- Kiểm tra lại `GDAL_PATH`, `GEOS_PATH` trong `.env`.
-- Đảm bảo đúng file `.dll` trên máy.
-
-### 4) Import lỗi ràng buộc cấp cứu 24h
-- Nếu `cap_cuu_24h=True` thì `co_cap_cuu` phải `True`.
-
----
-
-## 14) Ghi chú kỹ thuật
-
-- Stack chính: Django 6, PostGIS, Leaflet/OpenStreetMap.
-- Có cả Django Admin mặc định và Admin giao diện riêng.
-- Một số thao tác quản trị đã có test tự động trong `core/tests.py`.

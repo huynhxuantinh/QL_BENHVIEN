@@ -5,6 +5,7 @@
     <title>{{ title }}</title>
     {% if show_map_picker %}
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css">
     {% endif %}
     <style>
         body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f2f6f5; color: #1f2a27; }
@@ -43,27 +44,6 @@
         .schedule-table tr:last-child td { border-bottom: 0; }
 
         .map-block { margin-bottom: 14px; }
-        .map-search {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-        .map-search .btn { white-space: nowrap; }
-        .map-results {
-            list-style: none;
-            margin: 0 0 8px;
-            padding: 0;
-            border: 1px solid #d8e5df;
-            border-radius: 10px;
-            max-height: 180px;
-            overflow: auto;
-            display: none;
-            background: #fff;
-        }
-        .map-results li { padding: 8px 10px; border-bottom: 1px solid #edf2ef; cursor: pointer; font-size: 13px; }
-        .map-results li:last-child { border-bottom: 0; }
-        .map-results li:hover { background: #f4faf8; }
         #hospital-map { width: 100%; height: 360px; border: 1px solid #cbdbd5; border-radius: 10px; overflow: hidden; }
         .map-note { margin-top: 6px; font-size: 13px; color: #5e716c; }
 
@@ -178,13 +158,8 @@
                 {% if show_map_picker %}
                     <div class="section-title">Ch&#7885;n v&#7883; tr&#237; tr&#234;n b&#7843;n &#273;&#7891;</div>
                     <div class="map-block">
-                        <div class="map-search">
-                            <input id="map-address-input" type="text" placeholder="T&#236;m &#273;&#7883;a ch&#7881;, v&#237; d&#7909;: 215 H&#7891;ng B&#224;ng, Qu&#7853;n 5">
-                            <button id="map-search-btn" class="btn" type="button">T&#236;m tr&#234;n b&#7843;n &#273;&#7891;</button>
-                        </div>
-                        <ul id="map-search-results" class="map-results"></ul>
                         <div id="hospital-map"></div>
-                        <div id="map-note" class="map-note">B&#7845;m l&#234;n b&#7843;n &#273;&#7891; ho&#7863;c k&#233;o ghim &#273;&#7875; c&#7853;p nh&#7853;t V&#297; &#273;&#7897;/Kinh &#273;&#7897;.</div>
+                        <div id="map-note" class="map-note">B&#7845;m icon k&#237;nh l&#250;p tr&#234;n b&#7843;n &#273;&#7891; &#273;&#7875; t&#236;m &#273;&#7883;a ch&#7881;, ho&#7863;c k&#233;o ghim &#273;&#7875; c&#7853;p nh&#7853;t V&#297; &#273;&#7897;/Kinh &#273;&#7897;.</div>
                     </div>
                 {% endif %}
 
@@ -289,17 +264,12 @@
 
     {% if show_map_picker %}
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-        {% if google_maps_api_key %}
-            <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&libraries=places"></script>
-        {% endif %}
+        <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
         <script>
             (function () {
                 var latInput = document.getElementById("id_lat");
                 var lonInput = document.getElementById("id_lon");
                 var mapEl = document.getElementById("hospital-map");
-                var searchInput = document.getElementById("map-address-input");
-                var searchBtn = document.getElementById("map-search-btn");
-                var resultsEl = document.getElementById("map-search-results");
                 var noteEl = document.getElementById("map-note");
                 if (!latInput || !lonInput || !mapEl || typeof L === "undefined") return;
 
@@ -308,20 +278,17 @@
 
                 var lat = parseFloat(latInput.value);
                 var lon = parseFloat(lonInput.value);
-                if (Number.isNaN(lat) || Number.isNaN(lon)) {
-                    lat = defaultLat;
-                    lon = defaultLon;
-                    latInput.value = lat.toFixed(6);
-                    lonInput.value = lon.toFixed(6);
-                }
+                var hasInitialCoords = !Number.isNaN(lat) && !Number.isNaN(lon);
+                var viewLat = hasInitialCoords ? lat : defaultLat;
+                var viewLon = hasInitialCoords ? lon : defaultLon;
 
-                var map = L.map("hospital-map").setView([lat, lon], 12);
+                var map = L.map("hospital-map").setView([viewLat, viewLon], 12);
                 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                     maxZoom: 19,
                     attribution: "&copy; OpenStreetMap contributors"
                 }).addTo(map);
 
-                var marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+                var marker = null;
 
                 function setMapNote(text) {
                     if (noteEl) noteEl.textContent = text;
@@ -332,15 +299,29 @@
                     lonInput.value = latlng.lng.toFixed(6);
                 }
 
+                function bindMarkerDrag(targetMarker) {
+                    targetMarker.on("dragend", function (e) {
+                        updateInputs(e.target.getLatLng());
+                    });
+                }
+
+                function ensureMarker(latlng) {
+                    if (marker) return marker;
+                    marker = L.marker(latlng, { draggable: true }).addTo(map);
+                    bindMarkerDrag(marker);
+                    return marker;
+                }
+
                 function setMapLocation(latlng, zoom) {
-                    marker.setLatLng(latlng);
+                    ensureMarker(latlng).setLatLng(latlng);
                     updateInputs(latlng);
                     map.setView(latlng, zoom || 16);
                 }
 
-                marker.on("dragend", function (e) {
-                    updateInputs(e.target.getLatLng());
-                });
+                if (hasInitialCoords) {
+                    marker = L.marker([lat, lon], { draggable: true }).addTo(map);
+                    bindMarkerDrag(marker);
+                }
 
                 map.on("click", function (e) {
                     setMapLocation(e.latlng);
@@ -356,119 +337,32 @@
                 latInput.addEventListener("change", updateMarkerFromInputs);
                 lonInput.addEventListener("change", updateMarkerFromInputs);
 
-                function renderSearchResults(items) {
-                    if (!resultsEl) return;
-                    resultsEl.innerHTML = "";
-                    if (!items.length) {
-                        resultsEl.style.display = "none";
-                        return;
-                    }
-
-                    items.forEach(function (item) {
-                        var li = document.createElement("li");
-                        li.textContent = item.display_name;
-                        li.addEventListener("click", function () {
-                            var latNum = parseFloat(item.lat);
-                            var lonNum = parseFloat(item.lon);
-                            if (Number.isNaN(latNum) || Number.isNaN(lonNum)) return;
-                            setMapLocation({ lat: latNum, lng: lonNum }, 17);
-                            resultsEl.style.display = "none";
-                            setMapNote("&#272;&#227; ch&#7885;n: " + item.display_name);
+                if (L.Control && typeof L.Control.geocoder === "function") {
+                    var geocoderOptions = {
+                        position: "topleft",
+                        collapsed: true,
+                        defaultMarkGeocode: false,
+                        placeholder: "Tim dia chi...",
+                        errorMessage: "Khong tim thay dia chi"
+                    };
+                    if (L.Control.Geocoder && typeof L.Control.Geocoder.nominatim === "function") {
+                        geocoderOptions.geocoder = L.Control.Geocoder.nominatim({
+                            geocodingQueryParams: {
+                                countrycodes: "vn",
+                                "accept-language": "vi,en"
+                            }
                         });
-                        resultsEl.appendChild(li);
-                    });
-                    resultsEl.style.display = "block";
-                }
-
-                function fetchGoogleGeocode(query) {
-                    if (!window.google || !google.maps || !google.maps.Geocoder) {
-                        return Promise.resolve([]);
                     }
-                    return new Promise(function (resolve, reject) {
-                        var geocoder = new google.maps.Geocoder();
-                        geocoder.geocode(
-                            {
-                                address: query,
-                                componentRestrictions: { country: "VN" },
-                                region: "vn"
-                            },
-                            function (results, status) {
-                                if (status === "OK" && Array.isArray(results)) {
-                                    resolve(results.slice(0, 8).map(function (item) {
-                                        return {
-                                            display_name: item.formatted_address,
-                                            lat: item.geometry.location.lat(),
-                                            lon: item.geometry.location.lng()
-                                        };
-                                    }));
-                                    return;
-                                }
-                                if (status === "ZERO_RESULTS") {
-                                    resolve([]);
-                                    return;
-                                }
-                                reject(new Error("google geocode failed: " + status));
-                            }
-                        );
-                    });
-                }
 
-                async function fetchNominatim(query) {
-                    var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&q=" + encodeURIComponent(query);
-                    var response = await fetch(url, { headers: { "Accept-Language": "vi,en" } });
-                    if (!response.ok) throw new Error("search failed");
-                    var data = await response.json();
-                    return Array.isArray(data) ? data : [];
-                }
-
-                async function searchAddress() {
-                    if (!searchInput) return;
-                    var q = (searchInput.value || "").trim();
-                    if (!q) return;
-                    setMapNote("&#272;ang t&#236;m &#273;&#7883;a ch&#7881;...");
-
-                    try {
-                        var data = [];
-                        try {
-                            data = await fetchGoogleGeocode(q);
-                        } catch (error) {
-                            data = [];
-                        }
-
-                        if (!data.length) {
-                            data = await fetchNominatim(q);
-                        }
-
-                        if (!data.length && !/ho\s*chi\s*minh|tp\.?\s*hcm|sai\s*gon/i.test(q)) {
-                            try {
-                                data = await fetchGoogleGeocode(q + ", Ho Chi Minh City, Vietnam");
-                            } catch (error) {
-                                data = [];
-                            }
-                            if (!data.length) {
-                                data = await fetchNominatim(q + ", Ho Chi Minh City, Vietnam");
-                            }
-                        }
-
-                        renderSearchResults(data);
-                        if (!data.length) {
-                            setMapNote("Kh&#244;ng t&#236;m th&#7845;y &#273;&#7883;a ch&#7881;. Th&#7917; th&#234;m 'TP HCM' ho&#7863;c nh&#7853;p chi ti&#7871;t h&#417;n.");
-                        } else {
-                            setMapNote("Ch&#7885;n m&#7897;t k&#7871;t qu&#7843; b&#234;n d&#432;&#7899;i &#273;&#7875; &#273;&#7863;t v&#7883; tr&#237;.");
-                        }
-                    } catch (error) {
-                        setMapNote("Kh&#244;ng t&#236;m ki&#7871;m &#273;&#432;&#7907;c l&#250;c n&#224;y. B&#7841;n th&#7917; l&#7841;i sau.");
-                    }
-                }
-
-                if (searchBtn) searchBtn.addEventListener("click", searchAddress);
-                if (searchInput) {
-                    searchInput.addEventListener("keydown", function (event) {
-                        if (event.key === "Enter") {
-                            event.preventDefault();
-                            searchAddress();
-                        }
-                    });
+                    L.Control.geocoder(geocoderOptions)
+                        .on("markgeocode", function (e) {
+                            if (!e || !e.geocode || !e.geocode.center) return;
+                            setMapLocation(e.geocode.center, 17);
+                            setMapNote("Da chon: " + (e.geocode.name || "Vi tri"));
+                        })
+                        .addTo(map);
+                } else {
+                    setMapNote("Khong tai duoc thanh tim kiem tren ban do. Ban van co the bam len ban do de chon vi tri.");
                 }
             })();
         </script>

@@ -55,7 +55,7 @@ class AdminBenhVienForm(forms.ModelForm):
         fields = [
             "ten",
             "dia_chi",
-            "quan",
+            "phuong",
             "lat",
             "lon",
             "co_cap_cuu",
@@ -66,7 +66,7 @@ class AdminBenhVienForm(forms.ModelForm):
         labels = {
             "ten": "Tên bệnh viện",
             "dia_chi": "Địa chỉ",
-            "quan": "Quận",
+            "phuong": "Phường",
             "co_cap_cuu": "Có cấp cứu",
             "cap_cuu_24h": "Cấp cứu 24h",
             "co_bhyt": "Có BHYT",
@@ -75,7 +75,7 @@ class AdminBenhVienForm(forms.ModelForm):
         widgets = {
             "ten": forms.TextInput(attrs={"class": "form-control"}),
             "dia_chi": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "quan": forms.TextInput(attrs={"class": "form-control"}),
+            "phuong": forms.TextInput(attrs={"class": "form-control"}),
             "co_cap_cuu": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "cap_cuu_24h": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "co_bhyt": forms.CheckboxInput(attrs={"class": "form-check-input"}),

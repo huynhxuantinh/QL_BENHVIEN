@@ -9,7 +9,7 @@
 ## 1) Tính năng chính
 
 ### Người dùng
-- Xem danh sách bệnh viện, lọc theo quận/loại hình/BHYT/cấp cứu/trạng thái mở.
+- Xem danh sách bệnh viện, lọc theo phường/loại hình/BHYT/cấp cứu/trạng thái mở.
 - Tìm bệnh viện gần vị trí hiện tại.
 - Xem chi tiết bệnh viện và chỉ đường trên bản đồ.
 - Đặt lịch khám, xem lịch sắp tới, hủy lịch, xem lịch sử khám và phiếu khám.
@@ -133,7 +133,7 @@ venv\Scripts\python.exe manage.py import_hospitals data.xlsx --sheet Hospitals
 ### Cấu trúc sheet
 
 `Hospitals`:
-- `ten, dia_chi, quan, lat, lon, co_bhyt, co_cap_cuu, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
+- `ten, dia_chi, phuong, lat, lon, co_bhyt, co_cap_cuu, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
 
 `Departments`:
 - `ten, benh_vien`
@@ -187,7 +187,7 @@ venv\Scripts\python.exe manage.py test
 
 ## 12) Luồng demo đề xuất
 
-1. Vào trang chủ, lọc bệnh viện theo quận + tìm nhanh tên.
+1. Vào trang chủ, lọc bệnh viện theo phường + tìm nhanh tên.
 2. Mở chi tiết bệnh viện, thử chỉ đường từ vị trí nhập tay.
 3. Đăng nhập bệnh nhân, đặt lịch khám.
 4. Vào “Lịch khám sắp tới”, hủy 1 lịch rồi đặt lại.

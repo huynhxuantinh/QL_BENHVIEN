@@ -25,7 +25,7 @@ name_validator = RegexValidator(
 class BenhVien(models.Model):
     ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     dia_chi = models.TextField()
-    quan = models.CharField(max_length=100, db_index=True)
+    phuong = models.CharField(max_length=100, db_index=True)
     vi_tri = models.PointField(srid=4326, spatial_index=True)
     co_cap_cuu = models.BooleanField(default=False, db_index=True)
     cap_cuu_24h = models.BooleanField(default=False, db_index=True)
@@ -44,7 +44,7 @@ class BenhVien(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['quan', 'co_cap_cuu']),
+            models.Index(fields=['phuong', 'co_cap_cuu']),
             models.Index(fields=['loai_hinh', 'co_bhyt']),
             models.Index(fields=['cap_cuu_24h', 'co_cap_cuu']),
         ]

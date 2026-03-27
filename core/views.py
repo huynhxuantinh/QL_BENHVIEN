@@ -64,13 +64,13 @@ def home(request):
     filter_bhyt = request.GET.get("bhyt") == "1"
     filter_cap_cuu = request.GET.get("cap_cuu") == "1"
     loai_hinh = request.GET.get("loai_hinh")
-    quan_filter = request.GET.get("quan")
+    phuong_filter = (request.GET.get("phuong") or request.GET.get("quan") or "").strip()
     search_query = request.GET.get("q", "").strip()
 
-    all_quan = (
-        BenhVien.objects.values_list("quan", flat=True)
+    all_phuong = (
+        BenhVien.objects.values_list("phuong", flat=True)
         .distinct()
-        .order_by("quan")
+        .order_by("phuong")
     )
 
     lat_str = request.GET.get("lat")
@@ -101,13 +101,13 @@ def home(request):
     else:
         loai_hinh = None
 
-    if quan_filter:
-        bvs = bvs.filter(quan=quan_filter)
+    if phuong_filter:
+        bvs = bvs.filter(phuong=phuong_filter)
     if search_query:
         bvs = bvs.filter(
             Q(ten__icontains=search_query)
             | Q(dia_chi__icontains=search_query)
-            | Q(quan__icontains=search_query)
+            | Q(phuong__icontains=search_query)
         )
 
     if request.user.is_authenticated:
@@ -158,7 +158,7 @@ def home(request):
         f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
         f"open={int(filter_open)}|emg={int(filter_emergency)}|"
         f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
-        f"loai={loai_hinh or 'all'}|quan={quan_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
+        f"loai={loai_hinh or 'all'}|phuong={phuong_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
     )
     cached = cache.get(cache_key)
     if cached:
@@ -215,9 +215,9 @@ def home(request):
             "filter_open": filter_open,
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
-            "quan_filter": quan_filter,
+            "phuong_filter": phuong_filter,
             "q": search_query,
-            "all_quan": all_quan,
+            "all_phuong": all_phuong,
             "map_data": map_data,
         })
 
@@ -363,9 +363,9 @@ def home(request):
         "filter_open": filter_open,
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
-        "quan_filter": quan_filter,
+        "phuong_filter": phuong_filter,
         "q": search_query,
-        "all_quan": all_quan,
+        "all_phuong": all_phuong,
         "map_data": map_data,
     })
 
@@ -956,9 +956,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Bệnh viện",
         "model": BenhVien,
         "form_class": AdminBenhVienForm,
-        "list_display": ("ten", "quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
-        "search_fields": ("ten", "dia_chi", "quan"),
-        "list_filter": ("quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
+        "list_display": ("ten", "phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
+        "search_fields": ("ten", "dia_chi", "phuong"),
+        "list_filter": ("phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
         "ordering": ("ten",),
     },
     "gio-lam-viec-benh-vien": {
@@ -1119,7 +1119,7 @@ ADMIN_FIELD_LABELS = {
     "id": "ID",
     "ten": "Tên",
     "dia_chi": "Địa chỉ",
-    "quan": "Quận",
+    "phuong": "Phường",
     "loai_hinh": "Loại hình",
     "co_cap_cuu": "Có cấp cứu",
     "cap_cuu_24h": "Cấp cứu 24h",

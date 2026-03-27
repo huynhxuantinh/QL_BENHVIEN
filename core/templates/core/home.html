@@ -294,11 +294,11 @@
                             </select>
                         </div>
                         <div class="tool-field">
-                            <label for="quan">Qu&#7853;n</label>
-                            <select id="quan" name="quan" class="form-control">
+                            <label for="phuong">Ph&#432;&#7901;ng</label>
+                            <select id="phuong" name="phuong" class="form-control">
                                 <option value="">T&#7845;t c&#7843;</option>
-                                {% for q in all_quan %}
-                                    <option value="{{ q }}" {% if quan_filter == q %}selected{% endif %}>{{ q }}</option>
+                                {% for q in all_phuong %}
+                                    <option value="{{ q }}" {% if phuong_filter == q %}selected{% endif %}>{{ q }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -359,7 +359,7 @@
                 {% for bv in bvs %}
                     <div class="card">
                         <div class="card-title">{{ bv.ten }}</div>
-                        <div class="card-meta">{{ bv.quan }}</div>
+                        <div class="card-meta">{{ bv.phuong }}</div>
                         <div class="card-badges">
                             {% if bv.co_bhyt %}
                                 <span class="badge">C&#243; BHYT</span>

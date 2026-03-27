@@ -78,7 +78,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Chợ Rẫy",
                 "dia_chi": "201B Nguyễn Chí Thanh",
-                "quan": "Quận 5",
+                "phuong": "Quận 5",
                 "coords": (106.6581, 10.7531),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -90,7 +90,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Thống Nhất",
                 "dia_chi": "95 Lý Thường Kiệt",
-                "quan": "Tân Bình",
+                "phuong": "Tân Bình",
                 "coords": (106.6536, 10.7873),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -102,7 +102,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Đại học Y Dược",
                 "dia_chi": "215 Hồng Bàng",
-                "quan": "Quận 5",
+                "phuong": "Quận 5",
                 "coords": (106.6542, 10.7555),
                 "co_cap_cuu": False,
                 "cap_cuu_24h": False,
@@ -114,7 +114,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Nhân dân 115",
                 "dia_chi": "527 Sư Vạn Hạnh",
-                "quan": "Quận 10",
+                "phuong": "Quận 10",
                 "coords": (106.6676, 10.7746),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -126,7 +126,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Nhi Đồng 1",
                 "dia_chi": "341 Sư Vạn Hạnh",
-                "quan": "Quận 10",
+                "phuong": "Quận 10",
                 "coords": (106.6659, 10.7719),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -138,7 +138,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Nhi Đồng 2",
                 "dia_chi": "14 Lý Tự Trọng",
-                "quan": "Quận 1",
+                "phuong": "Quận 1",
                 "coords": (106.7036, 10.7813),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -150,7 +150,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Từ Dũ",
                 "dia_chi": "284 Cống Quỳnh",
-                "quan": "Quận 1",
+                "phuong": "Quận 1",
                 "coords": (106.6869, 10.7694),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -162,7 +162,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Bình Dân",
                 "dia_chi": "371 Điện Biên Phủ",
-                "quan": "Quận 3",
+                "phuong": "Quận 3",
                 "coords": (106.6888, 10.7794),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -174,7 +174,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Đa khoa Sài Gòn",
                 "dia_chi": "125 Lê Lợi",
-                "quan": "Quận 1",
+                "phuong": "Quận 1",
                 "coords": (106.7005, 10.7717),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -186,7 +186,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Nhân dân Gia Định",
                 "dia_chi": "1 Nơ Trang Long",
-                "quan": "Bình Thạnh",
+                "phuong": "Bình Thạnh",
                 "coords": (106.6942, 10.8125),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -198,7 +198,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Quân y 175",
                 "dia_chi": "786 Nguyễn Kiệm",
-                "quan": "Gò Vấp",
+                "phuong": "Gò Vấp",
                 "coords": (106.6718, 10.8136),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -210,7 +210,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện 115 (Phối hợp)",
                 "dia_chi": "99 Trần Quang Khải",
-                "quan": "Quận 1",
+                "phuong": "Quận 1",
                 "coords": (106.6931, 10.7895),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -222,7 +222,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Mắt TP.HCM",
                 "dia_chi": "280 Điện Biên Phủ",
-                "quan": "Quận 3",
+                "phuong": "Quận 3",
                 "coords": (106.6860, 10.7849),
                 "co_cap_cuu": False,
                 "cap_cuu_24h": False,
@@ -234,7 +234,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Đa khoa Vạn Hạnh",
                 "dia_chi": "624 Sư Vạn Hạnh",
-                "quan": "Quận 10",
+                "phuong": "Quận 10",
                 "coords": (106.6664, 10.7732),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -246,7 +246,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Hoàn Mỹ Sài Gòn",
                 "dia_chi": "60 Phan Xích Long",
-                "quan": "Phú Nhuận",
+                "phuong": "Phú Nhuận",
                 "coords": (106.6798, 10.7971),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -258,7 +258,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện FV",
                 "dia_chi": "6 Nguyễn Lương Bằng",
-                "quan": "Quận 7",
+                "phuong": "Quận 7",
                 "coords": (106.7185, 10.7289),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -270,7 +270,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Tâm Anh",
                 "dia_chi": "2B Phổ Quang",
-                "quan": "Tân Bình",
+                "phuong": "Tân Bình",
                 "coords": (106.6746, 10.8057),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -282,7 +282,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Hùng Vương",
                 "dia_chi": "128 Hồng Bàng",
-                "quan": "Quận 5",
+                "phuong": "Quận 5",
                 "coords": (106.6652, 10.7521),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -294,7 +294,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Đa khoa Thủ Đức",
                 "dia_chi": "64 Lê Văn Chí",
-                "quan": "Thủ Đức",
+                "phuong": "Thủ Đức",
                 "coords": (106.7615, 10.8543),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": True,
@@ -306,7 +306,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Quận 2",
                 "dia_chi": "130 Lê Văn Thịnh",
-                "quan": "Thủ Đức",
+                "phuong": "Thủ Đức",
                 "coords": (106.7591, 10.7907),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -318,7 +318,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Quận 11",
                 "dia_chi": "72 Số 5",
-                "quan": "Quận 11",
+                "phuong": "Quận 11",
                 "coords": (106.6506, 10.7615),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -330,7 +330,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Lê Văn Thịnh",
                 "dia_chi": "130 Lê Văn Thịnh",
-                "quan": "Thủ Đức",
+                "phuong": "Thủ Đức",
                 "coords": (106.7591, 10.7907),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -342,7 +342,7 @@ class Command(BaseCommand):
             {
                 "ten": "Bệnh viện Đa khoa Quận 4",
                 "dia_chi": "65 Bến Vân Đồn",
-                "quan": "Quận 4",
+                "phuong": "Quận 4",
                 "coords": (106.7021, 10.7544),
                 "co_cap_cuu": True,
                 "cap_cuu_24h": False,
@@ -363,7 +363,7 @@ class Command(BaseCommand):
             bv = BenhVien.objects.create(
                 ten=data["ten"],
                 dia_chi=data["dia_chi"],
-                quan=data["quan"],
+                phuong=data["phuong"],
                 vi_tri=Point(data["coords"][0], data["coords"][1], srid=4326),
                 co_cap_cuu=data["co_cap_cuu"],
                 cap_cuu_24h=data["cap_cuu_24h"],

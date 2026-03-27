@@ -23,7 +23,7 @@ class DoctorFlowTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="Benh vien test",
             dia_chi="1 Duong Test",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -162,7 +162,7 @@ class AppointmentBookingTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="Benh vien A",
             dia_chi="1 Duong A",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -174,7 +174,7 @@ class AppointmentBookingTests(TestCase):
         self.other_hospital = BenhVien.objects.create(
             ten="Benh vien B",
             dia_chi="2 Duong B",
-            quan="Quan 3",
+            phuong="Quan 3",
             vi_tri=Point(106.68, 10.79, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -335,7 +335,7 @@ class AdminDashboardTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="BV Admin Test",
             dia_chi="1 Duong Test",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,

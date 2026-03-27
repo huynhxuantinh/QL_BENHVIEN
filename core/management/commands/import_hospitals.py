@@ -140,7 +140,7 @@ def _import_hospitals(ws, update_existing):
     aliases = {
         "ten": {"ten", "ten benh vien", "name", "hospital", "benh vien"},
         "dia_chi": {"dia chi", "diachi", "address"},
-        "quan": {"quan", "quan/huyen", "district"},
+        "phuong": {"phuong", "phuong/xa", "ward", "quan", "quan/huyen", "district"},
         "lat": {"lat", "latitude", "vi do", "vido", "y"},
         "lon": {"lon", "lng", "longitude", "kinh do", "kinhdo", "x"},
         "co_bhyt": {"co bhyt", "bhyt", "bao hiem y te", "bhyt?"},
@@ -183,7 +183,7 @@ def _import_hospitals(ws, update_existing):
             continue
 
         dia_chi = _get_cell(row, header_map, "dia_chi", "") or ""
-        quan = _get_cell(row, header_map, "quan", "Chua ro") or "Chua ro"
+        phuong = _get_cell(row, header_map, "phuong", "Chua ro") or "Chua ro"
 
         gio_mo = _parse_time(_get_cell(row, header_map, "gio_mo"), default_open)
         gio_dong = _parse_time(_get_cell(row, header_map, "gio_dong"), default_close)
@@ -196,14 +196,26 @@ def _import_hospitals(ws, update_existing):
         if cap_cuu_24h and not co_cap_cuu:
             co_cap_cuu = True
 
-        qs = BenhVien.objects.filter(ten=ten)
-        if dia_chi:
-            qs = qs.filter(dia_chi=dia_chi)
+        bv = None
+        if update_existing:
+            by_name_qs = BenhVien.objects.filter(ten__iexact=str(ten).strip()).order_by("id")
+            if dia_chi:
+                exact_qs = by_name_qs.filter(dia_chi__iexact=str(dia_chi).strip())
+                bv = exact_qs.first()
+            if not bv:
+                for candidate in by_name_qs:
+                    if not candidate.vi_tri:
+                        continue
+                    if abs(candidate.vi_tri.x - lon) < 1e-6 and abs(candidate.vi_tri.y - lat) < 1e-6:
+                        bv = candidate
+                        break
+            if not bv:
+                # Fallback: update by name even when address changed (e.g. renamed wards).
+                bv = by_name_qs.first()
 
-        if update_existing and qs.exists():
-            bv = qs.first()
+        if bv:
             bv.dia_chi = dia_chi
-            bv.quan = quan
+            bv.phuong = phuong
             bv.vi_tri = Point(lon, lat, srid=4326)
             bv.co_cap_cuu = co_cap_cuu
             bv.cap_cuu_24h = cap_cuu_24h
@@ -217,7 +229,7 @@ def _import_hospitals(ws, update_existing):
             bv = BenhVien.objects.create(
                 ten=ten,
                 dia_chi=dia_chi,
-                quan=quan,
+                phuong=phuong,
                 vi_tri=Point(lon, lat, srid=4326),
                 co_cap_cuu=co_cap_cuu,
                 cap_cuu_24h=cap_cuu_24h,

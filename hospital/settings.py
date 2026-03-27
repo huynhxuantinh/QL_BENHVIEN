@@ -164,7 +164,6 @@ EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@qlbenhvien.local")
-CONTACT_RECEIVER_EMAIL = os.getenv("CONTACT_RECEIVER_EMAIL", DEFAULT_FROM_EMAIL)
 
 # Auth redirects
 LOGIN_URL = '/login/'

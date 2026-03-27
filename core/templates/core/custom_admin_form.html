@@ -342,8 +342,8 @@
                         position: "topleft",
                         collapsed: true,
                         defaultMarkGeocode: false,
-                        placeholder: "Tim dia chi...",
-                        errorMessage: "Khong tim thay dia chi"
+                        placeholder: "Tìm địa chỉ...",
+                        errorMessage: "Không tìm thấy địa chỉ"
                     };
                     if (L.Control.Geocoder && typeof L.Control.Geocoder.nominatim === "function") {
                         geocoderOptions.geocoder = L.Control.Geocoder.nominatim({
@@ -358,11 +358,11 @@
                         .on("markgeocode", function (e) {
                             if (!e || !e.geocode || !e.geocode.center) return;
                             setMapLocation(e.geocode.center, 17);
-                            setMapNote("Da chon: " + (e.geocode.name || "Vi tri"));
+                            setMapNote("Đã chọn: " + (e.geocode.name || "Vị trí"));
                         })
                         .addTo(map);
                 } else {
-                    setMapNote("Khong tai duoc thanh tim kiem tren ban do. Ban van co the bam len ban do de chon vi tri.");
+                    setMapNote("Không tải được thanh tìm kiếm trên bản đồ. Bạn vẫn có thể bấm lên bản đồ để chọn vị trí.");
                 }
             })();
         </script>

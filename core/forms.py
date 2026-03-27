@@ -63,6 +63,17 @@ class AdminBenhVienForm(forms.ModelForm):
             "gio_dong",
             "loai_hinh",
         ]
+        labels = {
+            "ten": "Tên bệnh viện",
+            "dia_chi": "Địa chỉ",
+            "quan": "Quận",
+            "co_cap_cuu": "Có cấp cứu",
+            "cap_cuu_24h": "Cấp cứu 24h",
+            "co_bhyt": "Có BHYT",
+            "gio_mo": "Giờ mở",
+            "gio_dong": "Giờ đóng",
+            "loai_hinh": "Loại hình",
+        }
         widgets = {
             "ten": forms.TextInput(attrs={"class": "form-control"}),
             "dia_chi": forms.Textarea(attrs={"class": "form-control", "rows": 3}),

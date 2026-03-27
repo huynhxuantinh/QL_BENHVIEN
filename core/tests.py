@@ -1,8 +1,9 @@
 import datetime
 
+from django.core import mail
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -448,6 +449,51 @@ class AdminDashboardTests(TestCase):
         self.admin_user.refresh_from_db()
         self.assertTrue(self.admin_user.check_password("NewPass@12345"))
 
-    def test_django_admin_url_enabled(self):
+    def test_django_admin_url_disabled(self):
         response = self.client.get("/admin/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    DEFAULT_FROM_EMAIL="no-reply@test.local",
+    CONTACT_RECEIVER_EMAIL="feedback@test.local",
+)
+class ContactFeedbackTests(TestCase):
+    def test_contact_feedback_page_renders(self):
+        response = self.client.get(reverse("contact_feedback"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Li&#234;n h&#7879; &amp; G&#243;p &#253;")
+
+    def test_submit_feedback_sends_email(self):
+        response = self.client.post(
+            reverse("contact_feedback"),
+            {
+                "ho_ten": "Nguoi dung test",
+                "email": "sender@example.com",
+                "chu_de": "Gop y giao dien",
+                "noi_dung": "Trang web de dung va can them mot vai tinh nang nho.",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "\u0110\u00e3 g\u1eedi g\u00f3p \u00fd th\u00e0nh c\u00f4ng")
+        self.assertEqual(len(mail.outbox), 1)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.to, ["feedback@test.local"])
+        self.assertIn("[G\u00d3P \u00dd] Gop y giao dien", sent.subject)
+        self.assertIn("Nguoi dung test", sent.body)
+        self.assertIn("sender@example.com", sent.body)
+
+    def test_submit_feedback_invalid_payload(self):
+        response = self.client.post(
+            reverse("contact_feedback"),
+            {
+                "ho_ten": "",
+                "email": "invalid-email",
+                "chu_de": "",
+                "noi_dung": "ngan",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 0)

@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.forms import modelform_factory
@@ -41,6 +42,7 @@ from .forms import (
     AdminGioLamViecBacSiForm,
     AdminKhoaForm,
     AdminUserForm,
+    ContactFeedbackForm,
     DatLichForm,
 )
 
@@ -1617,6 +1619,53 @@ def forgot_password(request):
     return render(request, "core/forgot_password.html")
 
 # ==========================
+# LIEN HE / GOP Y
+# ==========================
+def contact_feedback(request):
+    initial = {}
+    if request.user.is_authenticated:
+        full_name = request.user.get_full_name().strip()
+        initial["ho_ten"] = full_name or request.user.username
+        if request.user.email:
+            initial["email"] = request.user.email
+
+    if request.method == "POST":
+        form = ContactFeedbackForm(request.POST)
+        if form.is_valid():
+            cleaned = form.cleaned_data
+            recipient = getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or settings.DEFAULT_FROM_EMAIL
+            subject = f"[G\u00d3P \u00dd] {cleaned['chu_de']}"
+            message = (
+                f"H\u1ecd t\u00ean: {cleaned['ho_ten']}\n"
+                f"Email: {cleaned['email']}\n"
+                f"Th\u1eddi gian: {timezone.localtime().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+                f"N\u1ed9i dung:\n{cleaned['noi_dung']}"
+            )
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient],
+                    fail_silently=False,
+                )
+            except Exception:
+                messages.error(
+                    request,
+                    "Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c g\u00f3p \u00fd l\u00fac n\u00e0y. Vui l\u00f2ng th\u1eed l\u1ea1i sau.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "\u0110\u00e3 g\u1eedi g\u00f3p \u00fd th\u00e0nh c\u00f4ng. C\u1ea3m \u01a1n b\u1ea1n!",
+                )
+                return redirect("contact_feedback")
+    else:
+        form = ContactFeedbackForm(initial=initial)
+
+    return render(request, "core/contact_feedback.html", {"form": form})
+
+# ==========================
 # TRANG CHỦ BÁC SĨ
 # ==========================
 @login_required
@@ -2031,3 +2080,4 @@ def notifications(request):
     return render(request, "core/notifications.html", {
         "thong_baos": thong_baos,
     })
+

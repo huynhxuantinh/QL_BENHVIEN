@@ -63,7 +63,27 @@
         .brand h1 { font-family: "Playfair Display", serif; font-size: 26px; margin: 0; letter-spacing: 0.4px; }
         .brand span { font-size: 13px; color: var(--muted); }
 
-        .user-area { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .user-area {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 0;
+        }
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
         .user-name { font-weight: 600; color: var(--primary); }
 
         .btn {
@@ -217,15 +237,18 @@
             .hero h2 { font-size: 29px; }
             .tool-grid { grid-template-columns: 1fr; }
             .btn { width: 100%; }
-            .user-area { width: 100%; justify-content: flex-start; }
+            .user-area { width: 100%; align-items: flex-start; }
+            .user-meta { align-items: flex-start; text-align: left; width: 100%; }
+            .user-actions { width: 100%; justify-content: flex-start; }
             .brand-logo { width: 50px; height: 50px; border-radius: 9px; }
         }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" />
 </head>
 <body>
     <div class="page">
-        <header class="topbar">
+        <header class="topbar" data-aos="fade-down" data-aos-duration="500">
             <div class="brand-wrap">
                 <img class="brand-logo" src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo Bệnh viện 3T">
                 <div class="brand">
@@ -235,25 +258,32 @@
             </div>
             <div class="user-area">
                 {% if user.is_authenticated %}
-                    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
+                    <div class="user-meta">
                         <span class="user-name">Xin ch&#224;o {{ display_name }}</span>
                         {% if doctor_info %}
                             <span style="font-size:12px; color:var(--muted);">{{ doctor_info.khoa }} - {{ doctor_info.benh_vien }}</span>
                         {% endif %}
                     </div>
-                    {% if doctor_info %}
-                        <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang b&#225;c s&#297;</a>
-                        <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
-                    {% else %}
-                        <a class="btn ghost" href="{% url 'upcoming_appointments' %}">L&#7883;ch kh&#225;m</a>
-                        <a class="btn ghost" href="{% url 'medical_history' %}">L&#7883;ch s&#7917; kh&#225;m</a>
-                        <a class="btn ghost" href="{% url 'profile' %}">H&#7891; s&#417; c&#7911;a t&#244;i</a>
-                        <a class="btn ghost" href="{% url 'notifications' %}">Th&#244;ng b&#225;o{% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
-                    {% endif %}
-                    <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+                    <div class="user-actions">
+                        {% if doctor_info %}
+                            <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang b&#225;c s&#297;</a>
+                            <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
+                            <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
+                        {% else %}
+                            <a class="btn ghost" href="{% url 'upcoming_appointments' %}">L&#7883;ch kh&#225;m</a>
+                            <a class="btn ghost" href="{% url 'medical_history' %}">L&#7883;ch s&#7917; kh&#225;m</a>
+                            <a class="btn ghost" href="{% url 'profile' %}">H&#7891; s&#417; c&#7911;a t&#244;i</a>
+                            <a class="btn ghost" href="{% url 'notifications' %}">Th&#244;ng b&#225;o{% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
+                            <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
+                        {% endif %}
+                        <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+                    </div>
                 {% else %}
-                    <a class="btn ghost" href="{% url 'login' %}">&#272;&#259;ng nh&#7853;p</a>
-                    <a class="btn primary" href="{% url 'register' %}">&#272;&#259;ng k&#253;</a>
+                    <div class="user-actions">
+                        <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
+                        <a class="btn ghost" href="{% url 'login' %}">&#272;&#259;ng nh&#7853;p</a>
+                        <a class="btn primary" href="{% url 'register' %}">&#272;&#259;ng k&#253;</a>
+                    </div>
                 {% endif %}
             </div>
         </header>
@@ -266,7 +296,7 @@
             </div>
         {% endif %}
 
-        <section class="hero">
+        <section class="hero" data-aos="fade-up" data-aos-delay="60">
             <div>
                 <h2>Danh s&#225;ch b&#7879;nh vi&#7879;n</h2>
                 <p>
@@ -308,7 +338,7 @@
             </section>
         {% endif %}
 
-        <section class="tools">
+        <section class="tools" data-aos="fade-up" data-aos-delay="90">
             <div class="tool-card">
                 <h3 style="margin: 0 0 12px;">T&#236;m b&#7879;nh vi&#7879;n g&#7847;n b&#7841;n</h3>
                 <form method="get" id="geo-form">
@@ -391,7 +421,7 @@
             </div>
         </section>
 
-        <section>
+        <section data-aos="fade-up" data-aos-delay="110">
             <div class="grid">
                 {% for bv in bvs %}
                     <div class="card">
@@ -455,8 +485,29 @@
     </div>
 
     {{ map_data|json_script:"map-data" }}
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
     <script>
+        if (window.AOS) {
+            AOS.init({
+                duration: 520,
+                once: true,
+                offset: 40
+            });
+        }
+
+        const brandLogo = document.querySelector(".brand-logo");
+        if (brandLogo && window.anime) {
+            anime({
+                targets: brandLogo,
+                translateY: [0, -3, 0],
+                duration: 2800,
+                easing: "easeInOutSine",
+                loop: true
+            });
+        }
+
         const map = L.map("home-map").setView([10.77, 106.7], 12);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,

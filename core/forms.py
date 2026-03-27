@@ -36,6 +36,34 @@ class DatLichForm(forms.ModelForm):
     )
 
 
+class ContactFeedbackForm(forms.Form):
+    ho_ten = forms.CharField(
+        max_length=120,
+        label="Họ tên",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyễn Văn A"}),
+    )
+    email = forms.EmailField(
+        label="Email liên hệ",
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ban@email.com"}),
+    )
+    chu_de = forms.CharField(
+        max_length=180,
+        label="Chủ đề",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Góp ý về chức năng đặt lịch"}),
+    )
+    noi_dung = forms.CharField(
+        min_length=10,
+        label="Nội dung góp ý",
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 6,
+                "placeholder": "Nhập góp ý hoặc vấn đề bạn gặp...",
+            }
+        ),
+    )
+
+
 class AdminBenhVienForm(forms.ModelForm):
     lat = forms.FloatField(
         min_value=-90,

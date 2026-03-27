@@ -130,6 +130,10 @@ CACHES = {
     }
 }
 
+# OSM tile servers require Referer for browser requests.
+# Django default (same-origin) strips Referer on cross-origin tile calls.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

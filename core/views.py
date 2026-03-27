@@ -190,6 +190,7 @@ def home(request):
             map_data.append({
                 "id": bv.id,
                 "name": bv.ten,
+                "phuong": bv.phuong,
                 "lat": bv.map_lat,
                 "lon": bv.map_lon,
                 "open": bv.is_open,
@@ -324,6 +325,7 @@ def home(request):
         map_data.append({
             "id": bv.id,
             "name": bv.ten,
+            "phuong": bv.phuong,
             "lat": bv.map_lat,
             "lon": bv.map_lon,
             "open": bv.is_open,

@@ -165,6 +165,18 @@
             padding: 0;
         }
         #home-map { width: 100%; height: 100%; min-height: 560px; }
+        .map-popup { min-width: 180px; }
+        .map-popup-title { font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #1f2c2a; line-height: 1.3; }
+        .map-popup-meta { font-size: 12px; color: #566563; margin-bottom: 4px; line-height: 1.35; }
+        .map-popup-link {
+            display: inline-flex;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .map-popup-link:hover { text-decoration: underline; }
 
         .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(14, 111, 96, 0.1); color: var(--primary); }
         .status.closed { background: rgba(182, 55, 55, 0.14); color: #9d2c2c; }
@@ -431,18 +443,46 @@
         const map = L.map("home-map").setView([10.77, 106.7], 12);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
+            referrerPolicy: "strict-origin-when-cross-origin",
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
         let userMarker = null;
 
         const mapData = JSON.parse(document.getElementById("map-data").textContent || "[]");
+        const detailUrlBase = "{% url 'hospital_detail' 0 %}";
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function detailUrlForId(id) {
+            const numericId = Number(id);
+            if (!Number.isFinite(numericId)) {
+                return "#";
+            }
+            return detailUrlBase.replace("/0/", `/${numericId}/`);
+        }
+
         mapData.forEach(item => {
             const marker = L.marker([item.lat, item.lon]).addTo(map);
-            let label = `${item.name}`;
-            if (typeof item.distance_km === "number") {
-                label += ` (${item.distance_km} km)`;
-            }
-            marker.bindPopup(label);
+            const openText = item.open ? "&#272;ang m&#7903;" : "&#272;&#243;ng c&#7917;a";
+            const emergencyText = item.emergency ? "C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng" : "C&#7845;p c&#7913;u t&#7841;m ngh&#7881;";
+            const distanceText = typeof item.distance_km === "number" ? `${item.distance_km} km` : "";
+            const popupHtml = `
+                <div class="map-popup">
+                    <div class="map-popup-title">${escapeHtml(item.name)}</div>
+                    <div class="map-popup-meta">${escapeHtml(item.phuong || "Chua ro phuong")}</div>
+                    <div class="map-popup-meta">${openText}${distanceText ? ` - ${distanceText}` : ""}</div>
+                    <div class="map-popup-meta">${emergencyText}</div>
+                    <a class="map-popup-link" href="${detailUrlForId(item.id)}">Xem chi ti&#7871;t</a>
+                </div>
+            `;
+            marker.bindPopup(popupHtml);
         });
 
         function setUserLocation(lat, lon, focusMap = false) {

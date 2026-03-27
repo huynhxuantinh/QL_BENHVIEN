@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
@@ -59,8 +61,6 @@ class AdminBenhVienForm(forms.ModelForm):
             "co_cap_cuu",
             "cap_cuu_24h",
             "co_bhyt",
-            "gio_mo",
-            "gio_dong",
             "loai_hinh",
         ]
         labels = {
@@ -70,8 +70,6 @@ class AdminBenhVienForm(forms.ModelForm):
             "co_cap_cuu": "Có cấp cứu",
             "cap_cuu_24h": "Cấp cứu 24h",
             "co_bhyt": "Có BHYT",
-            "gio_mo": "Giờ mở",
-            "gio_dong": "Giờ đóng",
             "loai_hinh": "Loại hình",
         }
         widgets = {
@@ -81,8 +79,6 @@ class AdminBenhVienForm(forms.ModelForm):
             "co_cap_cuu": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "cap_cuu_24h": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "co_bhyt": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "gio_mo": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
-            "gio_dong": forms.TimeInput(attrs={"class": "form-control", "type": "time"}),
             "loai_hinh": forms.Select(attrs={"class": "form-control"}),
         }
 
@@ -105,6 +101,12 @@ class AdminBenhVienForm(forms.ModelForm):
         lat = self.cleaned_data.get("lat")
         lon = self.cleaned_data.get("lon")
         obj.vi_tri = Point(lon, lat, srid=4326)
+        # Keep required model fields consistent while admin now manages
+        # detailed operating hours via schedule-by-week table.
+        if not obj.gio_mo:
+            obj.gio_mo = datetime.time(7, 0)
+        if not obj.gio_dong:
+            obj.gio_dong = datetime.time(17, 0)
         if commit:
             obj.save()
         return obj

@@ -1,7 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
     <title>Trang ch&#7911;</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
@@ -46,7 +49,17 @@
             animation: fadeIn 0.36s ease-out both;
         }
 
-        .brand { display: flex; flex-direction: column; gap: 4px; }
+        .brand-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .brand-logo {
+            width: 62px;
+            height: 62px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: none;
+            background: transparent;
+            flex-shrink: 0;
+        }
+        .brand { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
         .brand h1 { font-family: "Playfair Display", serif; font-size: 26px; margin: 0; letter-spacing: 0.4px; }
         .brand span { font-size: 13px; color: var(--muted); }
 
@@ -205,6 +218,7 @@
             .tool-grid { grid-template-columns: 1fr; }
             .btn { width: 100%; }
             .user-area { width: 100%; justify-content: flex-start; }
+            .brand-logo { width: 50px; height: 50px; border-radius: 9px; }
         }
     </style>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -212,9 +226,12 @@
 <body>
     <div class="page">
         <header class="topbar">
-            <div class="brand">
-                <h1>B&#7843;n &#273;&#7891; y t&#7871;</h1>
-                <span>Tra c&#7913;u b&#7879;nh vi&#7879;n nhanh, r&#245;, tr&#7921;c quan</span>
+            <div class="brand-wrap">
+                <img class="brand-logo" src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo Bệnh viện 3T">
+                <div class="brand">
+                    <h1>B&#7843;n &#273;&#7891; y t&#7871;</h1>
+                    <span>Tra c&#7913;u b&#7879;nh vi&#7879;n nhanh, r&#245;, tr&#7921;c quan</span>
+                </div>
             </div>
             <div class="user-area">
                 {% if user.is_authenticated %}

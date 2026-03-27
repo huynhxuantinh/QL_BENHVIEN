@@ -43,6 +43,7 @@
             border-radius: 18px;
             box-shadow: var(--shadow-soft);
             backdrop-filter: blur(10px);
+            animation: fadeIn 0.36s ease-out both;
         }
 
         .brand { display: flex; flex-direction: column; gap: 4px; }
@@ -72,11 +73,12 @@
             gap: 16px;
             grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
             align-items: stretch;
+            animation: fadeIn 0.42s ease-out 0.05s both;
         }
         .hero h2 { font-family: "Playfair Display", serif; font-size: 34px; margin: 0 0 8px; line-height: 1.18; }
         .hero p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; max-width: 780px; }
 
-        .hero-card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: var(--shadow-soft); border: 1px solid var(--border); }
+        .hero-card { background: var(--card); border-radius: 18px; padding: 18px; box-shadow: var(--shadow-soft); border: 1px solid var(--border); animation: fadeIn 0.42s ease-out 0.09s both; }
         .hero-card h3 { margin: 0 0 12px; font-size: 18px; }
         .hero-card .meta { display: flex; justify-content: space-between; font-size: 14px; color: var(--muted); }
 
@@ -95,7 +97,10 @@
             text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 12px;
             transition: transform 0.18s ease, box-shadow 0.18s ease, border 0.18s ease;
             animation: fadeIn 0.45s ease both;
+            animation-delay: var(--enter-delay, 0s);
         }
+        .grid .card:nth-child(2n) { --enter-delay: 0.04s; }
+        .grid .card:nth-child(3n) { --enter-delay: 0.08s; }
         .card:hover { transform: translateY(-3px); border-color: rgba(14, 111, 96, 0.3); box-shadow: var(--shadow-card); }
         .card-title { font-weight: 600; font-size: 17px; }
         .card-meta { color: var(--muted); font-size: 14px; }
@@ -127,7 +132,10 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-soft);
+            animation: fadeIn 0.44s ease-out both;
         }
+        .tools .tool-card:first-child { animation-delay: 0.12s; }
+        .tools .tool-card:last-child { animation-delay: 0.18s; }
         .tool-card h3 {
             margin: 0 0 12px;
             font-size: 18px;

@@ -210,6 +210,46 @@
             text-decoration: none;
         }
         .map-popup-link:hover { text-decoration: underline; }
+        .home-locate-control {
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(14, 111, 96, 0.32);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 8px 16px rgba(18, 46, 42, 0.2);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+        .home-locate-control:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(18, 46, 42, 0.24);
+        }
+        .home-locate-control svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary);
+        }
+        .home-locate-control.locate-active svg { fill: #c62828; }
+        .home-user-marker-wrap {
+            background: transparent;
+            border: 0;
+        }
+        .home-user-marker {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 1px solid #fff;
+            background: #2a93ee;
+            animation: locatePulse 2s infinite;
+        }
+        @keyframes locatePulse {
+            0% { box-shadow: 0 0 0 0 rgba(42, 147, 238, 0.65); }
+            70% { box-shadow: 0 0 0 12px rgba(42, 147, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(42, 147, 238, 0); }
+        }
 
         .status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: rgba(14, 111, 96, 0.1); color: var(--primary); }
         .status.closed { background: rgba(182, 55, 55, 0.14); color: #9d2c2c; }
@@ -250,7 +290,7 @@
     <div class="page">
         <header class="topbar" data-aos="fade-down" data-aos-duration="500">
             <div class="brand-wrap">
-                <img class="brand-logo" src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo Bệnh viện 3T">
+                <img class="brand-logo" src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo B&#7879;nh vi&#7879;n 3T">
                 <div class="brand">
                     <h1>B&#7843;n &#273;&#7891; y t&#7871;</h1>
                     <span>Tra c&#7913;u b&#7879;nh vi&#7879;n nhanh, r&#245;, tr&#7921;c quan</span>
@@ -452,7 +492,7 @@
                         {% if bv.distance_km %}
                             <div class="card-meta">C&#225;ch b&#7841;n kho&#7843;ng {{ bv.distance_km }} km</div>
                         {% endif %}
-                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi tiết &amp; chỉ đường</a>
+                        <a class="card-cta" href="{% url 'hospital_detail' bv.id %}">Xem chi ti&#7871;t &amp; ch&#7881; &#273;&#432;&#7901;ng</a>
                     </div>
                 {% empty %}
                     <div class="empty-state">Ch&#432;a c&#243; b&#7879;nh vi&#7879;n n&#224;o</div>
@@ -515,6 +555,8 @@
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
         let userMarker = null;
+        let userAccuracyCircle = null;
+        let locateControlButton = null;
 
         const mapData = JSON.parse(document.getElementById("map-data").textContent || "[]");
         const detailUrlBase = "{% url 'hospital_detail' 0 %}";
@@ -553,25 +595,114 @@
             marker.bindPopup(popupHtml);
         });
 
-        function setUserLocation(lat, lon, focusMap = false) {
+        function setLocateButtonActive(active) {
+            if (!locateControlButton) {
+                return;
+            }
+            locateControlButton.classList.toggle("locate-active", !!active);
+            locateControlButton.setAttribute("aria-pressed", active ? "true" : "false");
+        }
+
+        function clearUserLocation() {
+            if (userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
+            }
+            if (userAccuracyCircle) {
+                map.removeLayer(userAccuracyCircle);
+                userAccuracyCircle = null;
+            }
+            setLocateButtonActive(false);
+        }
+
+        function setUserLocation(lat, lon, focusMap = false, accuracy = null) {
             if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
                 return;
             }
             if (userMarker) {
                 userMarker.setLatLng([lat, lon]);
             } else {
-                userMarker = L.circleMarker([lat, lon], {
-                    radius: 6,
-                    color: "#0b6b5b",
-                    fillColor: "#0b6b5b",
-                    fillOpacity: 0.8
+                userMarker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: "home-user-marker-wrap",
+                        html: '<div class="home-user-marker"></div>',
+                        iconSize: [17, 17],
+                        iconAnchor: [8.5, 8.5],
+                        popupAnchor: [0, -10],
+                    }),
                 }).addTo(map);
-                userMarker.bindPopup("V&#7883; tr&#237; c&#7911;a b&#7841;n");
+                userMarker.bindPopup("V\u1ecb tr\u00ed c\u1ee7a b\u1ea1n");
             }
+
+            if (Number.isFinite(accuracy) && accuracy > 0) {
+                const radius = Math.max(accuracy / 2, 20);
+                if (userAccuracyCircle) {
+                    userAccuracyCircle.setLatLng([lat, lon]);
+                    userAccuracyCircle.setRadius(radius);
+                } else {
+                    userAccuracyCircle = L.circle([lat, lon], {
+                        radius: radius,
+                        weight: 2,
+                        stroke: false,
+                        fillColor: "#2a93ee",
+                        fillOpacity: 0.15,
+                    }).addTo(map);
+                }
+            }
+
             if (focusMap) {
-                map.setView([lat, lon], 12);
+                map.setView([lat, lon], 14);
             }
         }
+
+        function locateUser(focusMap = true) {
+            if (!navigator.geolocation) {
+                alert("Tr\u00ecnh duy\u1ec7t kh\u00f4ng h\u1ed7 tr\u1ee3 \u0111\u1ecbnh v\u1ecb.");
+                return;
+            }
+            setLocateButtonActive(true);
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = Number(pos.coords.latitude);
+                const lon = Number(pos.coords.longitude);
+                const accuracy = Number(pos.coords.accuracy);
+
+                document.getElementById("lat").value = lat.toFixed(6);
+                document.getElementById("lon").value = lon.toFixed(6);
+                setUserLocation(lat, lon, focusMap, accuracy);
+            }, () => {
+                setLocateButtonActive(false);
+                alert("Vui l\u00f2ng cho ph\u00e9p truy c\u1eadp v\u1ecb tr\u00ed!");
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            });
+        }
+
+        const HomeLocateControl = L.Control.extend({
+            options: { position: "topleft" },
+            onAdd: function () {
+                const button = L.DomUtil.create("button", "home-locate-control leaflet-bar");
+                button.type = "button";
+                button.title = "\u0110\u1ecbnh v\u1ecb v\u1ecb tr\u00ed c\u1ee7a b\u1ea1n";
+                button.setAttribute("aria-label", "\u0110\u1ecbnh v\u1ecb v\u1ecb tr\u00ed c\u1ee7a b\u1ea1n");
+                button.setAttribute("aria-pressed", "false");
+                button.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>';
+                L.DomEvent.disableClickPropagation(button);
+                L.DomEvent.on(button, "click", (event) => {
+                    L.DomEvent.stop(event);
+                    const active = button.classList.contains("locate-active");
+                    if (active) {
+                        clearUserLocation();
+                        return;
+                    }
+                    locateUser(true);
+                });
+                locateControlButton = button;
+                return button;
+            }
+        });
+        map.addControl(new HomeLocateControl());
 
         const userLat = "{{ user_lat|default:'' }}";
         const userLon = "{{ user_lon|default:'' }}";
@@ -586,17 +717,7 @@
         const locateBtn = document.getElementById("locate-btn");
         locateBtn?.addEventListener("click", (event) => {
             event.preventDefault();
-            if (!navigator.geolocation) {
-                alert("Tr&#236;nh duy&#7879;t kh&#244;ng h&#7895; tr&#7907; &#273;&#7883;nh v&#7883;.");
-                return;
-            }
-            navigator.geolocation.getCurrentPosition((pos) => {
-                document.getElementById("lat").value = pos.coords.latitude.toFixed(6);
-                document.getElementById("lon").value = pos.coords.longitude.toFixed(6);
-                setUserLocation(pos.coords.latitude, pos.coords.longitude, true);
-            }, () => {
-                alert("Vui lòng cho phép truy cập vị trí !");
-            });
+            locateUser(true);
         });
     </script>
 </body>

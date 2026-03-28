@@ -211,6 +211,22 @@ class AdminGioLamViecBacSiForm(forms.ModelForm):
 
 
 class AdminUserForm(forms.ModelForm):
+    ROLE_USER = "nguoi_dung"
+    ROLE_DOCTOR = "bac_si"
+    ROLE_ADMIN = "admin"
+
+    role = forms.ChoiceField(
+        required=True,
+        label="Vai trò",
+        choices=(
+            (ROLE_USER, "Người dùng"),
+            (ROLE_DOCTOR, "Bác sĩ"),
+            (ROLE_ADMIN, "Admin"),
+        ),
+        widget=forms.Select(attrs={"class": "form-control"}),
+        help_text="Bác sĩ phải được liên kết trong danh mục Bác sĩ.",
+    )
+
     password = forms.CharField(
         required=False,
         label="Mật khẩu mới",
@@ -226,8 +242,7 @@ class AdminUserForm(forms.ModelForm):
             "first_name",
             "last_name",
             "is_active",
-            "is_staff",
-            "is_superuser",
+            "role",
             "password",
         ]
         widgets = {
@@ -236,18 +251,53 @@ class AdminUserForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            if self.instance.is_staff or self.instance.is_superuser:
+                self.fields["role"].initial = self.ROLE_ADMIN
+            elif BacSi.objects.filter(user=self.instance).exists():
+                self.fields["role"].initial = self.ROLE_DOCTOR
+            else:
+                self.fields["role"].initial = self.ROLE_USER
+        else:
+            self.fields["role"].initial = self.ROLE_USER
+
         if not self.instance or not self.instance.pk:
             self.fields["password"].required = True
             self.fields["password"].help_text = "Bắt buộc khi tạo tài khoản."
 
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get("role")
+        current_user = self.instance if self.instance and self.instance.pk else None
+        has_doctor_profile = bool(current_user and BacSi.objects.filter(user=current_user).exists())
+
+        if role == self.ROLE_DOCTOR and not has_doctor_profile:
+            self.add_error(
+                "role",
+                "Tài khoản này chưa liên kết bác sĩ. Hãy vào danh mục Bác sĩ để liên kết trước.",
+            )
+
+        if role in {self.ROLE_USER, self.ROLE_ADMIN} and has_doctor_profile:
+            self.add_error(
+                "role",
+                "Tài khoản đang liên kết Bác sĩ. Hãy gỡ liên kết ở danh mục Bác sĩ nếu muốn đổi vai trò.",
+            )
+        return cleaned_data
+
     def save(self, commit=True):
         user = super().save(commit=False)
+        role = self.cleaned_data.get("role", self.ROLE_USER)
+        if role == self.ROLE_ADMIN:
+            user.is_staff = True
+            user.is_superuser = False
+        else:
+            user.is_staff = False
+            user.is_superuser = False
+
         raw_password = self.cleaned_data.get("password", "").strip()
         if raw_password:
             user.set_password(raw_password)

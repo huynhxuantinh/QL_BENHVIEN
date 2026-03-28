@@ -381,6 +381,17 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(self.client.get(reverse("custom_admin_doctors")).status_code, 200)
         self.assertEqual(self.client.get(reverse("custom_admin_model_list", args=["tai-khoan"])).status_code, 200)
 
+    def test_admin_user_form_only_shows_role_field_for_permissions(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(
+            reverse("custom_admin_model_edit", args=["tai-khoan", self.admin_user.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="role"')
+        self.assertNotContains(response, 'name="is_staff"')
+        self.assertNotContains(response, 'name="is_superuser"')
+
     def test_admin_department_api_returns_departments_by_hospital(self):
         self.client.login(username="admin_demo", password="pass12345")
         response = self.client.get(
@@ -417,8 +428,7 @@ class AdminDashboardTests(TestCase):
                 "first_name": "Staff",
                 "last_name": "Custom",
                 "is_active": "on",
-                "is_staff": "on",
-                "is_superuser": "",
+                "role": "admin",
                 "password": "Staff@123456",
             },
         )
@@ -426,6 +436,7 @@ class AdminDashboardTests(TestCase):
         created_user = User.objects.get(username="staff_from_custom")
         self.assertTrue(created_user.check_password("Staff@123456"))
         self.assertTrue(created_user.is_staff)
+        self.assertFalse(created_user.is_superuser)
 
     def test_admin_edit_own_password_keeps_session(self):
         self.client.login(username="admin_demo", password="pass12345")
@@ -437,8 +448,7 @@ class AdminDashboardTests(TestCase):
                 "first_name": "",
                 "last_name": "",
                 "is_active": "on",
-                "is_staff": "on",
-                "is_superuser": "on",
+                "role": "admin",
                 "password": "NewPass@12345",
             },
         )

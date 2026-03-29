@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.conf import settings
 from django.core.cache import cache
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.core.exceptions import ValidationError
 from django.forms import modelform_factory
@@ -41,6 +42,7 @@ from .forms import (
     AdminGioLamViecBacSiForm,
     AdminKhoaForm,
     AdminUserForm,
+    ContactFeedbackForm,
     DatLichForm,
 )
 
@@ -64,13 +66,13 @@ def home(request):
     filter_bhyt = request.GET.get("bhyt") == "1"
     filter_cap_cuu = request.GET.get("cap_cuu") == "1"
     loai_hinh = request.GET.get("loai_hinh")
-    quan_filter = request.GET.get("quan")
+    phuong_filter = (request.GET.get("phuong") or request.GET.get("quan") or "").strip()
     search_query = request.GET.get("q", "").strip()
 
-    all_quan = (
-        BenhVien.objects.values_list("quan", flat=True)
+    all_phuong = (
+        BenhVien.objects.values_list("phuong", flat=True)
         .distinct()
-        .order_by("quan")
+        .order_by("phuong")
     )
 
     lat_str = request.GET.get("lat")
@@ -101,13 +103,13 @@ def home(request):
     else:
         loai_hinh = None
 
-    if quan_filter:
-        bvs = bvs.filter(quan=quan_filter)
+    if phuong_filter:
+        bvs = bvs.filter(phuong=phuong_filter)
     if search_query:
         bvs = bvs.filter(
             Q(ten__icontains=search_query)
             | Q(dia_chi__icontains=search_query)
-            | Q(quan__icontains=search_query)
+            | Q(phuong__icontains=search_query)
         )
 
     if request.user.is_authenticated:
@@ -158,7 +160,7 @@ def home(request):
         f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
         f"open={int(filter_open)}|emg={int(filter_emergency)}|"
         f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
-        f"loai={loai_hinh or 'all'}|quan={quan_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
+        f"loai={loai_hinh or 'all'}|phuong={phuong_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
     )
     cached = cache.get(cache_key)
     if cached:
@@ -190,6 +192,7 @@ def home(request):
             map_data.append({
                 "id": bv.id,
                 "name": bv.ten,
+                "phuong": bv.phuong,
                 "lat": bv.map_lat,
                 "lon": bv.map_lon,
                 "open": bv.is_open,
@@ -215,9 +218,9 @@ def home(request):
             "filter_open": filter_open,
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
-            "quan_filter": quan_filter,
+            "phuong_filter": phuong_filter,
             "q": search_query,
-            "all_quan": all_quan,
+            "all_phuong": all_phuong,
             "map_data": map_data,
         })
 
@@ -324,6 +327,7 @@ def home(request):
         map_data.append({
             "id": bv.id,
             "name": bv.ten,
+            "phuong": bv.phuong,
             "lat": bv.map_lat,
             "lon": bv.map_lon,
             "open": bv.is_open,
@@ -363,9 +367,9 @@ def home(request):
         "filter_open": filter_open,
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
-        "quan_filter": quan_filter,
+        "phuong_filter": phuong_filter,
         "q": search_query,
-        "all_quan": all_quan,
+        "all_phuong": all_phuong,
         "map_data": map_data,
     })
 
@@ -956,9 +960,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Bệnh viện",
         "model": BenhVien,
         "form_class": AdminBenhVienForm,
-        "list_display": ("ten", "quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
-        "search_fields": ("ten", "dia_chi", "quan"),
-        "list_filter": ("quan", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
+        "list_display": ("ten", "phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
+        "search_fields": ("ten", "dia_chi", "phuong"),
+        "list_filter": ("phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
         "ordering": ("ten",),
     },
     "gio-lam-viec-benh-vien": {
@@ -990,9 +994,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Tài khoản",
         "model": User,
         "form_class": AdminUserForm,
-        "list_display": ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "is_active"),
+        "list_display": ("username", "email", "first_name", "last_name", "vai_tro", "is_active"),
         "search_fields": ("username", "email", "first_name", "last_name"),
-        "list_filter": ("is_staff", "is_superuser", "is_active"),
+        "list_filter": ("is_active",),
         "ordering": ("-date_joined",),
     },
     "gio-lam-viec-bac-si": {
@@ -1119,7 +1123,7 @@ ADMIN_FIELD_LABELS = {
     "id": "ID",
     "ten": "Tên",
     "dia_chi": "Địa chỉ",
-    "quan": "Quận",
+    "phuong": "Phường",
     "loai_hinh": "Loại hình",
     "co_cap_cuu": "Có cấp cứu",
     "cap_cuu_24h": "Cấp cứu 24h",
@@ -1166,8 +1170,7 @@ ADMIN_FIELD_LABELS = {
     "email": "Email",
     "first_name": "Tên",
     "last_name": "Họ",
-    "is_staff": "Nhân viên",
-    "is_superuser": "Quản trị cao nhất",
+    "vai_tro": "Vai trò",
     "is_active": "Đang hoạt động",
     "date_joined": "Ngày tạo",
     "password": "Mật khẩu",
@@ -1192,6 +1195,13 @@ def _list_column_label(model, field_name):
 
 
 def _list_column_value(obj, field_name):
+    if isinstance(obj, User) and field_name == "vai_tro":
+        if obj.is_staff or obj.is_superuser:
+            return "Admin"
+        if BacSi.objects.filter(user=obj).exists():
+            return "Bác sĩ"
+        return "Người dùng"
+
     if "__" not in field_name:
         display_fn = f"get_{field_name}_display"
         if hasattr(obj, display_fn):
@@ -1613,6 +1623,53 @@ def forgot_password(request):
         return redirect("login")
 
     return render(request, "core/forgot_password.html")
+
+# ==========================
+# LIEN HE / GOP Y
+# ==========================
+def contact_feedback(request):
+    initial = {}
+    if request.user.is_authenticated:
+        full_name = request.user.get_full_name().strip()
+        initial["ho_ten"] = full_name or request.user.username
+        if request.user.email:
+            initial["email"] = request.user.email
+
+    if request.method == "POST":
+        form = ContactFeedbackForm(request.POST)
+        if form.is_valid():
+            cleaned = form.cleaned_data
+            recipient = getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or settings.DEFAULT_FROM_EMAIL
+            subject = f"[G\u00d3P \u00dd] {cleaned['chu_de']}"
+            message = (
+                f"H\u1ecd t\u00ean: {cleaned['ho_ten']}\n"
+                f"Email: {cleaned['email']}\n"
+                f"Th\u1eddi gian: {timezone.localtime().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+                f"N\u1ed9i dung:\n{cleaned['noi_dung']}"
+            )
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[recipient],
+                    fail_silently=False,
+                )
+            except Exception:
+                messages.error(
+                    request,
+                    "Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c g\u00f3p \u00fd l\u00fac n\u00e0y. Vui l\u00f2ng th\u1eed l\u1ea1i sau.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "\u0110\u00e3 g\u1eedi g\u00f3p \u00fd th\u00e0nh c\u00f4ng. C\u1ea3m \u01a1n b\u1ea1n!",
+                )
+                return redirect("contact_feedback")
+    else:
+        form = ContactFeedbackForm(initial=initial)
+
+    return render(request, "core/contact_feedback.html", {"form": form})
 
 # ==========================
 # TRANG CHỦ BÁC SĨ

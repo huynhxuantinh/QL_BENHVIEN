@@ -36,6 +36,34 @@ class DatLichForm(forms.ModelForm):
     )
 
 
+class ContactFeedbackForm(forms.Form):
+    ho_ten = forms.CharField(
+        max_length=120,
+        label="Họ tên",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyễn Văn A"}),
+    )
+    email = forms.EmailField(
+        label="Email liên hệ",
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ban@email.com"}),
+    )
+    chu_de = forms.CharField(
+        max_length=180,
+        label="Chủ đề",
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Góp ý về chức năng đặt lịch"}),
+    )
+    noi_dung = forms.CharField(
+        min_length=10,
+        label="Nội dung góp ý",
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 6,
+                "placeholder": "Nhập góp ý hoặc vấn đề bạn gặp...",
+            }
+        ),
+    )
+
+
 class AdminBenhVienForm(forms.ModelForm):
     lat = forms.FloatField(
         min_value=-90,
@@ -55,7 +83,7 @@ class AdminBenhVienForm(forms.ModelForm):
         fields = [
             "ten",
             "dia_chi",
-            "quan",
+            "phuong",
             "lat",
             "lon",
             "co_cap_cuu",
@@ -66,7 +94,7 @@ class AdminBenhVienForm(forms.ModelForm):
         labels = {
             "ten": "Tên bệnh viện",
             "dia_chi": "Địa chỉ",
-            "quan": "Quận",
+            "phuong": "Phường",
             "co_cap_cuu": "Có cấp cứu",
             "cap_cuu_24h": "Cấp cứu 24h",
             "co_bhyt": "Có BHYT",
@@ -75,7 +103,7 @@ class AdminBenhVienForm(forms.ModelForm):
         widgets = {
             "ten": forms.TextInput(attrs={"class": "form-control"}),
             "dia_chi": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "quan": forms.TextInput(attrs={"class": "form-control"}),
+            "phuong": forms.TextInput(attrs={"class": "form-control"}),
             "co_cap_cuu": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "cap_cuu_24h": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "co_bhyt": forms.CheckboxInput(attrs={"class": "form-check-input"}),
@@ -183,6 +211,22 @@ class AdminGioLamViecBacSiForm(forms.ModelForm):
 
 
 class AdminUserForm(forms.ModelForm):
+    ROLE_USER = "nguoi_dung"
+    ROLE_DOCTOR = "bac_si"
+    ROLE_ADMIN = "admin"
+
+    role = forms.ChoiceField(
+        required=True,
+        label="Vai trò",
+        choices=(
+            (ROLE_USER, "Người dùng"),
+            (ROLE_DOCTOR, "Bác sĩ"),
+            (ROLE_ADMIN, "Admin"),
+        ),
+        widget=forms.Select(attrs={"class": "form-control"}),
+        help_text="Bác sĩ phải được liên kết trong danh mục Bác sĩ.",
+    )
+
     password = forms.CharField(
         required=False,
         label="Mật khẩu mới",
@@ -198,8 +242,7 @@ class AdminUserForm(forms.ModelForm):
             "first_name",
             "last_name",
             "is_active",
-            "is_staff",
-            "is_superuser",
+            "role",
             "password",
         ]
         widgets = {
@@ -208,18 +251,53 @@ class AdminUserForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            if self.instance.is_staff or self.instance.is_superuser:
+                self.fields["role"].initial = self.ROLE_ADMIN
+            elif BacSi.objects.filter(user=self.instance).exists():
+                self.fields["role"].initial = self.ROLE_DOCTOR
+            else:
+                self.fields["role"].initial = self.ROLE_USER
+        else:
+            self.fields["role"].initial = self.ROLE_USER
+
         if not self.instance or not self.instance.pk:
             self.fields["password"].required = True
             self.fields["password"].help_text = "Bắt buộc khi tạo tài khoản."
 
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get("role")
+        current_user = self.instance if self.instance and self.instance.pk else None
+        has_doctor_profile = bool(current_user and BacSi.objects.filter(user=current_user).exists())
+
+        if role == self.ROLE_DOCTOR and not has_doctor_profile:
+            self.add_error(
+                "role",
+                "Tài khoản này chưa liên kết bác sĩ. Hãy vào danh mục Bác sĩ để liên kết trước.",
+            )
+
+        if role in {self.ROLE_USER, self.ROLE_ADMIN} and has_doctor_profile:
+            self.add_error(
+                "role",
+                "Tài khoản đang liên kết Bác sĩ. Hãy gỡ liên kết ở danh mục Bác sĩ nếu muốn đổi vai trò.",
+            )
+        return cleaned_data
+
     def save(self, commit=True):
         user = super().save(commit=False)
+        role = self.cleaned_data.get("role", self.ROLE_USER)
+        if role == self.ROLE_ADMIN:
+            user.is_staff = True
+            user.is_superuser = False
+        else:
+            user.is_staff = False
+            user.is_superuser = False
+
         raw_password = self.cleaned_data.get("password", "").strip()
         if raw_password:
             user.set_password(raw_password)

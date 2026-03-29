@@ -4,14 +4,15 @@
 - Tìm và lọc bệnh viện trên bản đồ.
 - Đặt lịch khám, theo dõi lịch và phiếu khám.
 - Luồng bác sĩ khám bệnh.
-- Trang quản trị tùy biến tại `/quan-tri/` (ngoài Django Admin mặc định).
+- Trang quản trị tùy biến tại `/quan-tri/`.
 
 ## 1) Tính năng chính
 
 ### Người dùng
-- Xem danh sách bệnh viện, lọc theo quận/loại hình/BHYT/cấp cứu/trạng thái mở.
+- Xem danh sách bệnh viện, lọc theo phường/loại hình/BHYT/cấp cứu/trạng thái mở.
 - Tìm bệnh viện gần vị trí hiện tại.
 - Xem chi tiết bệnh viện và chỉ đường trên bản đồ.
+- Gửi liên hệ/góp ý từ trang `/lien-he/` (email qua Mailtrap SMTP).
 - Đặt lịch khám, xem lịch sắp tới, hủy lịch, xem lịch sử khám và phiếu khám.
 
 ### Bác sĩ
@@ -20,7 +21,6 @@
 - Xem thông báo và lịch sử bệnh nhân.
 
 ### Quản trị
-- Django Admin mặc định: `/admin/`.
 - Admin giao diện riêng: `/quan-tri/`.
 - Quản lý bệnh viện, khoa, bác sĩ, giờ làm việc, tài khoản user, lịch khám, phiếu khám...
 - Import dữ liệu từ file Excel (`.xlsx`).
@@ -48,6 +48,14 @@ DB_PORT=5432
 
 GDAL_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\gdal312.dll
 GEOS_PATH=C:\Users\ASUS\AppData\Local\Programs\OSGeo4W\bin\geos_c.dll
+
+# Mailtrap SMTP (test email)
+EMAIL_HOST=sandbox.smtp.mailtrap.io
+EMAIL_PORT=2525
+EMAIL_HOST_USER=your_mailtrap_username
+EMAIL_HOST_PASSWORD=your_mailtrap_password
+EMAIL_USE_TLS=True
+DEFAULT_FROM_EMAIL=no-reply@qlbenhvien.local
 
 ```
 
@@ -84,7 +92,6 @@ venv\Scripts\python.exe manage.py runserver
 
 Truy cập:
 - Web: `http://127.0.0.1:8000/`
-- Admin mặc định: `http://127.0.0.1:8000/admin/`
 - Admin giao diện riêng: `http://127.0.0.1:8000/quan-tri/`
 
 ---
@@ -93,6 +100,11 @@ Truy cập:
 
 ```powershell
 venv\Scripts\python.exe manage.py createsuperuser
+```
+
+Gửi mail test Mailtrap:
+```powershell
+venv\Scripts\python.exe manage.py send_test_email --to your_test@email.com
 ```
 
 ## 8) Seed dữ liệu mẫu
@@ -133,7 +145,7 @@ venv\Scripts\python.exe manage.py import_hospitals data.xlsx --sheet Hospitals
 ### Cấu trúc sheet
 
 `Hospitals`:
-- `ten, dia_chi, quan, lat, lon, co_bhyt, co_cap_cuu, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
+- `ten, dia_chi, phuong, lat, lon, co_bhyt, co_cap_cuu, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
 
 `Departments`:
 - `ten, benh_vien`
@@ -185,9 +197,30 @@ venv\Scripts\python.exe manage.py test
 
 ---
 
-## 12) Luồng demo đề xuất
+## 12) Công nghệ & Tham khảo mở rộng
 
-1. Vào trang chủ, lọc bệnh viện theo quận + tìm nhanh tên.
+- CDN:
+  - `cdnjs`: https://cdnjs.com/
+  - `jsDelivr`: https://www.jsdelivr.com/
+- Animation:
+  - Anime.js: https://animejs.com/
+  - AOS: https://michalsnik.github.io/aos/
+- Pagination Django:
+  - https://www.geeksforgeeks.org/python/use-pagination-with-django-class-based-generic-listview/
+  - https://viblo.asia/p/pagination-in-django-PaLkDYwRvlX
+- Mailtrap + Django SMTP:
+  - https://mailtrap.io/blog/django-send-email/#Send-emails-in-Django-using-SMTP
+
+Lưu ý triển khai trong project:
+- Trang chủ dùng `AOS` + `anime.js` cho hiệu ứng nhẹ.
+- Các tài nguyên map/JS/CSS bên thứ ba đã chuyển qua CDN `jsDelivr`/`cdnjs`.
+- Phân trang vẫn dùng `Django Paginator` trong view để giữ tương thích logic hiện tại.
+
+---
+
+## 13) Luồng demo đề xuất
+
+1. Vào trang chủ, lọc bệnh viện theo phường + tìm nhanh tên.
 2. Mở chi tiết bệnh viện, thử chỉ đường từ vị trí nhập tay.
 3. Đăng nhập bệnh nhân, đặt lịch khám.
 4. Vào “Lịch khám sắp tới”, hủy 1 lịch rồi đặt lại.

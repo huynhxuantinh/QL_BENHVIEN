@@ -130,6 +130,10 @@ CACHES = {
     }
 }
 
+# OSM tile servers require Referer for browser requests.
+# Django default (same-origin) strips Referer on cross-origin tile calls.
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -142,6 +146,24 @@ GEOS_LIBRARY_PATH = os.getenv('GEOS_PATH')
 
 # Optional: for better geocoding search (Google Maps)
 GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', '')
+
+# Email (Mailtrap via SMTP)
+def _env_bool(name, default=False):
+    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
+
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "sandbox.smtp.mailtrap.io")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "2525"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
+EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@qlbenhvien.local")
 
 # Auth redirects
 LOGIN_URL = '/login/'

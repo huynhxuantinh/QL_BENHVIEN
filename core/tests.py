@@ -1,8 +1,9 @@
 import datetime
 
+from django.core import mail
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -23,7 +24,7 @@ class DoctorFlowTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="Benh vien test",
             dia_chi="1 Duong Test",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -162,7 +163,7 @@ class AppointmentBookingTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="Benh vien A",
             dia_chi="1 Duong A",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -174,7 +175,7 @@ class AppointmentBookingTests(TestCase):
         self.other_hospital = BenhVien.objects.create(
             ten="Benh vien B",
             dia_chi="2 Duong B",
-            quan="Quan 3",
+            phuong="Quan 3",
             vi_tri=Point(106.68, 10.79, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -335,7 +336,7 @@ class AdminDashboardTests(TestCase):
         self.hospital = BenhVien.objects.create(
             ten="BV Admin Test",
             dia_chi="1 Duong Test",
-            quan="Quan 1",
+            phuong="Quan 1",
             vi_tri=Point(106.7, 10.77, srid=4326),
             co_cap_cuu=True,
             cap_cuu_24h=False,
@@ -380,6 +381,17 @@ class AdminDashboardTests(TestCase):
         self.assertEqual(self.client.get(reverse("custom_admin_doctors")).status_code, 200)
         self.assertEqual(self.client.get(reverse("custom_admin_model_list", args=["tai-khoan"])).status_code, 200)
 
+    def test_admin_user_form_only_shows_role_field_for_permissions(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(
+            reverse("custom_admin_model_edit", args=["tai-khoan", self.admin_user.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="role"')
+        self.assertNotContains(response, 'name="is_staff"')
+        self.assertNotContains(response, 'name="is_superuser"')
+
     def test_admin_department_api_returns_departments_by_hospital(self):
         self.client.login(username="admin_demo", password="pass12345")
         response = self.client.get(
@@ -416,8 +428,7 @@ class AdminDashboardTests(TestCase):
                 "first_name": "Staff",
                 "last_name": "Custom",
                 "is_active": "on",
-                "is_staff": "on",
-                "is_superuser": "",
+                "role": "admin",
                 "password": "Staff@123456",
             },
         )
@@ -425,6 +436,7 @@ class AdminDashboardTests(TestCase):
         created_user = User.objects.get(username="staff_from_custom")
         self.assertTrue(created_user.check_password("Staff@123456"))
         self.assertTrue(created_user.is_staff)
+        self.assertFalse(created_user.is_superuser)
 
     def test_admin_edit_own_password_keeps_session(self):
         self.client.login(username="admin_demo", password="pass12345")
@@ -436,8 +448,7 @@ class AdminDashboardTests(TestCase):
                 "first_name": "",
                 "last_name": "",
                 "is_active": "on",
-                "is_staff": "on",
-                "is_superuser": "on",
+                "role": "admin",
                 "password": "NewPass@12345",
             },
         )
@@ -448,6 +459,51 @@ class AdminDashboardTests(TestCase):
         self.admin_user.refresh_from_db()
         self.assertTrue(self.admin_user.check_password("NewPass@12345"))
 
-    def test_django_admin_url_enabled(self):
+    def test_django_admin_url_disabled(self):
         response = self.client.get("/admin/")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 404)
+
+
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    DEFAULT_FROM_EMAIL="no-reply@test.local",
+    CONTACT_RECEIVER_EMAIL="feedback@test.local",
+)
+class ContactFeedbackTests(TestCase):
+    def test_contact_feedback_page_renders(self):
+        response = self.client.get(reverse("contact_feedback"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Li&#234;n h&#7879; &amp; G&#243;p &#253;")
+
+    def test_submit_feedback_sends_email(self):
+        response = self.client.post(
+            reverse("contact_feedback"),
+            {
+                "ho_ten": "Nguoi dung test",
+                "email": "sender@example.com",
+                "chu_de": "Gop y giao dien",
+                "noi_dung": "Trang web de dung va can them mot vai tinh nang nho.",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "\u0110\u00e3 g\u1eedi g\u00f3p \u00fd th\u00e0nh c\u00f4ng")
+        self.assertEqual(len(mail.outbox), 1)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.to, ["feedback@test.local"])
+        self.assertIn("[G\u00d3P \u00dd] Gop y giao dien", sent.subject)
+        self.assertIn("Nguoi dung test", sent.body)
+        self.assertIn("sender@example.com", sent.body)
+
+    def test_submit_feedback_invalid_payload(self):
+        response = self.client.post(
+            reverse("contact_feedback"),
+            {
+                "ho_ten": "",
+                "email": "invalid-email",
+                "chu_de": "",
+                "noi_dung": "ngan",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 0)

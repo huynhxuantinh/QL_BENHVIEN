@@ -35,6 +35,7 @@ urlpatterns = [
     path("register/", views.register, name="register"),
     path("logout/", views.user_logout, name="logout"),
     path("quen-mat-khau/", views.forgot_password, name="forgot_password"),
+    path("lien-he/", views.contact_feedback, name="contact_feedback"),
     path("thong-bao/", views.notifications, name="notifications"),
     path("lich-kham-sap-toi/", views.upcoming_appointments, name="upcoming_appointments"),
     path("lich-kham/<int:lich_id>/huy/", views.cancel_appointment, name="cancel_appointment"),

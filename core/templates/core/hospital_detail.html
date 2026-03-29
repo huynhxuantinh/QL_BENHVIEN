@@ -50,6 +50,7 @@
             border-radius: 18px;
             box-shadow: var(--shadow-soft);
             backdrop-filter: blur(10px);
+            animation: riseIn 0.36s ease-out both;
         }
 
         .brand h1 {
@@ -137,7 +138,16 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             box-shadow: var(--shadow-soft);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            animation: riseIn 0.42s ease-out both;
+            animation-delay: var(--enter-delay, 0s);
         }
+        .hero .card:nth-child(1) { --enter-delay: 0.06s; }
+        .hero .card:nth-child(2) { --enter-delay: 0.1s; }
+        .content-grid .card:nth-child(1) { --enter-delay: 0.14s; }
+        .content-grid .card:nth-child(2) { --enter-delay: 0.18s; }
+        .content-grid .card:nth-child(3) { --enter-delay: 0.22s; }
+        .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
 
         .info-card {
             padding: 16px;
@@ -229,6 +239,46 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
+        }
+        .detail-locate-control {
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(14, 111, 96, 0.32);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 8px 16px rgba(18, 46, 42, 0.2);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
+        }
+        .detail-locate-control:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 18px rgba(18, 46, 42, 0.24);
+        }
+        .detail-locate-control svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary);
+        }
+        .detail-locate-control.locate-active svg { fill: #c62828; }
+        .detail-user-marker-wrap {
+            background: transparent;
+            border: 0;
+        }
+        .detail-user-marker {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            border: 1px solid #fff;
+            background: #2a93ee;
+            animation: detailLocatePulse 2s infinite;
+        }
+        @keyframes detailLocatePulse {
+            0% { box-shadow: 0 0 0 0 rgba(42, 147, 238, 0.65); }
+            70% { box-shadow: 0 0 0 12px rgba(42, 147, 238, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(42, 147, 238, 0); }
         }
 
         .route-panel {
@@ -357,6 +407,17 @@
             margin-top: 8px;
         }
 
+        @keyframes riseIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @media (max-width: 1100px) {
             .hero {
                 grid-template-columns: 1fr;
@@ -410,9 +471,7 @@
     </style>
     <link
         rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""
+        href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
     />
 </head>
 <body>
@@ -438,8 +497,8 @@
                     </div>
                     <div class="meta-grid">
                         <div class="meta">
-                            <strong>Qu&#7853;n</strong>
-                            <span>{{ bv.quan }}</span>
+                            <strong>Ph&#432;&#7901;ng</strong>
+                            <span>{{ bv.phuong }}</span>
                         </div>
                         <div class="meta">
                             <strong>Lo&#7841;i h&#236;nh</strong>
@@ -550,14 +609,13 @@
     </div>
 
     <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""
+        src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
     ></script>
     <script>
         const map = L.map("map").setView([10.77, 106.7], 13);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             maxZoom: 19,
+            referrerPolicy: "strict-origin-when-cross-origin",
             attribution: "&copy; OpenStreetMap"
         }).addTo(map);
 
@@ -567,6 +625,8 @@
 
         let routeLayer = null;
         let userMarker = null;
+        let userAccuracyCircle = null;
+        let locateControlButton = null;
         let currentUserCoords = null;
 
         const routeStatusEl = document.getElementById("route-status");
@@ -586,7 +646,7 @@
             marker.bindPopup(hospitalName).openPopup();
             map.setView([destLat, destLon], 15);
         } else {
-            setRouteStatus("Bệnh viện chưa có tọa độ hợp lệ để vẽ tuyến.");
+            setRouteStatus("B\u1ec7nh vi\u1ec7n ch\u01b0a c\u00f3 t\u1ecda \u0111\u1ed9 h\u1ee3p l\u1ec7 \u0111\u1ec3 v\u1ebd tuy\u1ebfn.");
         }
 
         function setUserLocation(lat, lon, focusMap = false) {
@@ -603,11 +663,112 @@
                     fillColor: "#0b6b5b",
                     fillOpacity: 0.8
                 }).addTo(map);
-                userMarker.bindPopup("Vị trí của bạn");
+                userMarker.bindPopup("V\u1ecb tr\u00ed c\u1ee7a b\u1ea1n");
             }
             if (focusMap) {
                 map.setView([lat, lon], 13);
             }
+        }
+
+        function setLocateButtonActive(active) {
+            if (!locateControlButton) {
+                return;
+            }
+            locateControlButton.classList.toggle("locate-active", !!active);
+            locateControlButton.setAttribute("aria-pressed", active ? "true" : "false");
+        }
+
+        function clearUserLocation() {
+            if (userMarker) {
+                map.removeLayer(userMarker);
+                userMarker = null;
+            }
+            if (userAccuracyCircle) {
+                map.removeLayer(userAccuracyCircle);
+                userAccuracyCircle = null;
+            }
+            currentUserCoords = null;
+            if (routeLatInput) {
+                routeLatInput.value = "";
+            }
+            if (routeLonInput) {
+                routeLonInput.value = "";
+            }
+            setLocateButtonActive(false);
+        }
+
+        setUserLocation = function (lat, lon, focusMap = false, accuracy = null) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+                return;
+            }
+            currentUserCoords = { lat, lon };
+            if (userMarker) {
+                userMarker.setLatLng([lat, lon]);
+            } else {
+                userMarker = L.marker([lat, lon], {
+                    icon: L.divIcon({
+                        className: "detail-user-marker-wrap",
+                        html: '<div class="detail-user-marker"></div>',
+                        iconSize: [17, 17],
+                        iconAnchor: [8.5, 8.5],
+                        popupAnchor: [0, -10],
+                    }),
+                }).addTo(map);
+                userMarker.bindPopup("V\u1ecb tr\u00ed c\u1ee7a b\u1ea1n");
+            }
+
+            if (Number.isFinite(accuracy) && accuracy > 0) {
+                const radius = Math.max(accuracy / 2, 20);
+                if (userAccuracyCircle) {
+                    userAccuracyCircle.setLatLng([lat, lon]);
+                    userAccuracyCircle.setRadius(radius);
+                } else {
+                    userAccuracyCircle = L.circle([lat, lon], {
+                        radius: radius,
+                        weight: 2,
+                        stroke: false,
+                        fillColor: "#2a93ee",
+                        fillOpacity: 0.15,
+                    }).addTo(map);
+                }
+            }
+
+            if (focusMap) {
+                map.setView([lat, lon], 14);
+            }
+            setLocateButtonActive(true);
+        };
+
+        async function locateUser(focusMap = true) {
+            if (!navigator.geolocation) {
+                alert("Tr\u00ecnh duy\u1ec7t kh\u00f4ng h\u1ed7 tr\u1ee3 \u0111\u1ecbnh v\u1ecb.");
+                return null;
+            }
+            setLocateButtonActive(true);
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const lat = Number(pos.coords.latitude.toFixed(6));
+                    const lon = Number(pos.coords.longitude.toFixed(6));
+                    const accuracy = Number(pos.coords.accuracy);
+                    if (routeLatInput) {
+                        routeLatInput.value = lat;
+                    }
+                    if (routeLonInput) {
+                        routeLonInput.value = lon;
+                    }
+                    setUserLocation(lat, lon, focusMap, accuracy);
+                    setRouteStatus("\u0110\u00e3 c\u1eadp nh\u1eadt v\u1ecb tr\u00ed c\u1ee7a b\u1ea1n.");
+                    resolve({ lat, lon });
+                }, () => {
+                    setLocateButtonActive(false);
+                    alert("Kh\u00f4ng th\u1ec3 l\u1ea5y v\u1ecb tr\u00ed. Vui l\u00f2ng cho ph\u00e9p tr\u00ecnh duy\u1ec7t truy c\u1eadp v\u1ecb tr\u00ed.");
+                    resolve(null);
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0,
+                });
+            });
         }
 
         function clearRouteLayer() {
@@ -632,35 +793,49 @@
             if (byInput) {
                 return byInput;
             }
-            if (!navigator.geolocation) {
-                return null;
-            }
-            return new Promise((resolve) => {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const lat = Number(pos.coords.latitude.toFixed(6));
-                    const lon = Number(pos.coords.longitude.toFixed(6));
-                    routeLatInput.value = lat;
-                    routeLonInput.value = lon;
-                    setUserLocation(lat, lon, true);
-                    resolve({ lat, lon });
-                }, () => resolve(null));
-            });
+            return await locateUser(true);
         }
+
+        const DetailLocateControl = L.Control.extend({
+            options: { position: "topleft" },
+            onAdd: function () {
+                const button = L.DomUtil.create("button", "detail-locate-control leaflet-bar");
+                button.type = "button";
+                button.title = "\u0110\u1ecbnh v\u1ecb v\u1ecb tr\u00ed c\u1ee7a b\u1ea1n";
+                button.setAttribute("aria-label", "\u0110\u1ecbnh v\u1ecb v\u1ecb tr\u00ed c\u1ee7a b\u1ea1n");
+                button.setAttribute("aria-pressed", "false");
+                button.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>';
+                L.DomEvent.disableClickPropagation(button);
+                L.DomEvent.on(button, "click", async (event) => {
+                    L.DomEvent.stop(event);
+                    const active = button.classList.contains("locate-active");
+                    if (active) {
+                        clearUserLocation();
+                        setRouteStatus("\u0110\u00e3 x\u00f3a v\u1ecb tr\u00ed hi\u1ec7n t\u1ea1i.");
+                        return;
+                    }
+                    await locateUser(true);
+                });
+                locateControlButton = button;
+                return button;
+            }
+        });
+        map.addControl(new DetailLocateControl());
 
         async function drawRouteToHospital() {
             if (!Number.isFinite(destLat) || !Number.isFinite(destLon)) {
-                alert("Bệnh viện chưa có tọa độ hợp lệ.");
+                alert("B\u1ec7nh vi\u1ec7n ch\u01b0a c\u00f3 t\u1ecda \u0111\u1ed9 h\u1ee3p l\u1ec7.");
                 return;
             }
 
             const origin = await ensureOriginCoords();
             if (!origin) {
-                alert("Vui lòng bật vị trí hoặc nhập vĩ độ/kinh độ xuất phát.");
+                alert("Vui l\u00f2ng b\u1eadt v\u1ecb tr\u00ed ho\u1eb7c nh\u1eadp v\u0129 \u0111\u1ed9/kinh \u0111\u1ed9 xu\u1ea5t ph\u00e1t.");
                 return;
             }
 
             clearRouteLayer();
-            setRouteStatus(`Đang tìm đường đến ${hospitalName}...`);
+            setRouteStatus(`\u0110ang t\u00ecm \u0111\u01b0\u1eddng \u0111\u1ebfn ${hospitalName}...`);
 
             const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origin.lon},${origin.lat};${destLon},${destLat}?overview=full&geometries=geojson`;
             try {
@@ -684,7 +859,7 @@
 
                 const km = (route.distance / 1000).toFixed(1);
                 const mins = Math.round(route.duration / 60);
-                setRouteStatus(`Tuyến đến bệnh viện: ${km} km, ~${mins} phút.`);
+                setRouteStatus(`Tuy\u1ebfn \u0111\u1ebfn b\u1ec7nh vi\u1ec7n: ${km} km, ~${mins} ph\u00fat.`);
             } catch (err) {
                 routeLayer = L.polyline(
                     [[origin.lat, origin.lon], [destLat, destLon]],
@@ -696,25 +871,12 @@
                     }
                 ).addTo(map);
                 map.fitBounds(routeLayer.getBounds(), { padding: [30, 30] });
-                setRouteStatus("Không lấy được tuyến chi tiết. Đã vẽ đường thẳng tạm thời.");
+                setRouteStatus("Kh\u00f4ng l\u1ea5y \u0111\u01b0\u1ee3c tuy\u1ebfn chi ti\u1ebft. \u0110\u00e3 v\u1ebd \u0111\u01b0\u1eddng th\u1eb3ng t\u1ea1m th\u1eddi.");
             }
         }
 
-        routeLocateBtn?.addEventListener("click", () => {
-            if (!navigator.geolocation) {
-                alert("Trình duyệt không hỗ trợ định vị.");
-                return;
-            }
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const lat = Number(pos.coords.latitude.toFixed(6));
-                const lon = Number(pos.coords.longitude.toFixed(6));
-                routeLatInput.value = lat;
-                routeLonInput.value = lon;
-                setUserLocation(lat, lon, true);
-                setRouteStatus("Đã cập nhật vị trí của bạn.");
-            }, () => {
-                alert("Không thể lấy vị trí. Vui lòng cho phép trình duyệt truy cập vị trí.");
-            });
+        routeLocateBtn?.addEventListener("click", async () => {
+            await locateUser(true);
         });
 
         routeDrawBtn?.addEventListener("click", async () => {

@@ -85,7 +85,6 @@ class BenhVien(models.Model):
                 lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
                 if abs(lat) <= 90 and abs(lon) <= 180:
                     self.vi_tri = Point(lon, lat, srid=4326)
-
     def __str__(self):
         return self.ten
 

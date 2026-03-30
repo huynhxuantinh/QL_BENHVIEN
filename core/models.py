@@ -109,7 +109,6 @@ class BenhVien(models.Model):
             raise ValidationError({
                 "vi_tri": "Toa do khong hop le. He thong yeu cau toa do WGS84 (EPSG:4326)."
             })
-
     def __str__(self):
         return self.ten
 

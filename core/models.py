@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-from django.db.models.expressions import RawSQL
+from django.db.models.lookups import GreaterThanOrEqual, LessThanOrEqual
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -59,10 +59,11 @@ class BenhVien(models.Model):
                 name="benhvien_cap_cuu_24h_requires_cap_cuu",
             ),
             models.CheckConstraint(
-                condition=RawSQL(
-                    "ST_X(vi_tri) BETWEEN -180 AND 180 AND ST_Y(vi_tri) BETWEEN -90 AND 90",
-                    [],
-                    output_field=models.BooleanField(),
+                condition=(
+                    GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(-180))
+                    & LessThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(180))
+                    & GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_Y"), models.Value(-90))
+                    & LessThanOrEqual(models.Func(models.F("vi_tri"), function="ST_Y"), models.Value(90))
                 ),
                 name="benhvien_vi_tri_wgs84_range",
             ),

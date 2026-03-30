@@ -994,9 +994,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Tài khoản",
         "model": User,
         "form_class": AdminUserForm,
-        "list_display": ("username", "email", "first_name", "last_name", "vai_tro", "is_active"),
+        "list_display": ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "is_active"),
         "search_fields": ("username", "email", "first_name", "last_name"),
-        "list_filter": ("is_active",),
+        "list_filter": ("is_staff", "is_superuser", "is_active"),
         "ordering": ("-date_joined",),
     },
     "gio-lam-viec-bac-si": {
@@ -1170,7 +1170,8 @@ ADMIN_FIELD_LABELS = {
     "email": "Email",
     "first_name": "Tên",
     "last_name": "Họ",
-    "vai_tro": "Vai trò",
+    "is_staff": "Nhân viên",
+    "is_superuser": "Quản trị cao nhất",
     "is_active": "Đang hoạt động",
     "date_joined": "Ngày tạo",
     "password": "Mật khẩu",
@@ -1195,13 +1196,6 @@ def _list_column_label(model, field_name):
 
 
 def _list_column_value(obj, field_name):
-    if isinstance(obj, User) and field_name == "vai_tro":
-        if obj.is_staff or obj.is_superuser:
-            return "Admin"
-        if BacSi.objects.filter(user=obj).exists():
-            return "Bác sĩ"
-        return "Người dùng"
-
     if "__" not in field_name:
         display_fn = f"get_{field_name}_display"
         if hasattr(obj, display_fn):
@@ -2086,3 +2080,8 @@ def notifications(request):
     return render(request, "core/notifications.html", {
         "thong_baos": thong_baos,
     })
+
+
+def custom_404(request, exception):
+    return render(request, "404.html", status=404)
+

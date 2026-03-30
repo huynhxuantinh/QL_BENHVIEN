@@ -1,12 +1,14 @@
 import datetime
 
 from django.core import mail
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from core.forms import AdminBenhVienForm
 from core.models import (
     BacSi,
     BenhNhan,
@@ -507,3 +509,45 @@ class ContactFeedbackTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 0)
+
+
+class CoordinateConstraintTests(TestCase):
+    def _benh_vien_kwargs(self, vi_tri):
+        return {
+            "ten": "BV Toa Do Test",
+            "dia_chi": "1 Duong Test",
+            "phuong": "Sai Gon",
+            "vi_tri": vi_tri,
+            "co_cap_cuu": True,
+            "cap_cuu_24h": False,
+            "co_bhyt": True,
+            "gio_mo": datetime.time(7, 0),
+            "gio_dong": datetime.time(17, 0),
+            "loai_hinh": "cong",
+        }
+
+    def test_benhvien_rejects_out_of_range_wgs84(self):
+        benh_vien = BenhVien(**self._benh_vien_kwargs(Point(181, 10, srid=4326)))
+        with self.assertRaises(ValidationError):
+            benh_vien.full_clean()
+
+    def test_benhvien_accepts_valid_wgs84(self):
+        benh_vien = BenhVien(**self._benh_vien_kwargs(Point(106.7, 10.77, srid=4326)))
+        benh_vien.full_clean()
+        benh_vien.save()
+        self.assertEqual(benh_vien.vi_tri.srid, 4326)
+        self.assertTrue(-90 <= benh_vien.vi_tri.y <= 90)
+        self.assertTrue(-180 <= benh_vien.vi_tri.x <= 180)
+
+    def test_admin_benhvien_form_rejects_invalid_lat_lon(self):
+        form = AdminBenhVienForm(data={
+            "ten": "BV Form Test",
+            "dia_chi": "2 Duong Test",
+            "phuong": "Sai Gon",
+            "lat": 95,
+            "lon": 106.7,
+            "co_bhyt": "on",
+            "loai_hinh": "cong",
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("lat", form.errors)

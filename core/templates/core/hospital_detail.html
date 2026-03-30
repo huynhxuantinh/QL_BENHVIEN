@@ -530,11 +530,11 @@
                     <div class="route-tools">
                         <div class="route-field">
                             <label for="route-lat">V&#297; &#273;&#7897; xu&#7845;t ph&#225;t</label>
-                            <input id="route-lat" type="text" placeholder="10.77">
+                            <input id="route-lat" type="number" min="-90" max="90" step="any" placeholder="10.77">
                         </div>
                         <div class="route-field">
                             <label for="route-lon">Kinh &#273;&#7897; xu&#7845;t ph&#225;t</label>
-                            <input id="route-lon" type="text" placeholder="106.70">
+                            <input id="route-lon" type="number" min="-180" max="180" step="any" placeholder="106.70">
                         </div>
                     </div>
                     <div class="route-actions">
@@ -635,6 +635,10 @@
         const routeLocateBtn = document.getElementById("route-locate");
         const routeDrawBtn = document.getElementById("route-draw");
 
+        function isValidLatLon(lat, lon) {
+            return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+        }
+
         function setRouteStatus(text) {
             if (routeStatusEl) {
                 routeStatusEl.textContent = text;
@@ -650,7 +654,7 @@
         }
 
         function setUserLocation(lat, lon, focusMap = false) {
-            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            if (!isValidLatLon(lat, lon)) {
                 return;
             }
             currentUserCoords = { lat, lon };
@@ -698,7 +702,7 @@
         }
 
         setUserLocation = function (lat, lon, focusMap = false, accuracy = null) {
-            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            if (!isValidLatLon(lat, lon)) {
                 return;
             }
             currentUserCoords = { lat, lon };
@@ -750,6 +754,12 @@
                     const lat = Number(pos.coords.latitude.toFixed(6));
                     const lon = Number(pos.coords.longitude.toFixed(6));
                     const accuracy = Number(pos.coords.accuracy);
+                    if (!isValidLatLon(lat, lon)) {
+                        setLocateButtonActive(false);
+                        alert("Toa do vi tri khong hop le.");
+                        resolve(null);
+                        return;
+                    }
                     if (routeLatInput) {
                         routeLatInput.value = lat;
                     }
@@ -781,9 +791,12 @@
         function getOriginFromInputs() {
             const lat = parseFloat(routeLatInput?.value || "");
             const lon = parseFloat(routeLonInput?.value || "");
-            if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            if (isValidLatLon(lat, lon)) {
                 setUserLocation(lat, lon, false);
                 return { lat, lon };
+            }
+            if ((routeLatInput?.value || "").trim() || (routeLonInput?.value || "").trim()) {
+                setRouteStatus("Toa do khong hop le. Vi do trong [-90, 90], kinh do trong [-180, 180].");
             }
             return currentUserCoords;
         }

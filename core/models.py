@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.db.models.expressions import RawSQL
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -57,6 +58,14 @@ class BenhVien(models.Model):
                 condition=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
                 name="benhvien_cap_cuu_24h_requires_cap_cuu",
             ),
+            models.CheckConstraint(
+                condition=RawSQL(
+                    "ST_X(vi_tri) BETWEEN -180 AND 180 AND ST_Y(vi_tri) BETWEEN -90 AND 90",
+                    [],
+                    output_field=models.BooleanField(),
+                ),
+                name="benhvien_vi_tri_wgs84_range",
+            ),
         ]
         verbose_name = 'Bệnh viện'
         verbose_name_plural = 'Bệnh viện'
@@ -70,7 +79,17 @@ class BenhVien(models.Model):
         if self.vi_tri:
             x = self.vi_tri.x
             y = self.vi_tri.y
-            is_web_mercator = self.vi_tri.srid == 3857 or abs(x) > 180 or abs(y) > 90
+            srid = self.vi_tri.srid
+
+            if srid in (None, 0, 4326):
+                if not (-180 <= x <= 180 and -90 <= y <= 90):
+                    raise ValidationError({
+                        "vi_tri": "Toa do khong hop le. Vi do phai trong [-90, 90], kinh do trong [-180, 180]."
+                    })
+                self.vi_tri = Point(x, y, srid=4326)
+                return
+
+            is_web_mercator = srid == 3857 or abs(x) > 180 or abs(y) > 90
             if is_web_mercator:
                 max_merc = 20037508.34
                 world_width = max_merc * 2
@@ -85,6 +104,11 @@ class BenhVien(models.Model):
                 lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
                 if abs(lat) <= 90 and abs(lon) <= 180:
                     self.vi_tri = Point(lon, lat, srid=4326)
+                    return
+
+            raise ValidationError({
+                "vi_tri": "Toa do khong hop le. He thong yeu cau toa do WGS84 (EPSG:4326)."
+            })
 
     def __str__(self):
         return self.ten

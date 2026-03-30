@@ -411,11 +411,11 @@
                         </div>
                         <div class="tool-field">
                             <label>V&#7883; tr&#237; hi&#7879;n t&#7841;i</label>
-                            <input id="lat" name="lat" type="text" placeholder="V&#297; &#273;&#7897;" value="{{ user_lat|default:'' }}">
+                            <input id="lat" name="lat" type="number" min="-90" max="90" step="any" placeholder="V&#297; &#273;&#7897;" value="{{ user_lat|default:'' }}">
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
-                            <input id="lon" name="lon" type="text" placeholder="Kinh &#273;&#7897;" value="{{ user_lon|default:'' }}">
+                            <input id="lon" name="lon" type="number" min="-180" max="180" step="any" placeholder="Kinh &#273;&#7897;" value="{{ user_lon|default:'' }}">
                         </div>
                         <div class="tool-field">
                             <label>&nbsp;</label>
@@ -616,7 +616,7 @@
         }
 
         function setUserLocation(lat, lon, focusMap = false, accuracy = null) {
-            if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+            if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
                 return;
             }
             if (userMarker) {
@@ -666,6 +666,12 @@
                 const lon = Number(pos.coords.longitude);
                 const accuracy = Number(pos.coords.accuracy);
 
+                if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+                    setLocateButtonActive(false);
+                    alert("Toa do vi tri khong hop le.");
+                    return;
+                }
+
                 document.getElementById("lat").value = lat.toFixed(6);
                 document.getElementById("lon").value = lon.toFixed(6);
                 setUserLocation(lat, lon, focusMap, accuracy);
@@ -677,6 +683,10 @@
                 timeout: 10000,
                 maximumAge: 0,
             });
+        }
+
+        function isValidLatLon(lat, lon) {
+            return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
         }
 
         const HomeLocateControl = L.Control.extend({
@@ -709,10 +719,25 @@
         if (userLat && userLon) {
             const uLat = parseFloat(userLat);
             const uLon = parseFloat(userLon);
-            if (Number.isFinite(uLat) && Number.isFinite(uLon)) {
+            if (isValidLatLon(uLat, uLon)) {
                 setUserLocation(uLat, uLon, true);
             }
         }
+
+        const geoForm = document.getElementById("geo-form");
+        geoForm?.addEventListener("submit", (event) => {
+            const latValue = document.getElementById("lat")?.value?.trim() || "";
+            const lonValue = document.getElementById("lon")?.value?.trim() || "";
+            if (!latValue && !lonValue) {
+                return;
+            }
+            const lat = parseFloat(latValue);
+            const lon = parseFloat(lonValue);
+            if (!isValidLatLon(lat, lon)) {
+                event.preventDefault();
+                alert("Toa do khong hop le: Vi do trong [-90, 90], Kinh do trong [-180, 180].");
+            }
+        });
 
         const locateBtn = document.getElementById("locate-btn");
         locateBtn?.addEventListener("click", (event) => {

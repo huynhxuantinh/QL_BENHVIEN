@@ -427,8 +427,8 @@
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
-                                <input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
-                                C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng
+                                <input type="checkbox" name="cap_cuu_24h" value="1" {% if filter_cap_cuu_24h %}checked{% endif %}>
+                                C&#7845;p c&#7913;u 24/7
                             </label>
                         </div>
                         <div class="tool-field">
@@ -436,13 +436,6 @@
                             <label style="display:flex; align-items:center; gap:8px;">
                                 <input type="checkbox" name="bhyt" value="1" {% if filter_bhyt %}checked{% endif %}>
                                 C&#243; BHYT
-                            </label>
-                        </div>
-                        <div class="tool-field">
-                            <label>&nbsp;</label>
-                            <label style="display:flex; align-items:center; gap:8px;">
-                                <input type="checkbox" name="cap_cuu" value="1" {% if filter_cap_cuu %}checked{% endif %}>
-                                C&#243; c&#7845;p c&#7913;u
                             </label>
                         </div>
                     </div>
@@ -473,20 +466,15 @@
                             {% else %}
                                 <span class="badge warn">Kh&#244;ng BHYT</span>
                             {% endif %}
-                            {% if bv.co_cap_cuu %}
-                                <span class="badge">C&#7845;p c&#7913;u</span>
+                            {% if bv.cap_cuu_24h %}
+                                <span class="badge">C&#7845;p c&#7913;u 24/7</span>
                             {% else %}
-                                <span class="badge warn">Kh&#244;ng c&#7845;p c&#7913;u</span>
+                                <span class="badge warn">Kh&#244;ng c&#7845;p c&#7913;u 24/7</span>
                             {% endif %}
                             {% if bv.is_open %}
                                 <span class="status">&#272;ang m&#7903;</span>
                             {% else %}
                                 <span class="status closed">&#272;&#243;ng c&#7917;a</span>
-                            {% endif %}
-                            {% if bv.emergency_active %}
-                                <span class="status">C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng</span>
-                            {% else %}
-                                <span class="status warn">C&#7845;p c&#7913;u ngh&#7881;</span>
                             {% endif %}
                         </div>
                         {% if bv.distance_km %}
@@ -581,7 +569,7 @@
         mapData.forEach(item => {
             const marker = L.marker([item.lat, item.lon]).addTo(map);
             const openText = item.open ? "&#272;ang m&#7903;" : "&#272;&#243;ng c&#7917;a";
-            const emergencyText = item.emergency ? "C&#7845;p c&#7913;u ho&#7841;t &#273;&#7897;ng" : "C&#7845;p c&#7913;u t&#7841;m ngh&#7881;";
+            const emergencyText = item.emergency ? "C&#7845;p c&#7913;u 24/7" : "Kh&#244;ng c&#7845;p c&#7913;u 24/7";
             const distanceText = typeof item.distance_km === "number" ? `${item.distance_km} km` : "";
             const popupHtml = `
                 <div class="map-popup">
@@ -668,7 +656,7 @@
 
                 if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
                     setLocateButtonActive(false);
-                    alert("Toa do vi tri khong hop le.");
+                    alert("Tọa độ vị trí không hợp lệ.");
                     return;
                 }
 
@@ -735,7 +723,7 @@
             const lon = parseFloat(lonValue);
             if (!isValidLatLon(lat, lon)) {
                 event.preventDefault();
-                alert("Toa do khong hop le: Vi do trong [-90, 90], Kinh do trong [-180, 180].");
+                alert("Tọa độ không hợp lệ: Vĩ độ trong [-90, 90], Kinh độ trong [-180, 180].");
             }
         });
 

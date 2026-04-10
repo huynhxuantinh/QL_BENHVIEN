@@ -1,11 +1,11 @@
-import datetime
+﻿import datetime
 import math
 
 from django.contrib.gis.db import models
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
+from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db.models.lookups import GreaterThanOrEqual, LessThanOrEqual
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -85,7 +85,7 @@ class BenhVien(models.Model):
             if srid in (None, 0, 4326):
                 if not (-180 <= x <= 180 and -90 <= y <= 90):
                     raise ValidationError({
-                        "vi_tri": "Toa do khong hop le. Vi do phai trong [-90, 90], kinh do trong [-180, 180]."
+                        "vi_tri": "Tọa độ không hợp lệ. Vĩ độ phải trong [-90, 90], kinh độ trong [-180, 180]."
                     })
                 self.vi_tri = Point(x, y, srid=4326)
                 return
@@ -108,7 +108,7 @@ class BenhVien(models.Model):
                     return
 
             raise ValidationError({
-                "vi_tri": "Toa do khong hop le. He thong yeu cau toa do WGS84 (EPSG:4326)."
+                "vi_tri": "Tọa độ không hợp lệ. Hệ thống yêu cầu tọa độ WGS84 (EPSG:4326)."
             })
     def __str__(self):
         return self.ten
@@ -117,6 +117,48 @@ class BenhVien(models.Model):
 # ========================= 
 # GIỜ LÀM VIỆC BỆNH VIỆN
 # ========================= 
+def benh_vien_image_upload_to(instance, filename):
+    ext = "jpg"
+    if "." in filename:
+        ext = filename.rsplit(".", 1)[-1].lower() or "jpg"
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S%f")
+    return f"benh_vien/{instance.benh_vien_id}/{timestamp}.{ext}"
+
+
+class BenhVienHinhAnh(models.Model):
+    benh_vien = models.ForeignKey(
+        BenhVien,
+        on_delete=models.CASCADE,
+        related_name="hinh_anhs",
+    )
+    hinh_anh = models.ImageField(
+        upload_to=benh_vien_image_upload_to,
+        validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "webp"])],
+    )
+    mo_ta = models.CharField(max_length=255, blank=True, default="")
+    thu_tu = models.PositiveIntegerField(default=0)
+    la_anh_dai_dien = models.BooleanField(default=False, db_index=True)
+    ngay_tao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-la_anh_dai_dien", "thu_tu", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["benh_vien"],
+                condition=models.Q(la_anh_dai_dien=True),
+                name="benhvien_single_cover_image",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["benh_vien", "thu_tu"]),
+        ]
+        verbose_name = "Hình ảnh bệnh viện"
+        verbose_name_plural = "Hình ảnh bệnh viện"
+
+    def __str__(self):
+        return f"{self.benh_vien.ten} - ảnh #{self.pk}"
+
+
 class GioLamViecBenhVien(models.Model):
     benh_vien = models.ForeignKey(
         BenhVien,
@@ -503,7 +545,44 @@ class PhieuKham(models.Model):
 
 
 # ========================= 
-# LỊCH SỬ KHÁM BỆNH
+# HO TRO ANH PHIEU KHAM
+# ========================= 
+def phieu_kham_image_upload_to(instance, filename):
+    ext = "jpg"
+    if "." in filename:
+        ext = filename.rsplit(".", 1)[-1].lower() or "jpg"
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S%f")
+    return f"phieu_kham/{instance.phieu_kham_id}/{timestamp}.{ext}"
+
+
+class PhieuKhamHinhAnh(models.Model):
+    phieu_kham = models.ForeignKey(
+        PhieuKham,
+        on_delete=models.CASCADE,
+        related_name='hinh_anhs',
+    )
+    hinh_anh = models.ImageField(
+        upload_to=phieu_kham_image_upload_to,
+        validators=[FileExtensionValidator(allowed_extensions=["jpg", "jpeg", "png", "webp"])],
+    )
+    mo_ta = models.CharField(max_length=255, blank=True, default='')
+    thu_tu = models.PositiveIntegerField(default=0)
+    ngay_tao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['thu_tu', 'id']
+        indexes = [
+            models.Index(fields=['phieu_kham', 'thu_tu']),
+        ]
+        verbose_name = 'Hình ảnh phiếu khám'
+        verbose_name_plural = 'Hình ảnh phiếu khám'
+
+    def __str__(self):
+        return f"Phiếu {self.phieu_kham_id} - ảnh #{self.pk}"
+
+
+# ========================= 
+# LICH SU KHAM BENH
 # ========================= 
 class LichSuKhamBenh(models.Model):
     benh_nhan = models.ForeignKey(
@@ -772,3 +851,4 @@ def tao_thong_bao_phieu_kham(sender, instance, created, **kwargs):
             noi_dung=f"Đã hoàn thành phiếu khám cho bệnh nhân {instance.benh_nhan.ho_ten}",
             lien_ket=f"/phieu-kham/{instance.pk}/"
         )
+

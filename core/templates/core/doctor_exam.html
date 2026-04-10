@@ -66,6 +66,45 @@
             resize: vertical;
         }
 
+        .field input[type="file"] {
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(31, 42, 43, 0.18);
+            background: #fff;
+        }
+
+        .alert-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .alert {
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+
+        .alert.error {
+            background: #fff1f1;
+            border-color: #ffc8c8;
+            color: #9f2d2d;
+        }
+
+        .alert.success {
+            background: #eefaf4;
+            border-color: #bfe9cf;
+            color: #176b3a;
+        }
+
+        .alert.info {
+            background: #eef6ff;
+            border-color: #bfd8ff;
+            color: #1d4b8f;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -102,7 +141,15 @@
                 ({% with h=lich.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
             </p>
 
-            <form method="post">
+            {% if messages %}
+                <div class="alert-list">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 <div class="field">
@@ -118,6 +165,11 @@
                 <div class="field">
                     <label>H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</label>
                     <textarea name="huong_dieu_tri" required></textarea>
+                </div>
+
+                <div class="field">
+                    <label>&#7842;nh &#273;&#237;nh k&#232;m (c&#243; th&#7875; ch&#7885;n nhi&#7873;u &#7843;nh)</label>
+                    <input type="file" name="images" accept="image/*" multiple>
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">

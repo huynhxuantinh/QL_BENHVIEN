@@ -145,7 +145,7 @@ venv\Scripts\python.exe manage.py import_hospitals data.xlsx --sheet Hospitals
 ### Cấu trúc sheet
 
 `Hospitals`:
-- `ten, dia_chi, phuong, lat, lon, co_bhyt, co_cap_cuu, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
+- `ten, dia_chi, phuong, lat, lon, co_bhyt, cap_cuu_24h, loai_hinh, gio_mo, gio_dong`
 
 `Departments`:
 - `ten, benh_vien`
@@ -158,9 +158,8 @@ venv\Scripts\python.exe manage.py import_hospitals data.xlsx --sheet Hospitals
 
 Lưu ý import:
 - Bắt buộc trong `Hospitals`: `ten`, `lat`, `lon`.
-- Nếu `cap_cuu_24h=True` thì `co_cap_cuu` phải `True` (hệ thống sẽ tự ép).
-- Nếu sheet phụ thiếu cột bắt buộc, lệnh sẽ cảnh báo và bỏ qua sheet đó.
-
+- Chi can cot `cap_cuu_24h` cho cap cuu (he thong tu dong dong bo truong cu trong DB).
+- Neu sheet phu thieu cot bat buoc, lenh se canh bao va bo qua sheet do.
 ---
 
 ## 10) Dữ liệu demo ổn định (thuyết trình)
@@ -229,3 +228,4 @@ Lưu ý triển khai trong project:
 7. Đăng nhập admin vào `/quan-tri/`, xem dashboard và danh mục “Tài khoản”.
 
 ---
+

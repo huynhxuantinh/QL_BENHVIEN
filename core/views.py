@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404, redirect
+﻿from django.shortcuts import render, get_object_or_404, redirect
 import datetime
 import math
 from django.contrib.auth.decorators import login_required
@@ -15,7 +15,7 @@ from django.core.exceptions import ValidationError
 from django.forms import modelform_factory
 from django.http import Http404, JsonResponse
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Max, Q
 from django.db import models as db_models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
@@ -23,6 +23,7 @@ from .models import BaoHiemYTe
 
 from .models import (
     BenhVien,
+    BenhVienHinhAnh,
     BenhNhan,
     BacSi,
     Khoa,
@@ -31,6 +32,7 @@ from .models import (
     LichKham,
     LichSuKhamBenh,
     PhieuKham,
+    PhieuKhamHinhAnh,
     LogLichKham,
     LogHeThong,
     ThongBao,
@@ -64,7 +66,7 @@ def home(request):
     filter_open = request.GET.get("open") == "1"
     filter_emergency = request.GET.get("emergency") == "1"
     filter_bhyt = request.GET.get("bhyt") == "1"
-    filter_cap_cuu = request.GET.get("cap_cuu") == "1"
+    filter_cap_cuu_24h = request.GET.get("cap_cuu_24h") == "1"
     loai_hinh = request.GET.get("loai_hinh")
     phuong_filter = (request.GET.get("phuong") or request.GET.get("quan") or "").strip()
     search_query = request.GET.get("q", "").strip()
@@ -159,7 +161,7 @@ def home(request):
         f"home_filter:"
         f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
         f"open={int(filter_open)}|emg={int(filter_emergency)}|"
-        f"bhyt={int(filter_bhyt)}|capcuu={int(filter_cap_cuu)}|"
+        f"bhyt={int(filter_bhyt)}|capcuu247={int(filter_cap_cuu_24h)}|"
         f"loai={loai_hinh or 'all'}|phuong={phuong_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
     )
     cached = cache.get(cache_key)
@@ -214,7 +216,7 @@ def home(request):
             "user_lon": user_lon,
             "radius_km": radius_km,
             "filter_bhyt": filter_bhyt,
-            "filter_cap_cuu": filter_cap_cuu,
+            "filter_cap_cuu_24h": filter_cap_cuu_24h,
             "filter_open": filter_open,
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
@@ -226,8 +228,8 @@ def home(request):
 
     if filter_bhyt:
         bvs = bvs.filter(co_bhyt=True)
-    if filter_cap_cuu:
-        bvs = bvs.filter(co_cap_cuu=True)
+    if filter_cap_cuu_24h:
+        bvs = bvs.filter(cap_cuu_24h=True)
 
     if user_point:
         # GIS: annotate distance from user, filter by radius, sort nearest first
@@ -277,7 +279,7 @@ def home(request):
         else:
             is_open = bv.gio_mo <= now.time() <= bv.gio_dong
 
-        emergency_active = bv.cap_cuu_24h or (bv.co_cap_cuu and is_open)
+        emergency_active = bv.cap_cuu_24h
 
         map_lat, map_lon = point_to_latlon(bv.vi_tri) if bv.vi_tri else (None, None)
         setattr(bv, "map_lat", map_lat)
@@ -363,7 +365,7 @@ def home(request):
         "user_lon": user_lon,
         "radius_km": radius_km,
         "filter_bhyt": filter_bhyt,
-        "filter_cap_cuu": filter_cap_cuu,
+        "filter_cap_cuu_24h": filter_cap_cuu_24h,
         "filter_open": filter_open,
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
@@ -379,11 +381,18 @@ def home(request):
 # ==========================
 def hospital_detail(request, id):
 
-    bv = get_object_or_404(BenhVien, id=id)
+    bv = get_object_or_404(
+        BenhVien.objects.prefetch_related("hinh_anhs"),
+        id=id,
+    )
 
     khoas = bv.khoas.all()
     bac_sis = bv.bac_sis.all()
     gio_lam_viec = GioLamViecBenhVien.objects.filter(benh_vien=bv).order_by("thu")
+    hospital_images = list(bv.hinh_anhs.all())
+    primary_image = next((img for img in hospital_images if img.la_anh_dai_dien), None)
+    if not primary_image and hospital_images:
+        primary_image = hospital_images[0]
     map_lat = None
     map_lon = None
     if bv.vi_tri:
@@ -417,6 +426,8 @@ def hospital_detail(request, id):
         "khoas": khoas,
         "bac_sis": bac_sis,
         "gio_lam_viec": gio_lam_viec,
+        "hospital_images": hospital_images,
+        "primary_image": primary_image,
         "map_lat": map_lat,
         "map_lon": map_lon,
     })
@@ -676,7 +687,7 @@ def phieu_kham_detail(request, phieu_id):
 
     if bac_si:
         phieu = get_object_or_404(
-            PhieuKham,
+            PhieuKham.objects.prefetch_related("hinh_anhs"),
             id=phieu_id,
             lich_kham__bac_si=bac_si,
         )
@@ -690,6 +701,7 @@ def phieu_kham_detail(request, phieu_id):
             "benh_nhan": phieu.benh_nhan,
             "phieu": phieu,
             "edit_logs": edit_logs,
+            "exam_images": list(phieu.hinh_anhs.all()),
         })
 
     benh_nhan = BenhNhan.objects.filter(
@@ -698,10 +710,14 @@ def phieu_kham_detail(request, phieu_id):
 
     if not benh_nhan:
         return render(request, "core/error.html", {
-            "msg": "\u0042\u1ea1\u006e\u0020\u0063\u0068\u01b0\u0061\u0020\u0063\u00f3\u0020\u0068\u1ed3\u0020\u0073\u01a1\u0020\u0062\u1ec7\u006e\u0068\u0020\u006e\u0068\u00e2\u006e"
+            "msg": "Bạn chưa có hồ sơ bệnh nhân"
         })
 
-    phieu = get_object_or_404(PhieuKham, id=phieu_id, benh_nhan=benh_nhan)
+    phieu = get_object_or_404(
+        PhieuKham.objects.prefetch_related("hinh_anhs"),
+        id=phieu_id,
+        benh_nhan=benh_nhan,
+    )
 
     edit_logs = LogHeThong.objects.filter(
         model_name="PhieuKham",
@@ -713,6 +729,7 @@ def phieu_kham_detail(request, phieu_id):
         "benh_nhan": benh_nhan,
         "phieu": phieu,
         "edit_logs": edit_logs,
+        "exam_images": list(phieu.hinh_anhs.all()),
     })
 
 
@@ -758,7 +775,7 @@ def doctor_exam(request, lich_id):
     )
 
     if hasattr(lich, "phieu_kham"):
-        messages.info(request, "\u004c\u1ecbch kh\u00e1m n\u00e0y \u0111\u00e3 c\u00f3 phi\u1ebfu kh\u00e1m.")
+        messages.info(request, "Lịch khám này đã có phiếu khám.")
         return redirect("bac_si_home")
 
 
@@ -767,6 +784,7 @@ def doctor_exam(request, lich_id):
         trieu_chung = request.POST.get("trieu_chung", "").strip()
         chan_doan = request.POST.get("chan_doan", "").strip()
         huong_dieu_tri = request.POST.get("huong_dieu_tri", "").strip()
+        uploaded_images = request.FILES.getlist("images")
 
         if not trieu_chung or not chan_doan or not huong_dieu_tri:
             messages.error(request, "Vui lòng nhập đầy đủ thông tin phiếu khám.")
@@ -774,19 +792,32 @@ def doctor_exam(request, lich_id):
                 "lich": lich
             })
 
+        try:
+            with transaction.atomic():
+                phieu = PhieuKham.objects.create(
+                    benh_nhan=lich.benh_nhan,
+                    lich_kham=lich,
+                    trieu_chung=trieu_chung,
+                    chan_doan=chan_doan,
+                    huong_dieu_tri=huong_dieu_tri
+                )
 
-        PhieuKham.objects.create(
-            benh_nhan=lich.benh_nhan,
-            lich_kham=lich,
-            trieu_chung=trieu_chung,
-            chan_doan=chan_doan,
-            huong_dieu_tri=huong_dieu_tri
-        )
+                for idx, image in enumerate(uploaded_images):
+                    hinh_anh = PhieuKhamHinhAnh(
+                        phieu_kham=phieu,
+                        hinh_anh=image,
+                        thu_tu=idx,
+                    )
+                    hinh_anh.full_clean()
+                    hinh_anh.save()
 
-
-        lich.trang_thai = "xong"
-        lich.save()
-
+                lich.trang_thai = "xong"
+                lich.save()
+        except ValidationError:
+            messages.error(request, "Ảnh tải lên không hợp lệ. Vui lòng dùng JPG, PNG hoặc WEBP.")
+            return render(request, "core/doctor_exam.html", {
+                "lich": lich
+            })
 
         messages.success(request, "Đã hoàn thành khám")
 
@@ -796,7 +827,6 @@ def doctor_exam(request, lich_id):
     return render(request, "core/doctor_exam.html", {
         "lich": lich
     })
-
 
 # ==========================
 # ĐĂNG KÝ
@@ -960,9 +990,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Bệnh viện",
         "model": BenhVien,
         "form_class": AdminBenhVienForm,
-        "list_display": ("ten", "phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
+        "list_display": ("ten", "phuong", "loai_hinh", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
         "search_fields": ("ten", "dia_chi", "phuong"),
-        "list_filter": ("phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt"),
+        "list_filter": ("phuong", "loai_hinh", "cap_cuu_24h", "co_bhyt"),
         "ordering": ("ten",),
     },
     "gio-lam-viec-benh-vien": {
@@ -1038,6 +1068,14 @@ ADMIN_MODEL_CONFIG = {
         "search_fields": ("benh_nhan__ho_ten", "chan_doan", "trieu_chung"),
         "list_filter": ("ngay_lap",),
         "ordering": ("-ngay_lap",),
+    },
+    "phieu-kham-hinh-anh": {
+        "title": "Hình ảnh phiếu khám",
+        "model": PhieuKhamHinhAnh,
+        "list_display": ("phieu_kham", "thu_tu", "ngay_tao"),
+        "search_fields": ("phieu_kham__benh_nhan__ho_ten", "mo_ta"),
+        "list_filter": ("ngay_tao",),
+        "ordering": ("-ngay_tao",),
     },
     "lich-su-kham-benh": {
         "title": "Lịch sử khám bệnh",
@@ -1126,7 +1164,7 @@ ADMIN_FIELD_LABELS = {
     "phuong": "Phường",
     "loai_hinh": "Loại hình",
     "co_cap_cuu": "Có cấp cứu",
-    "cap_cuu_24h": "Cấp cứu 24h",
+    "cap_cuu_24h": "Cấp cứu 24/7",
     "co_bhyt": "Có BHYT",
     "gio_mo": "Giờ mở",
     "gio_dong": "Giờ đóng",
@@ -1150,6 +1188,10 @@ ADMIN_FIELD_LABELS = {
     "gio_kham": "Giờ khám",
     "trang_thai": "Trạng thái",
     "lich_kham": "Lịch khám",
+    "phieu_kham": "Phiếu khám",
+    "hinh_anh": "Hình ảnh",
+    "mo_ta": "Mô tả",
+    "thu_tu": "Thứ tự",
     "ngay_lap": "Ngày lập",
     "ngay_tao": "Ngày tạo",
     "hanh_dong": "Hành động",
@@ -1262,6 +1304,82 @@ def _build_filter_meta(model, list_filter, params):
             item["type"] = "date"
         filter_meta.append(item)
     return filter_meta
+
+
+ALLOWED_HOSPITAL_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp"}
+MAX_HOSPITAL_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+
+
+def _parse_int_set(values):
+    result = set()
+    for value in values:
+        try:
+            result.add(int(value))
+        except (TypeError, ValueError):
+            continue
+    return result
+
+
+def _validate_hospital_images(uploaded_images):
+    errors = []
+    for uploaded in uploaded_images:
+        name = uploaded.name or "tep_khong_ten"
+        ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if ext not in ALLOWED_HOSPITAL_IMAGE_EXTS:
+            errors.append(f"Ảnh '{name}' không đúng định dạng (jpg, jpeg, png, webp).")
+            continue
+        if uploaded.size and uploaded.size > MAX_HOSPITAL_IMAGE_SIZE_BYTES:
+            errors.append(f"Ảnh '{name}' vượt quá 5MB.")
+            continue
+        content_type = (getattr(uploaded, "content_type", "") or "").lower()
+        if content_type and not content_type.startswith("image/"):
+            errors.append(f"Tệp '{name}' không phải ảnh hợp lệ.")
+    return errors
+
+
+def _sync_hospital_images(hospital, uploaded_images, delete_ids=None, cover_image_id=None):
+    delete_ids = delete_ids or set()
+
+    if delete_ids:
+        BenhVienHinhAnh.objects.filter(benh_vien=hospital, id__in=delete_ids).delete()
+
+    if uploaded_images:
+        current_max = (
+            BenhVienHinhAnh.objects.filter(benh_vien=hospital)
+            .aggregate(value=Max("thu_tu"))
+            .get("value")
+            or 0
+        )
+        new_items = []
+        for idx, uploaded in enumerate(uploaded_images, start=1):
+            new_items.append(
+                BenhVienHinhAnh(
+                    benh_vien=hospital,
+                    hinh_anh=uploaded,
+                    thu_tu=current_max + idx,
+                    la_anh_dai_dien=False,
+                )
+            )
+        BenhVienHinhAnh.objects.bulk_create(new_items)
+
+    images = list(
+        BenhVienHinhAnh.objects.filter(benh_vien=hospital).order_by("thu_tu", "id")
+    )
+    if not images:
+        return
+
+    valid_ids = {img.id for img in images}
+    target_cover_id = cover_image_id if cover_image_id in valid_ids else None
+
+    if target_cover_id is None:
+        current_cover = next((img for img in images if img.la_anh_dai_dien), None)
+        if current_cover:
+            target_cover_id = current_cover.id
+        else:
+            target_cover_id = images[0].id
+
+    BenhVienHinhAnh.objects.filter(benh_vien=hospital).update(la_anh_dai_dien=False)
+    BenhVienHinhAnh.objects.filter(benh_vien=hospital, id=target_cover_id).update(la_anh_dai_dien=True)
 
 
 HOSPITAL_WEEKDAY_CHOICES = [
@@ -1412,21 +1530,29 @@ def custom_admin_model_create(request, model_key):
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
 
-    form = form_class(request.POST or None)
+    form = form_class(request.POST or None, request.FILES or None)
     schedule_rows = []
     schedule_errors = []
+    uploaded_images = []
+    upload_errors = []
     if is_hospital:
         schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, None)
+        if request.method == "POST":
+            uploaded_images = request.FILES.getlist("hospital_images")
+            upload_errors = _validate_hospital_images(uploaded_images)
 
-    if request.method == "POST" and form.is_valid():
-        if schedule_errors:
-            for err in schedule_errors:
-                form.add_error(None, err)
-        else:
+    if request.method == "POST":
+        for err in schedule_errors:
+            form.add_error(None, err)
+        for err in upload_errors:
+            form.add_error(None, err)
+
+        if form.is_valid():
             with transaction.atomic():
                 obj = form.save()
                 if is_hospital:
                     _save_hospital_schedule_rows(obj, schedule_rows)
+                    _sync_hospital_images(obj, uploaded_images)
             messages.success(request, f"Đã tạo {config['title'].lower()}.")
             return redirect("custom_admin_model_list", model_key=model_key)
 
@@ -1437,6 +1563,10 @@ def custom_admin_model_create(request, model_key):
         "show_map_picker": is_hospital,
         "show_hospital_layout": is_hospital,
         "show_hospital_schedule": is_hospital,
+        "show_hospital_image_manager": is_hospital,
+        "hospital_images": [],
+        "selected_delete_ids": set(),
+        "selected_cover_id": "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
     })
@@ -1453,21 +1583,46 @@ def custom_admin_model_edit(request, model_key, pk):
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
 
-    form = form_class(request.POST or None, instance=obj)
+    form = form_class(request.POST or None, request.FILES or None, instance=obj)
     schedule_rows = []
     schedule_errors = []
+    uploaded_images = []
+    upload_errors = []
+    selected_delete_ids = set()
+    selected_cover_id = ""
     if is_hospital:
         schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, obj)
+        if request.method == "POST":
+            uploaded_images = request.FILES.getlist("hospital_images")
+            upload_errors = _validate_hospital_images(uploaded_images)
+            selected_delete_ids = _parse_int_set(request.POST.getlist("delete_image_ids"))
+            selected_cover_id_raw = (request.POST.get("cover_image_id") or "").strip()
+            if selected_cover_id_raw:
+                try:
+                    selected_cover_id = int(selected_cover_id_raw)
+                except ValueError:
+                    selected_cover_id = ""
+                    form.add_error(None, "Ảnh đại diện không hợp lệ.")
+            if selected_cover_id and selected_cover_id in selected_delete_ids:
+                form.add_error(None, "Không thể chọn ảnh vừa đánh dấu xóa làm ảnh đại diện.")
 
-    if request.method == "POST" and form.is_valid():
-        if schedule_errors:
-            for err in schedule_errors:
-                form.add_error(None, err)
-        else:
+    if request.method == "POST":
+        for err in schedule_errors:
+            form.add_error(None, err)
+        for err in upload_errors:
+            form.add_error(None, err)
+
+        if form.is_valid():
             with transaction.atomic():
                 updated_obj = form.save()
                 if is_hospital:
                     _save_hospital_schedule_rows(updated_obj, schedule_rows)
+                    _sync_hospital_images(
+                        updated_obj,
+                        uploaded_images,
+                        delete_ids=selected_delete_ids,
+                        cover_image_id=selected_cover_id if selected_cover_id else None,
+                    )
             if isinstance(updated_obj, User) and request.user.pk == updated_obj.pk and form.cleaned_data.get("password"):
                 # Keep current admin session alive when changing own password.
                 update_session_auth_hash(request, updated_obj)
@@ -1482,6 +1637,10 @@ def custom_admin_model_edit(request, model_key, pk):
         "show_map_picker": is_hospital,
         "show_hospital_layout": is_hospital,
         "show_hospital_schedule": is_hospital,
+        "show_hospital_image_manager": is_hospital,
+        "hospital_images": list(obj.hinh_anhs.all()) if is_hospital else [],
+        "selected_delete_ids": selected_delete_ids,
+        "selected_cover_id": str(selected_cover_id) if selected_cover_id else "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
     })
@@ -1634,12 +1793,12 @@ def contact_feedback(request):
         if form.is_valid():
             cleaned = form.cleaned_data
             recipient = getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or settings.DEFAULT_FROM_EMAIL
-            subject = f"[G\u00d3P \u00dd] {cleaned['chu_de']}"
+            subject = f"[GÓP Ý] {cleaned['chu_de']}"
             message = (
-                f"H\u1ecd t\u00ean: {cleaned['ho_ten']}\n"
+                f"Họ tên: {cleaned['ho_ten']}\n"
                 f"Email: {cleaned['email']}\n"
-                f"Th\u1eddi gian: {timezone.localtime().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
-                f"N\u1ed9i dung:\n{cleaned['noi_dung']}"
+                f"Thời gian: {timezone.localtime().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+                f"Nội dung:\n{cleaned['noi_dung']}"
             )
             try:
                 send_mail(
@@ -1652,14 +1811,16 @@ def contact_feedback(request):
             except Exception:
                 messages.error(
                     request,
-                    "Kh\u00f4ng g\u1eedi \u0111\u01b0\u1ee3c g\u00f3p \u00fd l\u00fac n\u00e0y. Vui l\u00f2ng th\u1eed l\u1ea1i sau.",
+                    "Không gửi được góp ý lúc này. Vui lòng thử lại sau.",
                 )
             else:
                 messages.success(
                     request,
-                    "\u0110\u00e3 g\u1eedi g\u00f3p \u00fd th\u00e0nh c\u00f4ng. C\u1ea3m \u01a1n b\u1ea1n!",
+                    "Đã gửi góp ý thành công. Cảm ơn bạn!",
                 )
                 return redirect("contact_feedback")
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin góp ý.")
     else:
         form = ContactFeedbackForm(initial=initial)
 
@@ -1751,7 +1912,7 @@ def bac_si_patient_detail(request, benh_nhan_id):
         benh_nhan=benh_nhan
     ).exists()
     if not co_lich:
-        messages.error(request, "\u0042\u00e1\u0063\u0020\u0073\u0129\u0020\u006b\u0068\u00f4\u006e\u0067\u0020\u0063\u00f3\u0020\u006c\u1ecb\u0063\u0068\u0020\u006b\u0068\u00e1\u006d\u0020\u0076\u1edb\u0069\u0020\u0062\u1ec7\u006e\u0068\u0020\u006e\u0068\u00e2\u006e\u0020\u006e\u00e0\u0079\u002e")
+        messages.error(request, "Bác sĩ không có lịch khám với bệnh nhân này.")
         return redirect("bac_si_home")
 
     lich_su = LichSuKhamBenh.objects.filter(
@@ -1785,17 +1946,17 @@ def start_exam(request, lich_id):
     )
 
     if lich.trang_thai == "huy":
-        messages.error(request, "\u004c\u1ecbch \u0111\u00e3 h\u1ee7y, kh\u00f4ng th\u1ec3 b\u1eaft \u0111\u1ea7u kh\u00e1m.")
+        messages.error(request, "Lịch đã hủy, không thể bắt đầu khám.")
         return redirect("bac_si_home")
 
     if lich.trang_thai == "xong":
-        messages.info(request, "\u004c\u1ecbch \u0111\u00e3 ho\u00e0n th\u00e0nh.")
+        messages.info(request, "Lịch đã hoàn thành.")
         return redirect("bac_si_home")
 
     if lich.trang_thai != "dang":
         lich.trang_thai = "dang"
         lich.save()
-        messages.success(request, "\u0110\u00e3 chuy\u1ec3n tr\u1ea1ng th\u00e1i sang \u0111ang kh\u00e1m.")
+        messages.success(request, "Đã chuyển trạng thái sang đang khám.")
 
     return redirect("bac_si_home")
 
@@ -1817,7 +1978,7 @@ def bac_si_notifications(request):
                 nguoi_nhan=request.user,
                 da_doc=False,
             ).update(da_doc=True)
-            messages.success(request, "\u0110\u00e3 \u0111\u00e1nh d\u1ea5u t\u1ea5t c\u1ea3 th\u00f4ng b\u00e1o l\u00e0 \u0111\u00e3 \u0111\u1ecdc.")
+            messages.success(request, "Đã đánh dấu tất cả thông báo là đã đọc.")
             return redirect("bac_si_notifications")
         if action == "mark_one":
             tb_id = request.POST.get("tb_id")
@@ -1875,18 +2036,18 @@ def bac_si_schedule(request):
                 continue
 
             if not gio_bat_dau or not gio_ket_thuc:
-                messages.error(request, "\u0056\u0075\u0069\u0020\u006c\u00f2\u006e\u0067\u0020\u006e\u0068\u1ead\u0070\u0020\u0111\u1ea7\u0079\u0020\u0111\u1ee7\u0020\u0067\u0069\u1edd\u0020\u006c\u00e0\u006d\u0020\u0076\u0069\u1ec7\u0063\u002e")
+                messages.error(request, "Vui lòng nhập đầy đủ giờ làm việc.")
                 return redirect("bac_si_schedule")
 
             try:
                 start_time = datetime.time.fromisoformat(gio_bat_dau)
                 end_time = datetime.time.fromisoformat(gio_ket_thuc)
             except ValueError:
-                messages.error(request, "\u0110\u1ecb\u006e\u0068\u0020\u0064\u1ea1\u006e\u0067\u0020\u0067\u0069\u1edd\u0020\u006b\u0068\u00f4\u006e\u0067\u0020\u0068\u1ee3\u0070\u0020\u006c\u1ec7\u002e")
+                messages.error(request, "Định dạng giờ không hợp lệ.")
                 return redirect("bac_si_schedule")
 
             if start_time >= end_time:
-                messages.error(request, "\u0047\u0069\u1edd\u0020\u0062\u1eaf\u0074\u0020\u0111\u1ea7\u0075\u0020\u0070\u0068\u1ea3\u0069\u0020\u006e\u0068\u1ecf\u0020\u0068\u01a1\u006e\u0020\u0067\u0069\u1edd\u0020\u006b\u1ebf\u0074\u0020\u0074\u0068\u00fa\u0063\u002e")
+                messages.error(request, "Giờ bắt đầu phải nhỏ hơn giờ kết thúc.")
                 return redirect("bac_si_schedule")
 
             GioLamViecBacSi.objects.update_or_create(
@@ -1899,7 +2060,7 @@ def bac_si_schedule(request):
                 },
             )
 
-        messages.success(request, "\u0110\u00e3 c\u1ead\u0070\u0020\u006e\u0068\u1ead\u0074\u0020\u006c\u1ecb\u0063\u0068\u0020\u006c\u00e0\u006d\u0020\u0076\u0069\u1ec7\u0063\u002e")
+        messages.success(request, "Đã cập nhật lịch làm việc.")
         return redirect("bac_si_schedule")
 
     schedules = {
@@ -1934,7 +2095,7 @@ def bac_si_phieu_kham_edit(request, phieu_id):
         return redirect("home")
 
     phieu = get_object_or_404(
-        PhieuKham,
+        PhieuKham.objects.prefetch_related("hinh_anhs"),
         id=phieu_id,
         lich_kham__bac_si=bac_si,
     )
@@ -1943,9 +2104,11 @@ def bac_si_phieu_kham_edit(request, phieu_id):
         trieu_chung = request.POST.get("trieu_chung", "").strip()
         chan_doan = request.POST.get("chan_doan", "").strip()
         huong_dieu_tri = request.POST.get("huong_dieu_tri", "").strip()
+        remove_image_ids = request.POST.getlist("remove_image_ids")
+        new_images = request.FILES.getlist("new_images")
 
         if not trieu_chung or not chan_doan or not huong_dieu_tri:
-            messages.error(request, "\u0056\u0075\u0069\u0020\u006c\u00f2\u006e\u0067\u0020\u006e\u0068\u1ead\u0070\u0020\u0111\u1ea7\u0079\u0020\u0111\u1ee7\u0020\u0074\u0068\u00f4\u006e\u0067\u0020\u0074\u0069\u006e\u002e")
+            messages.error(request, "Vui lòng nhập đầy đủ thông tin.")
             return redirect("bac_si_phieu_kham_edit", phieu_id=phieu.id)
 
         old_data = {
@@ -1959,10 +2122,33 @@ def bac_si_phieu_kham_edit(request, phieu_id):
             "huong_dieu_tri": huong_dieu_tri,
         }
 
-        phieu.trieu_chung = trieu_chung
-        phieu.chan_doan = chan_doan
-        phieu.huong_dieu_tri = huong_dieu_tri
-        phieu.save()
+        try:
+            with transaction.atomic():
+                phieu.trieu_chung = trieu_chung
+                phieu.chan_doan = chan_doan
+                phieu.huong_dieu_tri = huong_dieu_tri
+                phieu.save()
+
+                if remove_image_ids:
+                    PhieuKhamHinhAnh.objects.filter(
+                        phieu_kham=phieu,
+                        id__in=remove_image_ids,
+                    ).delete()
+
+                next_order = phieu.hinh_anhs.aggregate(max_order=Max("thu_tu")).get("max_order")
+                next_order = (next_order + 1) if next_order is not None else 0
+                for image in new_images:
+                    hinh_anh = PhieuKhamHinhAnh(
+                        phieu_kham=phieu,
+                        hinh_anh=image,
+                        thu_tu=next_order,
+                    )
+                    hinh_anh.full_clean()
+                    hinh_anh.save()
+                    next_order += 1
+        except ValidationError:
+            messages.error(request, "Ảnh tải lên không hợp lệ. Vui lòng dùng JPG, PNG hoặc WEBP.")
+            return redirect("bac_si_phieu_kham_edit", phieu_id=phieu.id)
 
         if old_data != new_data:
             LogHeThong.objects.create(
@@ -1972,14 +2158,15 @@ def bac_si_phieu_kham_edit(request, phieu_id):
                 du_lieu_cu=old_data,
                 du_lieu_moi=new_data,
                 nguoi_thuc_hien=request.user,
-                ghi_chu="Cap nhat phieu kham",
+                ghi_chu="Cập nhật phiếu khám",
             )
 
-        messages.success(request, "\u0110\u00e3 c\u1ead\u0070\u0020\u006e\u0068\u1ead\u0074\u0020\u0070\u0068\u0069\u1ebf\u0075\u0020\u006b\u0068\u00e1\u006d\u002e")
+        messages.success(request, "Đã cập nhật phiếu khám.")
         return redirect("phieu_kham_detail", phieu_id=phieu.id)
 
     return render(request, "core/doctor_exam_edit.html", {
         "phieu": phieu,
+        "existing_images": list(phieu.hinh_anhs.all()),
     })
 
 
@@ -2084,4 +2271,10 @@ def notifications(request):
 
 def custom_404(request, exception):
     return render(request, "404.html", status=404)
+
+
+def custom_404_debug(request):
+    return render(request, "404.html", status=404)
+
+
 

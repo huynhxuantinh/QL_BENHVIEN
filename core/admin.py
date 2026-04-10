@@ -57,14 +57,13 @@ class BenhVienAdmin(GISModelAdmin):
         "ten",
         "phuong",
         "loai_hinh",
-        "co_cap_cuu",
         "cap_cuu_24h",
         "co_bhyt",
         "gio_mo",
         "gio_dong",
     )
     search_fields = ("ten", "dia_chi", "phuong")
-    list_filter = ("phuong", "loai_hinh", "co_cap_cuu", "cap_cuu_24h", "co_bhyt")
+    list_filter = ("phuong", "loai_hinh", "cap_cuu_24h", "co_bhyt")
     ordering = ("ten",)
     inlines = (GioLamViecBenhVienInline,)
 

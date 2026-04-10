@@ -28,9 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-zks&!%le7&vo#*)@6)m@v4u__4aek$3w*n3(ws@s%l61zwk+-$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").strip().lower() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = []
+_allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(",") if host.strip()]
+if DEBUG and not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -141,6 +144,8 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 import os
 GDAL_LIBRARY_PATH = os.getenv('GDAL_PATH')

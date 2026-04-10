@@ -144,7 +144,6 @@ def _import_hospitals(ws, update_existing):
         "lat": {"lat", "latitude", "vi do", "vido", "y"},
         "lon": {"lon", "lng", "longitude", "kinh do", "kinhdo", "x"},
         "co_bhyt": {"co bhyt", "bhyt", "bao hiem y te", "bhyt?"},
-        "co_cap_cuu": {"co cap cuu", "cap cuu", "capcuu"},
         "cap_cuu_24h": {"cap cuu 24h", "cap cuu 24", "capcuu 24h"},
         "loai_hinh": {"loai hinh", "loai", "type"},
         "gio_mo": {"gio mo", "open", "open time"},
@@ -189,12 +188,10 @@ def _import_hospitals(ws, update_existing):
         gio_dong = _parse_time(_get_cell(row, header_map, "gio_dong"), default_close)
 
         co_bhyt = _parse_bool(_get_cell(row, header_map, "co_bhyt"), default=False)
-        co_cap_cuu = _parse_bool(_get_cell(row, header_map, "co_cap_cuu"), default=False)
         cap_cuu_24h = _parse_bool(_get_cell(row, header_map, "cap_cuu_24h"), default=False)
+        # UI now uses only "cap_cuu_24h". Keep legacy field synced in DB.
+        co_cap_cuu = cap_cuu_24h
         loai_hinh = _parse_loai_hinh(_get_cell(row, header_map, "loai_hinh"))
-        # Enforce model constraint: cap_cuu_24h requires co_cap_cuu.
-        if cap_cuu_24h and not co_cap_cuu:
-            co_cap_cuu = True
 
         bv = None
         if update_existing:

@@ -40,20 +40,36 @@ class ContactFeedbackForm(forms.Form):
     ho_ten = forms.CharField(
         max_length=120,
         label="Họ tên",
+        error_messages={
+            "required": "Vui lòng nhập họ tên.",
+            "max_length": "Họ tên tối đa 120 ký tự.",
+        },
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyễn Văn A"}),
     )
     email = forms.EmailField(
         label="Email liên hệ",
+        error_messages={
+            "required": "Vui lòng nhập email liên hệ.",
+            "invalid": "Email không đúng định dạng.",
+        },
         widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ban@email.com"}),
     )
     chu_de = forms.CharField(
         max_length=180,
         label="Chủ đề",
+        error_messages={
+            "required": "Vui lòng nhập chủ đề.",
+            "max_length": "Chủ đề tối đa 180 ký tự.",
+        },
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Góp ý về chức năng đặt lịch"}),
     )
     noi_dung = forms.CharField(
         min_length=10,
         label="Nội dung góp ý",
+        error_messages={
+            "required": "Vui lòng nhập nội dung góp ý.",
+            "min_length": "Nội dung góp ý tối thiểu 10 ký tự.",
+        },
         widget=forms.Textarea(
             attrs={
                 "class": "form-control",
@@ -69,13 +85,13 @@ class AdminBenhVienForm(forms.ModelForm):
         min_value=-90,
         max_value=90,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="\u0056\u0129 \u0111\u1ed9",
+        label="Vĩ độ",
     )
     lon = forms.FloatField(
         min_value=-180,
         max_value=180,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="Kinh \u0111\u1ed9",
+        label="Kinh độ",
     )
 
     class Meta:
@@ -86,7 +102,6 @@ class AdminBenhVienForm(forms.ModelForm):
             "phuong",
             "lat",
             "lon",
-            "co_cap_cuu",
             "cap_cuu_24h",
             "co_bhyt",
             "loai_hinh",
@@ -95,8 +110,7 @@ class AdminBenhVienForm(forms.ModelForm):
             "ten": "Tên bệnh viện",
             "dia_chi": "Địa chỉ",
             "phuong": "Phường",
-            "co_cap_cuu": "Có cấp cứu",
-            "cap_cuu_24h": "Cấp cứu 24h",
+            "cap_cuu_24h": "Cấp cứu 24/7",
             "co_bhyt": "Có BHYT",
             "loai_hinh": "Loại hình",
         }
@@ -104,7 +118,6 @@ class AdminBenhVienForm(forms.ModelForm):
             "ten": forms.TextInput(attrs={"class": "form-control"}),
             "dia_chi": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "phuong": forms.TextInput(attrs={"class": "form-control"}),
-            "co_cap_cuu": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "cap_cuu_24h": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "co_bhyt": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "loai_hinh": forms.Select(attrs={"class": "form-control"}),
@@ -118,10 +131,9 @@ class AdminBenhVienForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        cap_cuu_24h = cleaned_data.get("cap_cuu_24h")
-        co_cap_cuu = cleaned_data.get("co_cap_cuu")
-        if cap_cuu_24h and not co_cap_cuu:
-            cleaned_data["co_cap_cuu"] = True
+        cap_cuu_24h = bool(cleaned_data.get("cap_cuu_24h"))
+        # Keep backward-compatible field in sync while UI only exposes 24/7.
+        cleaned_data["co_cap_cuu"] = cap_cuu_24h
         return cleaned_data
 
     def save(self, commit=True):
@@ -129,6 +141,7 @@ class AdminBenhVienForm(forms.ModelForm):
         lat = self.cleaned_data.get("lat")
         lon = self.cleaned_data.get("lon")
         obj.vi_tri = Point(lon, lat, srid=4326)
+        obj.co_cap_cuu = bool(self.cleaned_data.get("cap_cuu_24h"))
         # Keep required model fields consistent while admin now manages
         # detailed operating hours via schedule-by-week table.
         if not obj.gio_mo:
@@ -186,7 +199,7 @@ class AdminBacSiForm(forms.ModelForm):
         benh_vien = cleaned_data.get("benh_vien")
         khoa = cleaned_data.get("khoa")
         if benh_vien and khoa and khoa.benh_vien_id != benh_vien.id:
-            self.add_error("khoa", "Khoa kh\u00f4ng thu\u1ed9c b\u1ec7nh vi\u1ec7n \u0111\u00e3 ch\u1ecdn.")
+            self.add_error("khoa", "Khoa không thuộc bệnh viện đã chọn.")
         return cleaned_data
 
 
@@ -306,3 +319,6 @@ class AdminUserForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+

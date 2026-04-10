@@ -127,6 +127,72 @@
             align-items: start;
         }
 
+        .gallery-card {
+            margin-top: 14px;
+            padding: 14px;
+            position: relative;
+        }
+
+        .gallery-main {
+            width: 100%;
+            height: clamp(170px, 24vw, 320px);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #f0f4f2;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-nav {
+            position: absolute;
+            top: calc(50% - 24px);
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(14, 111, 96, 0.32);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary);
+            font-size: 18px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .gallery-nav.prev { left: 24px; }
+        .gallery-nav.next { right: 24px; }
+
+        .gallery-thumbs {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            gap: 8px;
+        }
+
+        .gallery-thumb {
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 0;
+            background: #fff;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .gallery-thumb.active {
+            border-color: var(--primary);
+            box-shadow: 0 8px 16px rgba(14, 111, 96, 0.18);
+        }
+
+        .gallery-thumb img {
+            width: 100%;
+            height: 56px;
+            object-fit: cover;
+            display: block;
+        }
+
         .info-col {
             display: grid;
             gap: 12px;
@@ -485,15 +551,12 @@
                 <a class="btn ghost" href="{% url 'home' %}">&#8592; Trang ch&#7911;</a>
                 <a class="btn primary" href="{% url 'dat_lich' bv.id %}">&#272;&#7863;t l&#7883;ch kh&#225;m</a>
             </div>
-        </header>
-
-        <section class="hero">
+        </header>        <section class="hero">
             <div class="info-col">
                 <aside class="card info-card">
                     <div class="service-row">
                         <span class="status">{% if bv.co_bhyt %}C&#243; BHYT{% else %}Kh&#244;ng BHYT{% endif %}</span>
-                        <span class="status {% if not bv.co_cap_cuu %}warn{% endif %}">{% if bv.co_cap_cuu %}C&#243; c&#7845;p c&#7913;u{% else %}Kh&#244;ng c&#7845;p c&#7913;u{% endif %}</span>
-                        <span class="status {% if not bv.cap_cuu_24h %}warn{% endif %}">{% if bv.cap_cuu_24h %}C&#7845;p c&#7913;u 24h{% else %}Kh&#244;ng c&#7845;p c&#7913;u 24h{% endif %}</span>
+                        <span class="status {% if not bv.cap_cuu_24h %}warn{% endif %}">{% if bv.cap_cuu_24h %}C&#7845;p c&#7913;u 24/7{% else %}Kh&#244;ng c&#7845;p c&#7913;u 24/7{% endif %}</span>
                     </div>
                     <div class="meta-grid">
                         <div class="meta">
@@ -557,7 +620,7 @@
         </section>
 
         <section class="content-grid">
-            <div class="card section-card wide">
+            <div class="card section-card">
                 <h2 class="section-title">Gi&#7901; l&#224;m vi&#7879;c</h2>
                 <div class="hours">
                     {% for glv in gio_lam_viec %}
@@ -579,6 +642,41 @@
                         </div>
                     {% endfor %}
                 </div>
+            </div>
+
+            <div class="card section-card">
+                <h2 class="section-title">H&#236;nh &#7843;nh</h2>
+                {% if primary_image %}
+                    <div class="gallery-card">
+                        <img
+                            id="gallery-main-image"
+                            class="gallery-main"
+                            src="{{ primary_image.hinh_anh.url }}"
+                            alt="H&#236;nh &#7843;nh b&#7879;nh vi&#7879;n {{ bv.ten }}"
+                        >
+                        {% if hospital_images|length > 1 %}
+                            <button type="button" id="gallery-prev" class="gallery-nav prev" aria-label="&#7842;nh tr&#432;&#7899;c">&#8249;</button>
+                            <button type="button" id="gallery-next" class="gallery-nav next" aria-label="&#7842;nh ti&#7871;p theo">&#8250;</button>
+                            <div class="gallery-thumbs">
+                                {% for image in hospital_images %}
+                                    <button
+                                        type="button"
+                                        class="gallery-thumb {% if image.id == primary_image.id %}active{% endif %}"
+                                        data-image-url="{{ image.hinh_anh.url }}"
+                                        data-index="{{ forloop.counter0 }}"
+                                        aria-label="Xem &#7843;nh {{ forloop.counter }}"
+                                    >
+                                        <img src="{{ image.hinh_anh.url }}" alt="&#7842;nh {{ forloop.counter }} c&#7911;a {{ bv.ten }}">
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="hours-item" style="min-height: 280px; align-items: center; justify-content: center;">
+                        Ch&#432;a c&#243; &#7843;nh b&#7879;nh vi&#7879;n
+                    </div>
+                {% endif %}
             </div>
 
             <div class="card section-card">
@@ -756,7 +854,7 @@
                     const accuracy = Number(pos.coords.accuracy);
                     if (!isValidLatLon(lat, lon)) {
                         setLocateButtonActive(false);
-                        alert("Toa do vi tri khong hop le.");
+                        alert("Tọa độ vị trí không hợp lệ.");
                         resolve(null);
                         return;
                     }
@@ -796,7 +894,7 @@
                 return { lat, lon };
             }
             if ((routeLatInput?.value || "").trim() || (routeLonInput?.value || "").trim()) {
-                setRouteStatus("Toa do khong hop le. Vi do trong [-90, 90], kinh do trong [-180, 180].");
+                setRouteStatus("Tọa độ không hợp lệ. Vĩ độ trong [-90, 90], kinh độ trong [-180, 180].");
             }
             return currentUserCoords;
         }
@@ -888,6 +986,47 @@
             }
         }
 
+        const galleryMainImage = document.getElementById("gallery-main-image");
+        const galleryThumbButtons = Array.from(document.querySelectorAll(".gallery-thumb"));
+        const galleryPrevButton = document.getElementById("gallery-prev");
+        const galleryNextButton = document.getElementById("gallery-next");
+        const galleryImages = galleryThumbButtons.map((button) => button.getAttribute("data-image-url") || "");
+        let galleryIndex = Math.max(0, galleryThumbButtons.findIndex((button) => button.classList.contains("active")));
+
+        function renderGallery(index) {
+            if (!galleryMainImage || !galleryImages.length) {
+                return;
+            }
+            const normalized = (index + galleryImages.length) % galleryImages.length;
+            galleryIndex = normalized;
+            galleryMainImage.src = galleryImages[normalized];
+            galleryThumbButtons.forEach((button, idx) => {
+                if (idx === normalized) {
+                    button.classList.add("active");
+                } else {
+                    button.classList.remove("active");
+                }
+            });
+        }
+
+        galleryThumbButtons.forEach((button, idx) => {
+            button.addEventListener("click", () => {
+                renderGallery(idx);
+            });
+        });
+
+        galleryPrevButton?.addEventListener("click", () => {
+            renderGallery(galleryIndex - 1);
+        });
+
+        galleryNextButton?.addEventListener("click", () => {
+            renderGallery(galleryIndex + 1);
+        });
+
+        if (galleryImages.length) {
+            renderGallery(galleryIndex);
+        }
+
         routeLocateBtn?.addEventListener("click", async () => {
             await locateUser(true);
         });
@@ -898,3 +1037,5 @@
     </script>
 </body>
 </html>
+
+

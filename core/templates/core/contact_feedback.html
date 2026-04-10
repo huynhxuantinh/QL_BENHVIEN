@@ -102,6 +102,9 @@
             border: 1px solid rgba(31, 42, 43, 0.14);
             background: rgba(255, 255, 255, 0.9);
         }
+        .alert.error { background: #fff1f1; border-color: #ffc8c8; color: #9f2d2d; }
+        .alert.success { background: #eefaf4; border-color: #bfe9cf; color: #176b3a; }
+        .alert.info { background: #eef6ff; border-color: #bfd8ff; color: #1d4b8f; }
 
         .submit-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
         .btn.primary {
@@ -125,11 +128,11 @@
         <section class="card">
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert">{{ message }}</div>
+                    <div class="alert {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
 
-            <form method="post">
+            <form method="post" novalidate>
                 {% csrf_token %}
 
                 <div class="form-field">

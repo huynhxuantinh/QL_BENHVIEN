@@ -100,6 +100,21 @@
             font-size: 20px;
             margin: 0 0 10px;
         }
+
+        .exam-images {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .exam-images img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(31, 42, 43, 0.12);
+            background: #fff;
+        }
     </style>
 </head>
 <body>
@@ -111,8 +126,10 @@
             </div>
             {% if request.user.bac_si %}
                 <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' phieu.id %}">S&#7917;a phi&#7871;u</a>
+                <a class="btn ghost" href="{% url 'bac_si_home' %}">&#8592; Trang b&#225;c s&#297;</a>
+            {% else %}
+                <a class="btn ghost" href="{% url 'medical_history' %}">&#8592; L&#7883;ch s&#7917; kh&#225;m</a>
             {% endif %}
-            <a class="btn ghost" href="{% url 'medical_history' %}">&#8592; L&#7883;ch s&#7917; kh&#225;m</a>
         </header>
 
         <div class="card">
@@ -143,6 +160,19 @@
         <div class="card">
             <h2 class="section-title">H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</h2>
             <div>{{ phieu.huong_dieu_tri }}</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">&#7842;nh &#273;&#237;nh k&#232;m</h2>
+            {% if exam_images %}
+                <div class="exam-images">
+                    {% for img in exam_images %}
+                        <img src="{{ img.hinh_anh.url }}" alt="&#7842;nh phi&#7871;u kh&#225;m">
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="meta">Ch&#432;a c&#243; &#7843;nh &#273;&#237;nh k&#232;m.</div>
+            {% endif %}
         </div>
 
         <div class="card">

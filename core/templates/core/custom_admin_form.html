@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }}</title>
     {% if show_map_picker %}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
@@ -134,19 +135,19 @@
                     </div>
 
                     {% if show_hospital_image_manager %}
-                        <div class="section-title">Hình ảnh bệnh viện</div>
+                        <div class="section-title">HÃ¬nh áº£nh bá»‡nh viá»‡n</div>
                         <div class="image-manager">
                             <div class="field">
-                                <label for="hospital_images">Tải ảnh mới (có thể chọn nhiều ảnh)</label>
+                                <label for="hospital_images">Táº£i áº£nh má»›i (cÃ³ thá»ƒ chá»n nhiá»u áº£nh)</label>
                                 <input id="hospital_images" name="hospital_images" type="file" accept="image/*" multiple>
-                                <p class="hint">Định dạng: JPG, JPEG, PNG, WEBP. Tối đa 5MB mỗi ảnh.</p>
+                                <p class="hint">Äá»‹nh dáº¡ng: JPG, JPEG, PNG, WEBP. Tá»‘i Ä‘a 5MB má»—i áº£nh.</p>
                             </div>
 
                             {% if hospital_images %}
                                 <div class="image-grid">
                                     {% for image in hospital_images %}
                                         <div class="image-item">
-                                            <img src="{{ image.hinh_anh.url }}" alt="Ảnh bệnh viện {{ forloop.counter }}">
+                                            <img src="{{ image.hinh_anh.url }}" alt="áº¢nh bá»‡nh viá»‡n {{ forloop.counter }}">
                                             <div class="image-actions">
                                                 <label>
                                                     <input
@@ -159,7 +160,7 @@
                                                             checked
                                                         {% endif %}
                                                     >
-                                                    Ảnh đại diện
+                                                    áº¢nh Ä‘áº¡i diá»‡n
                                                 </label>
                                                 <label>
                                                     <input
@@ -168,14 +169,14 @@
                                                         value="{{ image.id }}"
                                                         {% if image.id in selected_delete_ids %}checked{% endif %}
                                                     >
-                                                    Xóa ảnh này
+                                                    XÃ³a áº£nh nÃ y
                                                 </label>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="empty-images">Chưa có ảnh nào cho bệnh viện này.</div>
+                                <div class="empty-images">ChÆ°a cÃ³ áº£nh nÃ o cho bá»‡nh viá»‡n nÃ y.</div>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -383,8 +384,8 @@
                         position: "topleft",
                         collapsed: true,
                         defaultMarkGeocode: false,
-                        placeholder: "Tìm địa chỉ...",
-                        errorMessage: "Không tìm thấy địa chỉ"
+                        placeholder: "TÃ¬m Ä‘á»‹a chá»‰...",
+                        errorMessage: "KhÃ´ng tÃ¬m tháº¥y Ä‘á»‹a chá»‰"
                     };
                     if (L.Control.Geocoder && typeof L.Control.Geocoder.nominatim === "function") {
                         geocoderOptions.geocoder = L.Control.Geocoder.nominatim({
@@ -399,14 +400,16 @@
                         .on("markgeocode", function (e) {
                             if (!e || !e.geocode || !e.geocode.center) return;
                             setMapLocation(e.geocode.center, 17);
-                            setMapNote("Đã chọn: " + (e.geocode.name || "Vị trí"));
+                            setMapNote("ÄÃ£ chá»n: " + (e.geocode.name || "Vá»‹ trÃ­"));
                         })
                         .addTo(map);
                 } else {
-                    setMapNote("Không tải được thanh tìm kiếm trên bản đồ. Bạn vẫn có thể bấm lên bản đồ để chọn vị trí.");
+                    setMapNote("KhÃ´ng táº£i Ä‘Æ°á»£c thanh tÃ¬m kiáº¿m trÃªn báº£n Ä‘á»“. Báº¡n váº«n cÃ³ thá»ƒ báº¥m lÃªn báº£n Ä‘á»“ Ä‘á»ƒ chá»n vá»‹ trÃ­.");
                 }
             })();
         </script>
     {% endif %}
 </body>
 </html>
+
+

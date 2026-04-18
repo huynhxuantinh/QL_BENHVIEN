@@ -1,6 +1,7 @@
 ﻿from django.shortcuts import render, get_object_or_404, redirect
 import datetime
 import math
+import random
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
@@ -1795,35 +1796,205 @@ def user_logout(request):
     return redirect("login")
 
 # ==========================
-# QUÊN MẬT KHẨU (SĐT + EMAIL)
+# QUÊN MẬT KHẨU (OTP EMAIL)
 # ==========================
+FORGOT_PASSWORD_SESSION_KEY = "forgot_password_flow"
+FORGOT_PASSWORD_OTP_EXPIRE_MINUTES = 10
+
+
+def _clear_forgot_password_flow(request):
+    request.session.pop(FORGOT_PASSWORD_SESSION_KEY, None)
+
+
+def _mask_email(email):
+    if not email or "@" not in email:
+        return email
+    local, domain = email.split("@", 1)
+    if len(local) <= 2:
+        masked_local = local[0] + "*" * (len(local) - 1)
+    else:
+        masked_local = local[:2] + "*" * (len(local) - 2)
+    return f"{masked_local}@{domain}"
+
+
+def _get_valid_forgot_password_flow(request):
+    state = request.session.get(FORGOT_PASSWORD_SESSION_KEY)
+    if not state:
+        return None
+
+    expires_at_raw = state.get("expires_at")
+    if not expires_at_raw:
+        _clear_forgot_password_flow(request)
+        return None
+
+    try:
+        expires_at = datetime.datetime.fromisoformat(expires_at_raw)
+    except (TypeError, ValueError):
+        _clear_forgot_password_flow(request)
+        return None
+
+    if timezone.is_naive(expires_at):
+        expires_at = timezone.make_aware(expires_at, timezone.get_current_timezone())
+
+    if timezone.now() > expires_at:
+        _clear_forgot_password_flow(request)
+        return None
+
+    return state
+
+
 def forgot_password(request):
     if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        email = request.POST.get("email", "").strip()
-        new_password = request.POST.get("new_password", "").strip()
-        confirm_password = request.POST.get("confirm_password", "").strip()
+        step = (request.POST.get("step") or "").strip()
 
-        if not username or not email or not new_password or not confirm_password:
-            messages.error(request, "Vui lòng nhập đầy đủ thông tin")
+        if step == "restart":
+            _clear_forgot_password_flow(request)
+            messages.success(request, "Mời bạn nhập lại tên người dùng.")
             return redirect("forgot_password")
 
-        if new_password != confirm_password:
-            messages.error(request, "Mật khẩu xác nhận không khớp")
+        if step == "username":
+            username = request.POST.get("username", "").strip()
+            if not username:
+                messages.error(request, "Vui lòng nhập tên người dùng.")
+                return redirect("forgot_password")
+
+            user = User.objects.filter(username=username).first()
+            if not user:
+                messages.error(request, "Tên người dùng không tồn tại.")
+                return redirect("forgot_password")
+
+            email = (user.email or "").strip()
+            if not email:
+                messages.error(
+                    request,
+                    "Tài khoản này chưa có email, không thể gửi mã xác thực.",
+                )
+                return redirect("forgot_password")
+
+            otp_code = f"{random.randint(0, 999999):06d}"
+            expires_at = timezone.now() + datetime.timedelta(
+                minutes=FORGOT_PASSWORD_OTP_EXPIRE_MINUTES
+            )
+
+            subject = "[Hệ thống bệnh viện] Mã OTP đặt lại mật khẩu"
+            message = (
+                f"Xin chào {user.username},\n\n"
+                f"Mã OTP đặt lại mật khẩu của bạn là: {otp_code}\n"
+                f"Mã có hiệu lực trong {FORGOT_PASSWORD_OTP_EXPIRE_MINUTES} phút.\n\n"
+                "Nếu bạn không yêu cầu đổi mật khẩu, vui lòng bỏ qua email này."
+            )
+
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except Exception:
+                _clear_forgot_password_flow(request)
+                messages.error(
+                    request,
+                    "Không gửi được mã OTP lúc này. Vui lòng thử lại sau.",
+                )
+                return redirect("forgot_password")
+
+            request.session[FORGOT_PASSWORD_SESSION_KEY] = {
+                "user_id": user.id,
+                "username": user.username,
+                "email": email,
+                "otp_code": otp_code,
+                "verified": False,
+                "expires_at": expires_at.isoformat(),
+            }
+            messages.success(request, "Đã gửi mã OTP 6 số đến email của bạn.")
             return redirect("forgot_password")
 
-        user = User.objects.filter(username=username, email=email).first()
-        if not user:
-            messages.error(request, "SĐT hoặc email không đúng")
+        if step == "otp":
+            state = _get_valid_forgot_password_flow(request)
+            if not state:
+                messages.error(
+                    request,
+                    "Mã OTP đã hết hạn hoặc chưa được tạo. Vui lòng thực hiện lại.",
+                )
+                return redirect("forgot_password")
+
+            otp_input = request.POST.get("otp", "").strip()
+            if not (otp_input.isdigit() and len(otp_input) == 6):
+                messages.error(request, "Vui lòng nhập đúng mã OTP gồm 6 chữ số.")
+                return redirect("forgot_password")
+
+            if otp_input != str(state.get("otp_code", "")):
+                messages.error(request, "Mã OTP không đúng.")
+                return redirect("forgot_password")
+
+            state["verified"] = True
+            request.session[FORGOT_PASSWORD_SESSION_KEY] = state
+            messages.success(request, "Xác thực OTP thành công. Mời bạn nhập mật khẩu mới.")
             return redirect("forgot_password")
 
-        user.set_password(new_password)
-        user.save()
+        if step == "reset":
+            state = _get_valid_forgot_password_flow(request)
+            if not state:
+                messages.error(
+                    request,
+                    "Phiên đổi mật khẩu đã hết hạn. Vui lòng thực hiện lại.",
+                )
+                return redirect("forgot_password")
 
-        messages.success(request, "Đổi mật khẩu thành công. Vui lòng đăng nhập lại")
-        return redirect("login")
+            if not state.get("verified"):
+                messages.error(request, "Vui lòng xác thực OTP trước khi đổi mật khẩu.")
+                return redirect("forgot_password")
 
-    return render(request, "core/forgot_password.html")
+            new_password = request.POST.get("new_password", "").strip()
+            confirm_password = request.POST.get("confirm_password", "").strip()
+
+            if not new_password or not confirm_password:
+                messages.error(request, "Vui lòng nhập đầy đủ mật khẩu mới.")
+                return redirect("forgot_password")
+
+            if new_password != confirm_password:
+                messages.error(request, "Mật khẩu xác nhận không khớp.")
+                return redirect("forgot_password")
+
+            user = User.objects.filter(pk=state.get("user_id")).first()
+            if not user:
+                _clear_forgot_password_flow(request)
+                messages.error(request, "Tài khoản không tồn tại. Vui lòng thử lại.")
+                return redirect("forgot_password")
+
+            try:
+                validate_password(new_password, user=user)
+            except ValidationError as exc:
+                messages.error(request, " ".join(exc.messages))
+                return redirect("forgot_password")
+
+            user.set_password(new_password)
+            user.save(update_fields=["password"])
+            _clear_forgot_password_flow(request)
+
+            messages.success(request, "Đổi mật khẩu thành công vui lòng đăng nhập")
+            return redirect("login")
+
+        messages.error(request, "Yêu cầu không hợp lệ. Vui lòng thử lại.")
+        return redirect("forgot_password")
+
+    state = _get_valid_forgot_password_flow(request)
+    if not state:
+        step = "username"
+    elif state.get("verified"):
+        step = "reset"
+    else:
+        step = "otp"
+
+    context = {
+        "step": step,
+        "flow_username": state.get("username") if state else "",
+        "flow_email_masked": _mask_email(state.get("email")) if state else "",
+        "otp_expire_minutes": FORGOT_PASSWORD_OTP_EXPIRE_MINUTES,
+    }
+    return render(request, "core/forgot_password.html", context)
 
 # ==========================
 # LIEN HE / GOP Y

@@ -20,7 +20,7 @@
             width: 100%; box-sizing: border-box; border: 1px solid #cbdbd5; border-radius: 10px;
             padding: 10px 12px; font-size: 14px; background: #fff;
         }
-        input[type="checkbox"] { width: auto; }
+        input[type="checkbox"], input[type="radio"] { width: auto; }
         .errorlist { margin: 4px 0 0; color: #8a2f2f; font-size: 13px; padding-left: 16px; }
         .actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
         .btn {
@@ -49,15 +49,55 @@
         .map-note { margin-top: 6px; font-size: 13px; color: #5e716c; }
         .image-manager { margin-top: 12px; border: 1px solid #d7e4df; border-radius: 12px; padding: 12px; background: #fbfefd; }
         .image-manager .hint { margin: 6px 0 0; font-size: 12px; color: #5e716c; }
-        .image-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
-        .image-item { border: 1px solid #d7e4df; border-radius: 10px; background: #fff; overflow: hidden; }
-        .image-item img { width: 100%; height: 122px; object-fit: cover; display: block; background: #eef5f2; }
-        .image-actions { padding: 8px; display: grid; gap: 8px; }
-        .image-actions label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #2a4440; }
+        .image-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .image-item {
+            border: 1px solid #d7e4df;
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .image-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #eef5f2; }
+        .image-actions { padding: 8px; display: grid; gap: 8px; margin-top: auto; }
+        .image-actions label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #2a4440;
+            white-space: nowrap;
+        }
         .empty-images { margin-top: 10px; font-size: 13px; color: #5e716c; }
+        .upload-preview-block {
+            margin-top: 10px;
+            display: none;
+        }
+        .upload-preview-block.active {
+            display: block;
+        }
+        .upload-preview-title {
+            margin: 0 0 8px;
+            font-size: 13px;
+            color: #2a4440;
+            font-weight: 600;
+        }
+        .image-file-name {
+            display: block;
+            font-size: 12px;
+            color: #5e716c;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
         @media (max-width: 800px) {
             .grid-2 { grid-template-columns: 1fr; }
+            .image-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 520px) {
+            .image-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -142,6 +182,10 @@
                                 <input id="hospital_images" name="hospital_images" type="file" accept="image/*" multiple>
                                 <p class="hint">Định dạng: JPG, JPEG, PNG, WEBP. Tối đa 5MB mỗi ảnh.</p>
                             </div>
+                            <div id="hospital-upload-preview" class="upload-preview-block">
+                                <p class="upload-preview-title">Ảnh mới sẽ thêm</p>
+                                <div id="hospital-upload-preview-grid" class="image-grid"></div>
+                            </div>
 
                             {% if hospital_images %}
                                 <div class="image-grid">
@@ -149,19 +193,6 @@
                                         <div class="image-item">
                                             <img src="{{ image.hinh_anh.url }}" alt="Ảnh bệnh viện {{ forloop.counter }}">
                                             <div class="image-actions">
-                                                <label>
-                                                    <input
-                                                        type="radio"
-                                                        name="cover_image_id"
-                                                        value="{{ image.id }}"
-                                                        {% if selected_cover_id %}
-                                                            {% if selected_cover_id == image.id|stringformat:"s" %}checked{% endif %}
-                                                        {% elif image.la_anh_dai_dien %}
-                                                            checked
-                                                        {% endif %}
-                                                    >
-                                                    Ảnh đại diện
-                                                </label>
                                                 <label>
                                                     <input
                                                         type="checkbox"
@@ -334,6 +365,57 @@
             });
 
             loadDepartments(initialDepartmentId);
+        })();
+    </script>
+    <script src="/static/core/js/form_validation_vi.js"></script>
+    <script>
+        (function () {
+            const input = document.getElementById("hospital_images");
+            const previewBlock = document.getElementById("hospital-upload-preview");
+            const previewGrid = document.getElementById("hospital-upload-preview-grid");
+            if (!input || !previewBlock || !previewGrid) return;
+
+            function renderPreview() {
+                previewGrid.innerHTML = "";
+                const files = Array.from(input.files || []);
+
+                if (!files.length) {
+                    previewBlock.classList.remove("active");
+                    return;
+                }
+
+                files.forEach((file, index) => {
+                    if (!file.type || !file.type.startsWith("image/")) {
+                        return;
+                    }
+                    const item = document.createElement("div");
+                    item.className = "image-item";
+
+                    const image = document.createElement("img");
+                    image.alt = `Ảnh mới ${index + 1}`;
+                    const objectUrl = URL.createObjectURL(file);
+                    image.src = objectUrl;
+                    image.addEventListener("load", function () {
+                        URL.revokeObjectURL(objectUrl);
+                    });
+
+                    const actions = document.createElement("div");
+                    actions.className = "image-actions";
+
+                    const name = document.createElement("span");
+                    name.className = "image-file-name";
+                    name.textContent = file.name;
+
+                    actions.appendChild(name);
+                    item.appendChild(image);
+                    item.appendChild(actions);
+                    previewGrid.appendChild(item);
+                });
+
+                previewBlock.classList.toggle("active", previewGrid.children.length > 0);
+            }
+
+            input.addEventListener("change", renderPreview);
         })();
     </script>
 

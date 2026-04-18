@@ -1,5 +1,7 @@
 ﻿from django.shortcuts import render, get_object_or_404, redirect
 import datetime
+import hashlib
+import json
 import math
 import random
 import re
@@ -67,6 +69,16 @@ def _get_current_benh_nhan(user):
     return benh_nhan
 
 
+def _split_full_name(full_name):
+    normalized = " ".join((full_name or "").strip().split())
+    if not normalized:
+        return "", ""
+    parts = normalized.split(" ")
+    if len(parts) == 1:
+        return normalized, ""
+    return " ".join(parts[:-1]), parts[-1]
+
+
 # ==========================
 # TRANG CHỦ
 # ==========================
@@ -89,6 +101,17 @@ def home(request):
     phuong_filter = (request.GET.get("phuong") or request.GET.get("quan") or "").strip()
     search_query = request.GET.get("q", "").strip()
 
+    non_name_filter_requested = any(
+        (
+            loai_hinh in {"cong", "tu", "qt"},
+            bool(phuong_filter),
+            filter_open,
+            filter_emergency,
+            filter_bhyt,
+            filter_cap_cuu_24h,
+        )
+    )
+
     all_phuong = (
         BenhVien.objects.values_list("phuong", flat=True)
         .distinct()
@@ -110,6 +133,19 @@ def home(request):
         except ValueError:
             user_point = None
 
+    if non_name_filter_requested and not user_point:
+        messages.error(
+            request,
+            "Vui lòng lấy vị trí người dùng trước khi áp dụng bộ lọc bệnh viện.",
+        )
+        filter_open = False
+        filter_emergency = False
+        filter_bhyt = False
+        filter_cap_cuu_24h = False
+        loai_hinh = None
+        phuong_filter = ""
+        radius_str = "5"
+
     if radius_str:
         try:
             radius_km = float(radius_str)
@@ -117,6 +153,8 @@ def home(request):
                 radius_km = None
         except ValueError:
             radius_km = None
+    else:
+        radius_km = 5.0 if user_point else None
 
     if loai_hinh in {"cong", "tu", "qt"}:
         bvs = bvs.filter(loai_hinh=loai_hinh)
@@ -124,7 +162,7 @@ def home(request):
         loai_hinh = None
 
     if phuong_filter:
-        bvs = bvs.filter(phuong=phuong_filter)
+        bvs = bvs.filter(phuong__iexact=phuong_filter)
     if search_query:
         bvs = bvs.filter(
             Q(ten__icontains=search_query)
@@ -173,13 +211,22 @@ def home(request):
 
     now = timezone.localtime()
     time_bucket = now.strftime("%Y%m%d%H%M")
-    cache_key = (
-        f"home_filter:"
-        f"lat={user_lat}|lon={user_lon}|radius={radius_km}|"
-        f"open={int(filter_open)}|emg={int(filter_emergency)}|"
-        f"bhyt={int(filter_bhyt)}|capcuu247={int(filter_cap_cuu_24h)}|"
-        f"loai={loai_hinh or 'all'}|phuong={phuong_filter or 'all'}|q={search_query.lower()}|t={time_bucket}"
-    )
+    cache_payload = {
+        "lat": user_lat,
+        "lon": user_lon,
+        "radius_km": radius_km,
+        "open": filter_open,
+        "emergency": filter_emergency,
+        "bhyt": filter_bhyt,
+        "cap_cuu_24h": filter_cap_cuu_24h,
+        "loai_hinh": loai_hinh or "all",
+        "phuong": phuong_filter or "all",
+        "q": search_query.lower(),
+        "bucket": time_bucket,
+    }
+    cache_key = "home_filter:" + hashlib.sha256(
+        json.dumps(cache_payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+    ).hexdigest()
     cached = cache.get(cache_key)
     if cached:
         ids = cached.get("ids", [])
@@ -287,7 +334,10 @@ def home(request):
                 gio_lam = glv
                 break
 
-        if gio_lam:
+        # Bệnh viện cấp cứu 24/7 luôn được xem là đang mở.
+        if bv.cap_cuu_24h:
+            is_open = True
+        elif gio_lam:
             if gio_lam.nghi:
                 is_open = False
             else:
@@ -336,6 +386,11 @@ def home(request):
     bvs = computed_bvs
 
     total_bvs = len(bvs)
+    if total_bvs == 0 and loai_hinh == "tu" and filter_bhyt:
+        messages.info(
+            request,
+            "Bộ lọc hiện tại không có kết quả. Trong dữ liệu test, nhóm bệnh viện tư không có BHYT; vui lòng bỏ lọc BHYT để xem bệnh viện tư.",
+        )
     paginator, page_obj, paged_bvs = paginate_hospitals(bvs)
 
     map_data = []
@@ -939,8 +994,8 @@ def register(request):
             messages.error(request, "Vui lòng nhập email")
             return redirect("register")
 
-        if not re.fullmatch(r"^\d{9,15}$", so_dien_thoai):
-            messages.error(request, "Số điện thoại phải gồm 9-15 chữ số.")
+        if not re.fullmatch(r"^0\d{9}$", so_dien_thoai):
+            messages.error(request, "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0.")
             return redirect("register")
 
         if User.objects.filter(email=email).exists():
@@ -949,7 +1004,7 @@ def register(request):
 
         if User.objects.filter(username=username).exists():
 
-            messages.error(request, "Tài khoản đã tồn tại")
+            messages.error(request, "Tên tài khoản đã tồn tại, vui lòng đăng nhập.")
 
             return redirect("register")
 
@@ -964,10 +1019,14 @@ def register(request):
                 messages.error(request, _translate_password_validation_message(raw_message))
             return redirect("register")
 
+        ho, ten = _split_full_name(name)
+
         user = User.objects.create_user(
             username=username,
             password=password,
             email=email,
+            first_name=ho,
+            last_name=ten,
         )
 
 
@@ -1112,9 +1171,17 @@ ADMIN_MODEL_CONFIG = {
         "title": "Tài khoản",
         "model": User,
         "form_class": AdminUserForm,
-        "list_display": ("username", "email", "first_name", "last_name", "is_staff", "is_superuser", "is_active"),
-        "search_fields": ("username", "email", "first_name", "last_name"),
-        "list_filter": ("is_staff", "is_superuser", "is_active"),
+        "list_display": (
+            "username",
+            "so_dien_thoai_tai_khoan",
+            "email",
+            "first_name",
+            "last_name",
+            "role_tai_khoan",
+            "is_active",
+        ),
+        "search_fields": ("username", "email", "first_name", "last_name", "benh_nhan__so_dien_thoai"),
+        "list_filter": ("role_tai_khoan", "is_active"),
         "ordering": ("-date_joined",),
     },
     "gio-lam-viec-bac-si": {
@@ -1298,10 +1365,12 @@ ADMIN_FIELD_LABELS = {
     "ho_ten": "Họ tên",
     "username": "Tên đăng nhập",
     "email": "Email",
-    "first_name": "Tên",
-    "last_name": "Họ",
+    "first_name": "Họ",
+    "last_name": "Tên",
     "is_staff": "Nhân viên",
     "is_superuser": "Quản trị cao nhất",
+    "so_dien_thoai_tai_khoan": "Số điện thoại",
+    "role_tai_khoan": "Vai trò",
     "is_active": "Đang hoạt động",
     "date_joined": "Ngày tạo",
     "password": "Mật khẩu",
@@ -1325,7 +1394,22 @@ def _list_column_label(model, field_name):
         return ADMIN_FIELD_LABELS.get(field_name, field_name.replace("_", " ").capitalize())
 
 
+def _user_role_label(user):
+    if not isinstance(user, User):
+        return ""
+    if user.is_superuser or user.is_staff:
+        return "Admin"
+    if hasattr(user, "bac_si"):
+        return "Bác sĩ"
+    return "Người dùng"
+
+
 def _list_column_value(obj, field_name):
+    if field_name == "so_dien_thoai_tai_khoan":
+        benh_nhan = BenhNhan.objects.filter(user=obj).only("so_dien_thoai").first()
+        return benh_nhan.so_dien_thoai if benh_nhan else ""
+    if field_name == "role_tai_khoan":
+        return _user_role_label(obj)
     if "__" not in field_name:
         display_fn = f"get_{field_name}_display"
         if hasattr(obj, display_fn):
@@ -1340,6 +1424,14 @@ def _apply_admin_filters(queryset, model, list_filter, params):
     for filter_name in list_filter:
         raw_value = params.get(filter_name, "").strip()
         if not raw_value:
+            continue
+        if filter_name == "role_tai_khoan" and model == User:
+            if raw_value == "admin":
+                queryset = queryset.filter(Q(is_staff=True) | Q(is_superuser=True))
+            elif raw_value == "bac_si":
+                queryset = queryset.filter(is_staff=False, is_superuser=False, bac_si__isnull=False)
+            elif raw_value == "nguoi_dung":
+                queryset = queryset.filter(is_staff=False, is_superuser=False, bac_si__isnull=True)
             continue
         try:
             field = model._meta.get_field(filter_name)
@@ -1363,6 +1455,20 @@ def _apply_admin_filters(queryset, model, list_filter, params):
 def _build_filter_meta(model, list_filter, params):
     filter_meta = []
     for filter_name in list_filter:
+        if filter_name == "role_tai_khoan" and model == User:
+            selected = params.get(filter_name, "").strip()
+            filter_meta.append({
+                "name": filter_name,
+                "label": _list_column_label(model, filter_name),
+                "selected": selected,
+                "type": "select",
+                "options": [
+                    {"value": "admin", "label": "Admin"},
+                    {"value": "bac_si", "label": "Bác sĩ"},
+                    {"value": "nguoi_dung", "label": "Người dùng"},
+                ],
+            })
+            continue
         try:
             field = model._meta.get_field(filter_name)
         except Exception:
@@ -1444,7 +1550,7 @@ def _validate_exam_images(uploaded_images):
     return errors
 
 
-def _sync_hospital_images(hospital, uploaded_images, delete_ids=None, cover_image_id=None):
+def _sync_hospital_images(hospital, uploaded_images, delete_ids=None):
     delete_ids = delete_ids or set()
 
     if delete_ids:
@@ -1475,15 +1581,11 @@ def _sync_hospital_images(hospital, uploaded_images, delete_ids=None, cover_imag
     if not images:
         return
 
-    valid_ids = {img.id for img in images}
-    target_cover_id = cover_image_id if cover_image_id in valid_ids else None
-
-    if target_cover_id is None:
-        current_cover = next((img for img in images if img.la_anh_dai_dien), None)
-        if current_cover:
-            target_cover_id = current_cover.id
-        else:
-            target_cover_id = images[0].id
+    current_cover = next((img for img in images if img.la_anh_dai_dien), None)
+    if current_cover:
+        target_cover_id = current_cover.id
+    else:
+        target_cover_id = images[0].id
 
     BenhVienHinhAnh.objects.filter(benh_vien=hospital).update(la_anh_dai_dien=False)
     BenhVienHinhAnh.objects.filter(benh_vien=hospital, id=target_cover_id).update(la_anh_dai_dien=True)
@@ -1712,7 +1814,6 @@ def custom_admin_model_create(request, model_key):
         "exam_images": [],
         "selected_delete_ids": set(),
         "selected_delete_exam_ids": set(),
-        "selected_cover_id": "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
     })
@@ -1736,7 +1837,6 @@ def custom_admin_model_edit(request, model_key, pk):
     uploaded_images = []
     upload_errors = []
     selected_delete_ids = set()
-    selected_cover_id = ""
     exam_uploaded_images = []
     exam_upload_errors = []
     selected_delete_exam_ids = set()
@@ -1746,15 +1846,6 @@ def custom_admin_model_edit(request, model_key, pk):
             uploaded_images = request.FILES.getlist("hospital_images")
             upload_errors = _validate_hospital_images(uploaded_images)
             selected_delete_ids = _parse_int_set(request.POST.getlist("delete_image_ids"))
-            selected_cover_id_raw = (request.POST.get("cover_image_id") or "").strip()
-            if selected_cover_id_raw:
-                try:
-                    selected_cover_id = int(selected_cover_id_raw)
-                except ValueError:
-                    selected_cover_id = ""
-                    form.add_error(None, "Ảnh đại diện không hợp lệ.")
-                if selected_cover_id and selected_cover_id in selected_delete_ids:
-                    form.add_error(None, "Không thể chọn ảnh vừa đánh dấu xóa làm ảnh đại diện.")
     elif is_exam_record and request.method == "POST":
         exam_uploaded_images = request.FILES.getlist("exam_images")
         exam_upload_errors = _validate_exam_images(exam_uploaded_images)
@@ -1777,7 +1868,6 @@ def custom_admin_model_edit(request, model_key, pk):
                         updated_obj,
                         uploaded_images,
                         delete_ids=selected_delete_ids,
-                        cover_image_id=selected_cover_id if selected_cover_id else None,
                     )
                 elif is_exam_record:
                     _sync_exam_images(
@@ -1805,7 +1895,6 @@ def custom_admin_model_edit(request, model_key, pk):
         "exam_images": list(obj.hinh_anhs.all()) if is_exam_record else [],
         "selected_delete_ids": selected_delete_ids,
         "selected_delete_exam_ids": selected_delete_exam_ids,
-        "selected_cover_id": str(selected_cover_id) if selected_cover_id else "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
     })
@@ -2137,7 +2226,11 @@ def contact_feedback(request):
     initial = {}
     if request.user.is_authenticated:
         full_name = request.user.get_full_name().strip()
-        initial["ho_ten"] = full_name or request.user.username
+        if full_name:
+            initial["ho_ten"] = full_name
+        else:
+            benh_nhan = _get_current_benh_nhan(request.user)
+            initial["ho_ten"] = benh_nhan.ho_ten if benh_nhan else ""
         if request.user.email:
             initial["email"] = request.user.email
 
@@ -2148,7 +2241,7 @@ def contact_feedback(request):
             recipient = getattr(settings, "CONTACT_RECEIVER_EMAIL", "") or settings.DEFAULT_FROM_EMAIL
             subject = f"[GÓP Ý] {cleaned['chu_de']}"
             message = (
-                f"Họ tên: {cleaned['ho_ten']}\n"
+                f"Họ và tên: {cleaned['ho_ten']}\n"
                 f"Email: {cleaned['email']}\n"
                 f"Thời gian: {timezone.localtime().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
                 f"Nội dung:\n{cleaned['noi_dung']}"
@@ -2585,8 +2678,8 @@ def profile(request):
             return redirect("profile")
 
         so_dien_thoai_moi = request.POST.get("so_dien_thoai", "").strip()
-        if not re.fullmatch(r"^\d{9,15}$", so_dien_thoai_moi):
-            messages.error(request, "Số điện thoại phải gồm 9-15 chữ số.")
+        if not re.fullmatch(r"^0\d{9}$", so_dien_thoai_moi):
+            messages.error(request, "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0.")
             return redirect("profile")
 
         if BenhNhan.objects.filter(so_dien_thoai=so_dien_thoai_moi).exclude(pk=benh_nhan.pk).exists():

@@ -1,10 +1,23 @@
 ﻿import datetime
+import re
 
 from django import forms
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ValidationError
 
-from .models import BacSi, BenhVien, GioLamViecBacSi, Khoa, LichKham
+from .models import BacSi, BenhNhan, BenhVien, GioLamViecBacSi, Khoa, LichKham
+
+
+def _translate_password_validation_message(message):
+    mapping = {
+        "This password is too short. It must contain at least 8 characters.": "Mật khẩu quá ngắn. Mật khẩu phải có ít nhất 8 ký tự.",
+        "This password is too common.": "Mật khẩu quá phổ biến, vui lòng chọn mật khẩu khác an toàn hơn.",
+        "This password is entirely numeric.": "Mật khẩu không được chỉ gồm chữ số.",
+        "The password is too similar to the username.": "Mật khẩu quá giống với tên người dùng.",
+    }
+    return mapping.get(message, message)
 
 
 class DatLichForm(forms.ModelForm):
@@ -267,21 +280,28 @@ class AdminUserForm(forms.ModelForm):
 
     role = forms.ChoiceField(
         required=True,
-        label="Vai trÃ²",
+        label="Vai trò",
         choices=(
-            (ROLE_USER, "NgÆ°á»i dÃ¹ng"),
-            (ROLE_DOCTOR, "BÃ¡c sÄ©"),
+            (ROLE_USER, "Người dùng"),
+            (ROLE_DOCTOR, "Bác sĩ"),
             (ROLE_ADMIN, "Admin"),
         ),
         widget=forms.Select(attrs={"class": "form-control"}),
-        help_text="BÃ¡c sÄ© pháº£i Ä‘Æ°á»£c liÃªn káº¿t trong danh má»¥c BÃ¡c sÄ©.",
+        help_text="Bác sĩ phải được liên kết trong danh mục Bác sĩ.",
     )
 
     password = forms.CharField(
         required=False,
-        label="Máº­t kháº©u má»›i",
+        label="Mật khẩu mới",
         widget=forms.PasswordInput(render_value=False, attrs={"class": "form-control"}),
-        help_text="Äá»ƒ trá»‘ng náº¿u khÃ´ng Ä‘á»•i máº­t kháº©u.",
+        help_text="Để trống nếu không đổi mật khẩu.",
+    )
+
+    so_dien_thoai = forms.CharField(
+        required=False,
+        label="Số điện thoại",
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+        help_text="Đồng bộ với hồ sơ bệnh nhân của tài khoản này.",
     )
 
     class Meta:
@@ -291,6 +311,7 @@ class AdminUserForm(forms.ModelForm):
             "email",
             "first_name",
             "last_name",
+            "so_dien_thoai",
             "is_active",
             "role",
             "password",
@@ -305,6 +326,8 @@ class AdminUserForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._benh_nhan_instance = None
+
         if self.instance and self.instance.pk:
             if self.instance.is_staff or self.instance.is_superuser:
                 self.fields["role"].initial = self.ROLE_ADMIN
@@ -312,12 +335,17 @@ class AdminUserForm(forms.ModelForm):
                 self.fields["role"].initial = self.ROLE_DOCTOR
             else:
                 self.fields["role"].initial = self.ROLE_USER
+
+            benh_nhan = BenhNhan.objects.filter(user=self.instance).first()
+            if benh_nhan:
+                self.fields["so_dien_thoai"].initial = benh_nhan.so_dien_thoai
+                self._benh_nhan_instance = benh_nhan
         else:
             self.fields["role"].initial = self.ROLE_USER
 
         if not self.instance or not self.instance.pk:
             self.fields["password"].required = True
-            self.fields["password"].help_text = "Báº¯t buá»™c khi táº¡o tÃ i khoáº£n."
+            self.fields["password"].help_text = "Bắt buộc khi tạo tài khoản."
 
     def clean(self):
         cleaned_data = super().clean()
@@ -328,14 +356,38 @@ class AdminUserForm(forms.ModelForm):
         if role == self.ROLE_DOCTOR and not has_doctor_profile:
             self.add_error(
                 "role",
-                "TÃ i khoáº£n nÃ y chÆ°a liÃªn káº¿t bÃ¡c sÄ©. HÃ£y vÃ o danh má»¥c BÃ¡c sÄ© Ä‘á»ƒ liÃªn káº¿t trÆ°á»›c.",
+                "Tài khoản này chưa liên kết bác sĩ. Hãy vào danh mục Bác sĩ để liên kết trước.",
             )
 
         if role in {self.ROLE_USER, self.ROLE_ADMIN} and has_doctor_profile:
             self.add_error(
                 "role",
-                "TÃ i khoáº£n Ä‘ang liÃªn káº¿t BÃ¡c sÄ©. HÃ£y gá»¡ liÃªn káº¿t á»Ÿ danh má»¥c BÃ¡c sÄ© náº¿u muá»‘n Ä‘á»•i vai trÃ².",
+                "Tài khoản đang liên kết Bác sĩ. Hãy gỡ liên kết ở danh mục Bác sĩ nếu muốn đổi vai trò.",
             )
+
+        so_dien_thoai = (cleaned_data.get("so_dien_thoai") or "").strip()
+        if so_dien_thoai:
+            if not re.fullmatch(r"^0\d{9}$", so_dien_thoai):
+                self.add_error("so_dien_thoai", "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0.")
+            else:
+                qs = BenhNhan.objects.filter(so_dien_thoai=so_dien_thoai)
+                if self._benh_nhan_instance:
+                    qs = qs.exclude(pk=self._benh_nhan_instance.pk)
+                if qs.exists():
+                    self.add_error("so_dien_thoai", "Số điện thoại đã được sử dụng.")
+
+        raw_password = (cleaned_data.get("password") or "").strip()
+        if raw_password:
+            user_for_validation = self.instance if self.instance and self.instance.pk else User(
+                username=(cleaned_data.get("username") or "").strip(),
+                email=(cleaned_data.get("email") or "").strip(),
+            )
+            try:
+                validate_password(raw_password, user=user_for_validation)
+            except ValidationError as exc:
+                for message in exc.messages:
+                    self.add_error("password", _translate_password_validation_message(message))
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -353,9 +405,19 @@ class AdminUserForm(forms.ModelForm):
             user.set_password(raw_password)
         elif not user.pk:
             user.set_unusable_password()
+
         if commit:
             user.save()
+            so_dien_thoai = (self.cleaned_data.get("so_dien_thoai") or "").strip()
+            benh_nhan = self._benh_nhan_instance or BenhNhan.objects.filter(user=user).first()
+            if benh_nhan:
+                if so_dien_thoai:
+                    benh_nhan.so_dien_thoai = so_dien_thoai
+                benh_nhan.user = user
+                benh_nhan.save(update_fields=["so_dien_thoai", "user"])
+
         return user
+
 
 
 

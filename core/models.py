@@ -12,8 +12,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 phone_validator = RegexValidator(
-    regex=r"^\d{9,15}$",
-    message="Số điện thoại phải gồm 9-15 chữ số."
+    regex=r"^0\d{9}$",
+    message="Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0."
 )
 name_validator = RegexValidator(
     regex=r".*[A-Za-zÀ-ỹ].*",
@@ -465,8 +465,11 @@ class LichKham(models.Model):
 
     def clean(self):
         super().clean()
-        if self.ngay_kham and self.ngay_kham < timezone.localdate():
+        today = timezone.localdate()
+        if self.ngay_kham and self.ngay_kham < today:
             raise ValidationError({"ngay_kham": "Không thể đặt lịch ở ngày quá khứ."})
+        if self.ngay_kham and self.ngay_kham > today + datetime.timedelta(days=15):
+            raise ValidationError({"ngay_kham": "Chỉ được đặt lịch tối đa trước 15 ngày."})
 
         if self.gio_kham and self.gio_kham.minute % 30 != 0:
             raise ValidationError({"gio_kham": "Giờ khám chỉ nhận các mốc 30 phút (00 hoặc 30)."})

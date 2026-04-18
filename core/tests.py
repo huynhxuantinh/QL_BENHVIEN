@@ -484,6 +484,29 @@ class ProfileAccountTests(TestCase):
         self.assertTrue(self.user.check_password("NewPass@456"))
 
 
+class RegisterFlowTests(TestCase):
+    def test_register_saves_user_name_and_patient_phone(self):
+        response = self.client.post(
+            reverse("register"),
+            {
+                "name": "Nguyen Van A",
+                "username": "user1234",
+                "email": "user1234@example.com",
+                "so_dien_thoai": "0911222333",
+                "password": "StrongPass@123",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        user = User.objects.get(username="user1234")
+        self.assertEqual(user.first_name, "Nguyen Van")
+        self.assertEqual(user.last_name, "A")
+
+        benh_nhan = BenhNhan.objects.get(user=user)
+        self.assertEqual(benh_nhan.so_dien_thoai, "0911222333")
+        self.assertEqual(benh_nhan.ho_ten, "Nguyen Van A")
+
+
 class AdminDashboardTests(TestCase):
     def setUp(self):
         self.admin_user = User.objects.create_superuser(
@@ -553,6 +576,14 @@ class AdminDashboardTests(TestCase):
         self.assertContains(response, 'name="role"')
         self.assertNotContains(response, 'name="is_staff"')
         self.assertNotContains(response, 'name="is_superuser"')
+
+    def test_admin_user_list_uses_single_role_column(self):
+        self.client.login(username="admin_demo", password="pass12345")
+        response = self.client.get(reverse("custom_admin_model_list", args=["tai-khoan"]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Vai trò")
+        self.assertNotContains(response, "Nhân viên")
+        self.assertNotContains(response, "Quản trị cao nhất")
 
     def test_admin_department_api_returns_departments_by_hospital(self):
         self.client.login(username="admin_demo", password="pass12345")
@@ -636,6 +667,20 @@ class ContactFeedbackTests(TestCase):
         response = self.client.get(reverse("contact_feedback"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Li&#234;n h&#7879; &amp; G&#243;p &#253;")
+
+    def test_contact_feedback_prefills_full_name_not_username(self):
+        user = User.objects.create_user(
+            username="user_no_name_01",
+            password="pass12345",
+            first_name="Nguyen Van",
+            last_name="A",
+            email="user_name@example.com",
+        )
+        self.client.login(username="user_no_name_01", password="pass12345")
+        response = self.client.get(reverse("contact_feedback"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Nguyen Van A"')
+        self.assertNotContains(response, 'value="user_no_name_01"')
 
     def test_submit_feedback_sends_email(self):
         response = self.client.post(

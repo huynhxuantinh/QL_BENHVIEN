@@ -320,11 +320,11 @@
                             <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
                             <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
                         {% else %}
-                            <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                             <a class="btn ghost" href="{% url 'upcoming_appointments' %}">L&#7883;ch kh&#225;m</a>
                             <a class="btn ghost" href="{% url 'medical_history' %}">L&#7883;ch s&#7917; kh&#225;m</a>
                             <a class="btn ghost" href="{% url 'profile' %}">H&#7891; s&#417; c&#7911;a t&#244;i</a>
                             <a class="btn ghost" href="{% url 'notifications' %}">Th&#244;ng b&#225;o{% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
+                            <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                             <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
                         {% endif %}
                         <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
@@ -401,7 +401,7 @@
                         </div>
                         <div class="tool-field">
                             <label for="radius">B&#225;n k&#237;nh (km)</label>
-                            <input id="radius" name="radius" type="number" min="1" step="1" value="{{ radius_km|default:5 }}">
+                            <input id="radius" name="radius" type="number" min="1" step="1" placeholder="V&#237; d&#7909;: 5" value="{{ radius_km|default:5 }}">
                         </div>
                         <div class="tool-field">
                             <label for="loai_hinh">Lo&#7841;i h&#236;nh BV</label>
@@ -458,7 +458,7 @@
                     </div>
                 </form>
                 <p style="margin: 10px 0 0; color: var(--muted); font-size: 13px;">
-                    H&#7879; th&#7889;ng s&#7869; t&#237;nh kho&#7843;ng c&#225;ch, l&#7885;c theo b&#225;n k&#237;nh v&#224; s&#7855;p x&#7871;p theo g&#7847;n nh&#7845;t n&#7871;u c&#243; v&#7883; tr&#237;.
+                    Tìm nhanh theo tên/quận/địa chỉ có thể dùng ngay. Các bộ lọc nâng cao sẽ tự lấy vị trí nếu bạn chưa bật vị trí.
                 </p>
             </div>
             <div class="tool-card map-box">
@@ -655,7 +655,7 @@
             }
         }
 
-        function locateUser(focusMap = true) {
+        function locateUser(focusMap = true, onSuccess = null) {
             if (!navigator.geolocation) {
                 alert("Tr\u00ecnh duy\u1ec7t kh\u00f4ng h\u1ed7 tr\u1ee3 \u0111\u1ecbnh v\u1ecb.");
                 return;
@@ -675,6 +675,9 @@
                 document.getElementById("lat").value = lat.toFixed(6);
                 document.getElementById("lon").value = lon.toFixed(6);
                 setUserLocation(lat, lon, focusMap, accuracy);
+                if (typeof onSuccess === "function") {
+                    onSuccess(lat, lon);
+                }
             }, () => {
                 setLocateButtonActive(false);
                 alert("Vui l\u00f2ng cho ph\u00e9p truy c\u1eadp v\u1ecb tr\u00ed!");
@@ -728,14 +731,35 @@
         geoForm?.addEventListener("submit", (event) => {
             const latValue = document.getElementById("lat")?.value?.trim() || "";
             const lonValue = document.getElementById("lon")?.value?.trim() || "";
+            const qValue = document.getElementById("q")?.value?.trim() || "";
+            const radiusValue = document.getElementById("radius")?.value?.trim() || "";
+            const loaiHinhValue = document.getElementById("loai_hinh")?.value?.trim() || "";
+            const phuongValue = document.getElementById("phuong")?.value?.trim() || "";
+            const openChecked = !!document.querySelector('input[name="open"]')?.checked;
+            const capCuuChecked = !!document.querySelector('input[name="cap_cuu_24h"]')?.checked;
+            const bhytChecked = !!document.querySelector('input[name="bhyt"]')?.checked;
+
+            const hasAdvancedFilters = !!(
+                loaiHinhValue || phuongValue || openChecked || capCuuChecked || bhytChecked || (!qValue && radiusValue)
+            );
+
+            if (hasAdvancedFilters && (!latValue || !lonValue)) {
+                event.preventDefault();
+                locateUser(true, () => {
+                    geoForm.submit();
+                });
+                return;
+            }
+
             if (!latValue && !lonValue) {
                 return;
             }
+
             const lat = parseFloat(latValue);
             const lon = parseFloat(lonValue);
             if (!isValidLatLon(lat, lon)) {
                 event.preventDefault();
-                alert("Tá»a Ä‘á»™ khÃ´ng há»£p lá»‡: VÄ© Ä‘á»™ trong [-90, 90], Kinh Ä‘á»™ trong [-180, 180].");
+                alert("Tọa độ không hợp lệ: Vĩ độ trong [-90, 90], Kinh độ trong [-180, 180].");
             }
         });
 

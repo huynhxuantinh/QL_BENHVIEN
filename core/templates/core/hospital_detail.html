@@ -168,12 +168,19 @@
 
         .gallery-thumbs {
             margin-top: 10px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+            display: flex;
+            flex-wrap: nowrap;
             gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            padding-bottom: 4px;
         }
+        .gallery-thumbs::-webkit-scrollbar { height: 6px; }
+        .gallery-thumbs::-webkit-scrollbar-thumb { background: rgba(14, 111, 96, 0.35); border-radius: 999px; }
 
         .gallery-thumb {
+            flex: 0 0 84px;
             border: 2px solid transparent;
             border-radius: 10px;
             padding: 0;
@@ -967,7 +974,7 @@
 
             const origin = await ensureOriginCoords();
             if (!origin) {
-                alert("Vui l\u00f2ng b\u1eadt v\u1ecb tr\u00ed ho\u1eb7c nh\u1eadp v\u0129 \u0111\u1ed9/kinh \u0111\u1ed9 xu\u1ea5t ph\u00e1t.");
+                setRouteStatus("Vui lòng bật vị trí hoặc nhập vĩ độ/kinh độ xuất phát để chỉ đường.");
                 return;
             }
 

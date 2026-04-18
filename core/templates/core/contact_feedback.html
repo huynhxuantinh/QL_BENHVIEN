@@ -120,7 +120,7 @@
     <div class="page">
         <header class="topbar">
             <div>
-                <h1 class="title">Li&#234;n h&#7879; &amp; G&#243;p &#253;</h1>
+                <h1 class="title">Liên Hệ / Góp Ý</h1>
                 <p class="subtitle">G&#7917;i ph&#7843;n h&#7891;i &#273;&#7875; &#273;&#7897;i ng&#361; c&#7843;i ti&#7871;n h&#7879; th&#7889;ng nhanh h&#417;n.</p>
             </div>
             <a class="btn" href="{% url 'home' %}">&larr; Trang ch&#7911;</a>
@@ -137,7 +137,7 @@
                 {% csrf_token %}
 
                 <div class="form-field">
-                    <label for="{{ form.ho_ten.id_for_label }}">H&#7885; t&#234;n</label>
+                    <label for="{{ form.ho_ten.id_for_label }}">H&#7885; v&#224; t&#234;n</label>
                     {{ form.ho_ten }}
                     {% for error in form.ho_ten.errors %}<p class="error">{{ error }}</p>{% endfor %}
                 </div>
@@ -171,6 +171,7 @@
             </form>
         </section>
     </div>
+    <script src="/static/core/js/form_validation_vi.js"></script>
 </body>
 </html>
 

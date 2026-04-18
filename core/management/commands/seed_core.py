@@ -387,10 +387,10 @@ class Command(BaseCommand):
             for dept_name in department_names:
                 all_khoa.append(Khoa.objects.create(ten=dept_name, benh_vien=bv))
 
-        phone_base = 907000000
+        phone_base = 900000000
         for idx, khoa in enumerate(all_khoa, start=1):
             for n in range(2):
-                phone = str(phone_base + idx * 10 + n)
+                phone = f"0{phone_base + idx * 10 + n}"
                 bac_si = BacSi.objects.create(
                     ho_ten=f"BS {khoa.ten} {n + 1}",
                     chuyen_khoa=khoa.ten,

@@ -367,7 +367,7 @@
                     </form>
 
                     {% if bac_sis %}
-                        <form method="post" novalidate>
+                        <form method="post">
                             {% csrf_token %}
                             <input type="hidden" name="khoa" value="{{ khoa_id }}">
 
@@ -379,7 +379,7 @@
                             <div class="field">
                                 <label>Ngày khám</label>
                                 {{ form.ngay_kham }}
-                                <p class="hint">Chọn ngày từ hôm nay trở đi.</p>
+                                <p class="hint">Chọn ngày từ hôm nay đến tối đa 15 ngày tới.</p>
                             </div>
 
                             <div class="field">
@@ -443,8 +443,16 @@
             const mm = String(now.getMonth() + 1).padStart(2, "0");
             const dd = String(now.getDate()).padStart(2, "0");
             dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+            const maxDate = new Date(now);
+            maxDate.setDate(maxDate.getDate() + 15);
+            const maxY = maxDate.getFullYear();
+            const maxM = String(maxDate.getMonth() + 1).padStart(2, "0");
+            const maxD = String(maxDate.getDate()).padStart(2, "0");
+            dateInput.max = `${maxY}-${maxM}-${maxD}`;
         })();
     </script>
+    <script src="/static/core/js/form_validation_vi.js"></script>
 </body>
 </html>
 

@@ -1,0 +1,414 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <title>Hệ thống tra cứu và đặt lịch khám bệnh tích hợp GIS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap");
+
+        :root {
+            --bg-1: #f6f8f4;
+            --bg-2: #eaf1ec;
+            --ink: #1f2c2a;
+            --muted: #5a6765;
+            --primary: #0e6f60;
+            --primary-2: #13806f;
+            --card: #ffffff;
+            --border: rgba(18, 46, 42, 0.12);
+            --shadow-soft: 0 10px 28px rgba(16, 35, 31, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Work Sans", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(1200px 650px at 100% -10%, rgba(19, 128, 111, 0.14), transparent 58%),
+                radial-gradient(800px 480px at -10% 10%, rgba(118, 160, 145, 0.13), transparent 58%),
+                linear-gradient(120deg, var(--bg-1), var(--bg-2));
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px 18px 46px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.84);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 28px;
+            font-family: "Playfair Display", serif;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            white-space: nowrap;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 10px 18px rgba(14, 111, 96, 0.24);
+        }
+
+        .btn.primary:hover {
+            background: var(--primary-2);
+            transform: translateY(-1px);
+        }
+
+        .btn.ghost {
+            color: var(--primary);
+            border-color: rgba(14, 111, 96, 0.35);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .btn.ghost:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 16px rgba(14, 111, 96, 0.12);
+        }
+
+        .poster {
+            margin-top: 16px;
+            overflow: hidden;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .poster img {
+            width: 100%;
+            height: min(380px, 52vw);
+            object-fit: cover;
+            display: block;
+        }
+
+        .poster-caption {
+            padding: 20px 20px 22px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .poster-caption p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .section-stack {
+            margin-top: 16px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1fr;
+        }
+
+        .section-grid {
+            margin-top: 16px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1.4fr 1fr;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-soft);
+            padding: 16px;
+        }
+
+        .card h3 {
+            margin: 0 0 10px;
+            font-family: "Playfair Display", serif;
+            font-size: 24px;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+
+        .card p + p {
+            margin-top: 10px;
+        }
+
+        .list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            line-height: 1.65;
+            display: grid;
+            gap: 4px;
+        }
+
+        .wide-card {
+            margin-top: 14px;
+        }
+
+        .map-wrap {
+            margin-top: 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #about-map {
+            width: 100%;
+            height: 430px;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 7px 11px;
+            border-radius: 999px;
+            border: 1px solid rgba(14, 111, 96, 0.28);
+            background: rgba(14, 111, 96, 0.08);
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .cta {
+            margin-top: 16px;
+            text-align: center;
+            padding: 22px;
+        }
+
+        .cta h3 {
+            margin: 0 0 8px;
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
+        }
+
+        .cta p {
+            margin: 0 0 14px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 960px) {
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .page {
+                padding: 14px 10px 28px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .top-actions .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .brand h1 {
+                font-size: 23px;
+                line-height: 1.22;
+            }
+
+            #about-map {
+                height: 330px;
+            }
+
+            .cta h3 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <h1>Hệ thống tra cứu và đặt lịch khám bệnh tích hợp GIS</h1>
+            </div>
+            <div class="top-actions">
+                <a class="btn ghost" href="{% url 'contact_feedback' %}">Liên hệ</a>
+                <a class="btn primary" href="{% url 'home' %}">Khám phá ngay</a>
+            </div>
+        </header>
+
+        <section class="poster">
+            <img src="{% static 'core/img/about-banner.jpg' %}" alt="Poster giới thiệu hệ thống">
+            <div class="poster-caption">
+                <p>
+                    Hệ thống giúp người dùng nhanh chóng tìm bệnh viện phù hợp, xem tuyến đường và chủ động đặt lịch khám.
+                    Mục tiêu là rút ngắn thời gian tra cứu và nâng cao trải nghiệm tiếp cận dịch vụ y tế.
+                </p>
+            </div>
+        </section>
+
+        <section class="section-stack">
+            <article class="card">
+                <h3>Giới thiệu hệ thống</h3>
+                <p>
+                    Đây là nền tảng web tra cứu bệnh viện và đặt lịch khám trực tuyến, được xây dựng theo định hướng gắn
+                    dữ liệu y tế với bản đồ số. Hệ thống tập trung thông tin bệnh viện theo từng thuộc tính nghiệp vụ như
+                    địa chỉ, loại hình, dịch vụ, bảo hiểm và trạng thái hoạt động để người dùng tra cứu tại một nơi duy nhất.
+                </p>
+                <p>
+                    Điểm mạnh của hệ thống là kết hợp giao diện bản đồ trực quan với bộ lọc chi tiết. Người dùng có thể quan sát
+                    vị trí bệnh viện trên bản đồ, mở thông tin chi tiết, so sánh khoảng cách và đưa ra quyết định khám bệnh nhanh hơn.
+                    Về phía quản trị, dữ liệu được cập nhật tập trung giúp giảm sai lệch thông tin giữa các kênh.
+                </p>
+            </article>
+            <article class="card">
+                <h3>Vấn đề & mục tiêu</h3>
+                <p>
+                    Bài toán thực tế là dữ liệu y tế thường phân tán ở nhiều nguồn, thông tin không đồng nhất và khó kiểm chứng
+                    theo thời gian. Khi cần đi khám gấp, người dùng phải tự tổng hợp nhiều dữ liệu rời rạc nên mất thời gian,
+                    đặc biệt khó khăn khi phải cân nhắc quãng đường, khả năng tiếp nhận và chuyên khoa phù hợp.
+                </p>
+                <p>
+                    Mục tiêu của đề tài là xây dựng một hệ thống có khả năng trực quan hóa vị trí bệnh viện bằng GIS,
+                    hỗ trợ tìm kiếm theo nhiều tiêu chí và cung cấp công cụ ước lượng khoảng cách, thời gian di chuyển.
+                    Từ đó, hệ thống giúp giảm chi phí tìm kiếm thông tin cho người dân và tăng hiệu quả quản trị dữ liệu cho đơn vị vận hành.
+                </p>
+            </article>
+        </section>
+
+        <article class="card wide-card">
+            <h3>Chức năng chính</h3>
+            <ul class="list">
+                <li>Tra cứu bệnh viện theo từ khóa, phường, loại hình, BHYT, trạng thái hoạt động.</li>
+                <li>Xem chi tiết bệnh viện: địa chỉ, giờ làm việc, khoa, bác sĩ, hình ảnh.</li>
+                <li>Định vị vị trí người dùng và so sánh khoảng cách tới bệnh viện.</li>
+                <li>Tìm tuyến đường tới bệnh viện và hiển thị quãng đường, thời gian dự kiến.</li>
+                <li>Đặt lịch khám trực tuyến và theo dõi lịch khám theo tài khoản.</li>
+            </ul>
+        </article>
+
+        <section class="section-grid">
+            <article class="card">
+                <h3>Thành phần GIS</h3>
+                <ul class="list">
+                    <li>Hiển thị bản đồ và marker bệnh viện bằng Leaflet.</li>
+                    <li>Lưu và xử lý tọa độ bệnh viện bằng PointField (PostGIS).</li>
+                    <li>Tính khoảng cách từ vị trí người dùng bằng hàm Distance của GeoDjango.</li>
+                    <li>Tìm đường đi bằng dịch vụ OSRM để ước lượng quãng đường và thời gian.</li>
+                </ul>
+            </article>
+            <article class="card">
+                <h3>Công nghệ sử dụng</h3>
+                <div class="tech-tags">
+                    <span class="tag">Django</span>
+                    <span class="tag">GeoDjango</span>
+                    <span class="tag">PostgreSQL + PostGIS</span>
+                    <span class="tag">Leaflet</span>
+                    <span class="tag">OpenStreetMap</span>
+                    <span class="tag">OSRM</span>
+                    <span class="tag">Nominatim</span>
+                    <span class="tag">JavaScript</span>
+                </div>
+            </article>
+        </section>
+
+        <article class="card wide-card">
+            <div class="map-wrap">
+                <div id="about-map"></div>
+            </div>
+        </article>
+
+        <section class="card cta">
+            <h3>Khám phá ngay</h3>
+            <p>Truy cập trang chủ để trải nghiệm bộ lọc bệnh viện, bản đồ và các chức năng đặt lịch khám.</p>
+            <a class="btn primary" href="{% url 'home' %}">Khám phá ngay</a>
+        </section>
+    </div>
+
+    {{ map_data|json_script:"about-map-data" }}
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            const mapData = JSON.parse(document.getElementById("about-map-data").textContent || "[]");
+            const map = L.map("about-map", {
+                zoomControl: true,
+                dragging: true,
+                scrollWheelZoom: true,
+                doubleClickZoom: true,
+                boxZoom: true,
+                keyboard: true,
+                touchZoom: true,
+                tap: false
+            });
+
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                referrerPolicy: "strict-origin-when-cross-origin",
+                attribution: "&copy; OpenStreetMap"
+            }).addTo(map);
+
+            if (!mapData.length) {
+                map.setView([10.77, 106.7], 11);
+                return;
+            }
+
+            const bounds = [];
+            mapData.forEach((item) => {
+                L.marker([item.lat, item.lon])
+                    .addTo(map)
+                    .bindPopup(`<strong>${item.name}</strong><br>${item.phuong || ""}`);
+                bounds.push([item.lat, item.lon]);
+            });
+
+            map.fitBounds(bounds, { padding: [20, 20] });
+        })();
+    </script>
+</body>
+</html>

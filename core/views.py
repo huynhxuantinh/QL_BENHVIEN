@@ -377,6 +377,54 @@ def home(request):
 
 
 # ==========================
+# GIOI THIEU
+# ==========================
+def gioi_thieu(request):
+    bvs = BenhVien.objects.only("id", "ten", "phuong", "vi_tri").order_by("ten")
+
+    def point_to_latlon(point):
+        if not point:
+            return None, None
+        x = point.x
+        y = point.y
+        is_web_mercator = point.srid == 3857 or abs(x) > 180 or abs(y) > 90
+        if is_web_mercator:
+            max_merc = 20037508.34
+            world_width = max_merc * 2
+            if x > max_merc or x < -max_merc:
+                x = ((x + max_merc) % world_width) - max_merc
+            if y > max_merc:
+                y = max_merc
+            elif y < -max_merc:
+                y = -max_merc
+            lon = x * 180.0 / 20037508.34
+            lat = y * 180.0 / 20037508.34
+            lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+            if abs(lat) <= 90 and abs(lon) <= 180:
+                return lat, lon
+            return None, None
+        return y, x
+
+    map_data = []
+    for bv in bvs:
+        lat, lon = point_to_latlon(bv.vi_tri) if bv.vi_tri else (None, None)
+        if lat is None or lon is None:
+            continue
+        map_data.append({
+            "id": bv.id,
+            "name": bv.ten,
+            "phuong": bv.phuong,
+            "lat": lat,
+            "lon": lon,
+        })
+
+    return render(request, "core/about.html", {
+        "map_data": map_data,
+        "total_hospitals": len(map_data),
+    })
+
+
+# ==========================
 # CHI TIẾT BỆNH VIỆN
 # ==========================
 def hospital_detail(request, id):

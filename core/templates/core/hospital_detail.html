@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ bv.ten }}</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
@@ -533,6 +534,30 @@
             .content-grid {
                 grid-template-columns: 1fr;
             }
+
+            .map-card {
+                min-height: 380px;
+            }
+
+            #map {
+                min-height: 320px;
+            }
+
+            .gallery-nav.prev { left: 10px; }
+            .gallery-nav.next { right: 10px; }
+
+            .hours-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hours-item span {
+                text-align: left;
+            }
+
+            .route-actions .btn {
+                width: 100%;
+            }
         }
     </style>
     <link
@@ -549,6 +574,7 @@
             </div>
             <div class="top-actions">
                 <a class="btn ghost" href="{% url 'home' %}">&#8592; Trang ch&#7911;</a>
+                <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                 <a class="btn primary" href="{% url 'dat_lich' bv.id %}">&#272;&#7863;t l&#7883;ch kh&#225;m</a>
             </div>
         </header>        <section class="hero">
@@ -854,7 +880,7 @@
                     const accuracy = Number(pos.coords.accuracy);
                     if (!isValidLatLon(lat, lon)) {
                         setLocateButtonActive(false);
-                        alert("Tọa độ vị trí không hợp lệ.");
+                        alert("Tá»a Ä‘á»™ vá»‹ trÃ­ khÃ´ng há»£p lá»‡.");
                         resolve(null);
                         return;
                     }
@@ -894,7 +920,7 @@
                 return { lat, lon };
             }
             if ((routeLatInput?.value || "").trim() || (routeLonInput?.value || "").trim()) {
-                setRouteStatus("Tọa độ không hợp lệ. Vĩ độ trong [-90, 90], kinh độ trong [-180, 180].");
+                setRouteStatus("Tá»a Ä‘á»™ khÃ´ng há»£p lá»‡. VÄ© Ä‘á»™ trong [-90, 90], kinh Ä‘á»™ trong [-180, 180].");
             }
             return currentUserCoords;
         }
@@ -1037,5 +1063,7 @@
     </script>
 </body>
 </html>
+
+
 
 

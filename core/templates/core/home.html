@@ -1,8 +1,9 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
     <link rel="apple-touch-icon" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
     <title>Trang ch&#7911;</title>
@@ -273,14 +274,22 @@
         }
         @media (max-width: 700px) {
             .page { padding: 14px 10px 26px; }
-            .topbar { padding: 14px; }
-            .hero h2 { font-size: 29px; }
+            .topbar {
+                padding: 14px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .hero h2 { font-size: 27px; }
             .tool-grid { grid-template-columns: 1fr; }
             .btn { width: 100%; }
             .user-area { width: 100%; align-items: flex-start; }
             .user-meta { align-items: flex-start; text-align: left; width: 100%; }
             .user-actions { width: 100%; justify-content: flex-start; }
             .brand-logo { width: 50px; height: 50px; border-radius: 9px; }
+            .brand h1 { font-size: 24px; }
+            .brand span { font-size: 12px; }
+            #home-map, .map-box { min-height: 360px; }
+            .pagination { justify-content: center; }
         }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
@@ -306,10 +315,12 @@
                     </div>
                     <div class="user-actions">
                         {% if doctor_info %}
+                            <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                             <a class="btn ghost" href="{% url 'bac_si_home' %}">Trang b&#225;c s&#297;</a>
                             <a class="btn ghost" href="{% url 'bac_si_notifications' %}">Th&#244;ng b&#225;o</a>
                             <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
                         {% else %}
+                            <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                             <a class="btn ghost" href="{% url 'upcoming_appointments' %}">L&#7883;ch kh&#225;m</a>
                             <a class="btn ghost" href="{% url 'medical_history' %}">L&#7883;ch s&#7917; kh&#225;m</a>
                             <a class="btn ghost" href="{% url 'profile' %}">H&#7891; s&#417; c&#7911;a t&#244;i</a>
@@ -320,6 +331,7 @@
                     </div>
                 {% else %}
                     <div class="user-actions">
+                        <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                         <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
                         <a class="btn ghost" href="{% url 'login' %}">&#272;&#259;ng nh&#7853;p</a>
                         <a class="btn primary" href="{% url 'register' %}">&#272;&#259;ng k&#253;</a>
@@ -656,7 +668,7 @@
 
                 if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
                     setLocateButtonActive(false);
-                    alert("Tọa độ vị trí không hợp lệ.");
+                    alert("Tá»a Ä‘á»™ vá»‹ trÃ­ khÃ´ng há»£p lá»‡.");
                     return;
                 }
 
@@ -723,7 +735,7 @@
             const lon = parseFloat(lonValue);
             if (!isValidLatLon(lat, lon)) {
                 event.preventDefault();
-                alert("Tọa độ không hợp lệ: Vĩ độ trong [-90, 90], Kinh độ trong [-180, 180].");
+                alert("Tá»a Ä‘á»™ khÃ´ng há»£p lá»‡: VÄ© Ä‘á»™ trong [-90, 90], Kinh Ä‘á»™ trong [-180, 180].");
             }
         });
 
@@ -735,3 +747,5 @@
     </script>
 </body>
 </html>
+
+

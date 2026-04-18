@@ -51,6 +51,22 @@ from .forms import (
 )
 
 
+def _get_current_benh_nhan(user):
+    if not user or not user.is_authenticated:
+        return None
+
+    benh_nhan = BenhNhan.objects.filter(user=user).first()
+    if benh_nhan:
+        return benh_nhan
+
+    # Backward compatibility: old data linked patient by phone=username.
+    benh_nhan = BenhNhan.objects.filter(so_dien_thoai=user.username).first()
+    if benh_nhan and not benh_nhan.user_id:
+        benh_nhan.user = user
+        benh_nhan.save(update_fields=["user"])
+    return benh_nhan
+
+
 # ==========================
 # TRANG CHỦ
 # ==========================
@@ -143,9 +159,7 @@ def home(request):
             for lich in doctor_today:
                 lich.ca_label = "Ca sáng" if lich.gio_kham < datetime.time(12, 0) else "Ca chiều"
         else:
-            benh_nhan = BenhNhan.objects.filter(
-                so_dien_thoai=request.user.username
-            ).only("ho_ten").first()
+            benh_nhan = _get_current_benh_nhan(request.user)
             display_name = benh_nhan.ho_ten if benh_nhan else request.user.username
 
     query_params = request.GET.copy()
@@ -486,14 +500,33 @@ def hospital_detail(request, id):
 # ==========================
 # ĐẶT LỊCH KHÁM (BỆNH NHÂN)
 # ==========================
+def _extract_constraint_name_from_integrity_error(exc):
+    constraint_name = ""
+    root_exc = getattr(exc, "__cause__", None) or getattr(exc, "__context__", None)
+    diag = getattr(root_exc, "diag", None)
+    if diag:
+        constraint_name = getattr(diag, "constraint_name", "") or ""
+    if constraint_name:
+        return constraint_name
+
+    text = str(exc)
+    known_constraints = (
+        "lichkham_benhnhan_ngay_active_unique",
+        "lichkham_benhnhan_ngay_gio_active_unique",
+        "lichkham_bacsi_ngay_gio_active_unique",
+    )
+    for name in known_constraints:
+        if name in text:
+            return name
+    return ""
+
+
 @login_required
 def dat_lich(request, bv_id):
 
     benh_vien = get_object_or_404(BenhVien, id=bv_id)
 
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -521,22 +554,35 @@ def dat_lich(request, bv_id):
             for bs in bac_sis
         ]
 
+    def _first_booking_error(form_obj):
+        non_field_errors = form_obj.non_field_errors()
+        if non_field_errors:
+            return str(non_field_errors[0])
+        for field_name in form_obj.errors:
+            errors = form_obj.errors.get(field_name)
+            if errors:
+                return str(errors[0])
+        return "Không thể đặt lịch. Vui lòng thử lại."
+
+    def _render_booking(form_obj, booking_error_message=""):
+        return render(request, "core/appointment.html", {
+            "form": form_obj,
+            "benh_vien": benh_vien,
+            "benh_nhan": benh_nhan,
+            "khoas": khoas,
+            "bac_sis": bac_sis,
+            "bac_si_schedules": bac_si_schedules,
+            "khoa_id": khoa_id,
+            "booking_error_message": booking_error_message,
+        })
+
     if request.method == "POST":
         form = DatLichForm(request.POST)
         form.fields["bac_si"].queryset = bac_sis
 
         if not selected_khoa:
             form.add_error(None, "Vui lòng chọn khoa trước khi đặt lịch.")
-            messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
-            return render(request, "core/appointment.html", {
-                "form": form,
-                "benh_vien": benh_vien,
-                "benh_nhan": benh_nhan,
-                "khoas": khoas,
-                "bac_sis": bac_sis,
-                "bac_si_schedules": bac_si_schedules,
-                "khoa_id": khoa_id,
-            })
+            return _render_booking(form, _first_booking_error(form))
 
         if form.is_valid():
             lich = form.save(commit=False)
@@ -553,28 +599,19 @@ def dat_lich(request, bv_id):
                     else:
                         for error in errors:
                             form.add_error(None, error)
-                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
-                return render(request, "core/appointment.html", {
-                    "form": form,
-                    "benh_vien": benh_vien,
-                    "benh_nhan": benh_nhan,
-                    "khoas": khoas,
-                    "bac_sis": bac_sis,
-                    "bac_si_schedules": bac_si_schedules,
-                    "khoa_id": khoa_id,
-                })
-            except IntegrityError:
-                form.add_error("ngay_kham", "Bạn đã có lịch khám trong ngày này.")
-                messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
-                return render(request, "core/appointment.html", {
-                    "form": form,
-                    "benh_vien": benh_vien,
-                    "benh_nhan": benh_nhan,
-                    "khoas": khoas,
-                    "bac_sis": bac_sis,
-                    "bac_si_schedules": bac_si_schedules,
-                    "khoa_id": khoa_id,
-                })
+                return _render_booking(form, _first_booking_error(form))
+            except IntegrityError as exc:
+                constraint_name = _extract_constraint_name_from_integrity_error(exc)
+                if constraint_name in {
+                    "lichkham_benhnhan_ngay_active_unique",
+                    "lichkham_benhnhan_ngay_gio_active_unique",
+                }:
+                    form.add_error("ngay_kham", "Mỗi ngày bạn chỉ được đặt 1 lịch khám.")
+                elif constraint_name == "lichkham_bacsi_ngay_gio_active_unique":
+                    form.add_error("gio_kham", "Khung giờ này đã có người đặt. Vui lòng chọn giờ khác.")
+                else:
+                    form.add_error(None, "Không thể đặt lịch do dữ liệu bị trùng. Vui lòng thử lại.")
+                return _render_booking(form, _first_booking_error(form))
 
             messages.success(request, "Đặt lịch thành công.")
             ThongBao.objects.create(
@@ -588,27 +625,17 @@ def dat_lich(request, bv_id):
             )
             return redirect("upcoming_appointments")
 
-        messages.error(request, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
+        return _render_booking(form, _first_booking_error(form))
     else:
         form = DatLichForm()
         form.fields["bac_si"].queryset = bac_sis
 
-    return render(request, "core/appointment.html", {
-        "form": form,
-        "benh_vien": benh_vien,
-        "benh_nhan": benh_nhan,
-        "khoas": khoas,
-        "bac_sis": bac_sis,
-        "bac_si_schedules": bac_si_schedules,
-        "khoa_id": khoa_id,
-    })
+    return _render_booking(form)
 
 
 @login_required
 def upcoming_appointments(request):
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -658,9 +685,7 @@ def cancel_appointment(request, lich_id):
     if request.method != "POST":
         return redirect("upcoming_appointments")
 
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -704,9 +729,7 @@ def cancel_appointment(request, lich_id):
 # ==========================
 @login_required
 def medical_history(request):
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -755,9 +778,7 @@ def phieu_kham_detail(request, phieu_id):
             "exam_images": list(phieu.hinh_anhs.all()),
         })
 
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -896,44 +917,14 @@ def doctor_exam(request, lich_id):
 def register(request):
 
     if request.method == "POST":
-        action = request.POST.get("action", "update_profile")
-        if action == "change_password":
-            current_password = request.POST.get("current_password", "")
-            new_password = request.POST.get("new_password", "")
-            confirm_password = request.POST.get("confirm_password", "")
-
-            if not current_password or not new_password or not confirm_password:
-                messages.error(request, "Vui lòng nhập đầy đủ thông tin đổi mật khẩu.")
-                return redirect("profile")
-
-            if not request.user.check_password(current_password):
-                messages.error(request, "Mật khẩu hiện tại không đúng.")
-                return redirect("profile")
-
-            if new_password != confirm_password:
-                messages.error(request, "Mật khẩu xác nhận không khớp.")
-                return redirect("profile")
-
-            try:
-                validate_password(new_password, user=request.user)
-            except ValidationError as exc:
-                for err in exc.messages:
-                    messages.error(request, err)
-                return redirect("profile")
-
-            request.user.set_password(new_password)
-            request.user.save()
-            update_session_auth_hash(request, request.user)
-            messages.success(request, "Đổi mật khẩu thành công.")
-            return redirect("profile")
-
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip()
+        so_dien_thoai = request.POST.get("so_dien_thoai", "").strip()
 
-        if not name or not username or not password:
-            messages.error(request, "Vui lòng nhập đầy đủ họ tên, tên người dùng và mật khẩu.")
+        if not name or not username or not password or not so_dien_thoai:
+            messages.error(request, "Vui lòng nhập đầy đủ họ tên, tên người dùng, số điện thoại và mật khẩu.")
             return redirect("register")
 
         username_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$"
@@ -948,6 +939,10 @@ def register(request):
             messages.error(request, "Vui lòng nhập email")
             return redirect("register")
 
+        if not re.fullmatch(r"^\d{9,15}$", so_dien_thoai):
+            messages.error(request, "Số điện thoại phải gồm 9-15 chữ số.")
+            return redirect("register")
+
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email đã được sử dụng")
             return redirect("register")
@@ -958,6 +953,16 @@ def register(request):
 
             return redirect("register")
 
+        if BenhNhan.objects.filter(so_dien_thoai=so_dien_thoai).exists():
+            messages.error(request, "Số điện thoại đã được sử dụng.")
+            return redirect("register")
+
+        try:
+            validate_password(password, user=User(username=username, email=email))
+        except ValidationError as exc:
+            for raw_message in exc.messages:
+                messages.error(request, _translate_password_validation_message(raw_message))
+            return redirect("register")
 
         user = User.objects.create_user(
             username=username,
@@ -967,8 +972,9 @@ def register(request):
 
 
         BenhNhan.objects.create(
+            user=user,
             ho_ten=name,
-            so_dien_thoai=username,
+            so_dien_thoai=so_dien_thoai,
             ngay_sinh="2000-01-01",
             gioi_tinh="nam",
             dia_chi="Chưa cập nhật"
@@ -2530,9 +2536,7 @@ def bac_si_phieu_kham_edit(request, phieu_id):
 @login_required
 def profile(request):
 
-    benh_nhan = BenhNhan.objects.filter(
-        so_dien_thoai=request.user.username
-    ).first()
+    benh_nhan = _get_current_benh_nhan(request.user)
 
     if not benh_nhan:
         return render(request, "core/error.html", {
@@ -2540,48 +2544,131 @@ def profile(request):
         })
 
     if request.method == "POST":
+        action = request.POST.get("action", "update_profile").strip()
+
+        if action == "change_password":
+            current_password = request.POST.get("current_password", "")
+            new_password = request.POST.get("new_password", "")
+            confirm_password = request.POST.get("confirm_password", "")
+
+            if not current_password or not new_password or not confirm_password:
+                messages.error(request, "Vui lòng nhập đầy đủ thông tin đổi mật khẩu.")
+                return redirect("profile")
+
+            if not request.user.check_password(current_password):
+                messages.error(request, "Mật khẩu hiện tại không đúng.")
+                return redirect("profile")
+
+            if new_password != confirm_password:
+                messages.error(request, "Mật khẩu xác nhận không khớp.")
+                return redirect("profile")
+
+            if request.user.check_password(new_password):
+                messages.error(request, "Mật khẩu mới không được trùng với mật khẩu hiện tại.")
+                return redirect("profile")
+
+            try:
+                validate_password(new_password, user=request.user)
+            except ValidationError as exc:
+                for raw_message in exc.messages:
+                    messages.error(request, _translate_password_validation_message(raw_message))
+                return redirect("profile")
+
+            request.user.set_password(new_password)
+            request.user.save(update_fields=["password"])
+            update_session_auth_hash(request, request.user)
+            messages.success(request, "Đổi mật khẩu thành công.")
+            return redirect("profile")
+
+        if action != "update_profile":
+            messages.error(request, "Yêu cầu không hợp lệ.")
+            return redirect("profile")
 
         so_dien_thoai_moi = request.POST.get("so_dien_thoai", "").strip()
-        if so_dien_thoai_moi and so_dien_thoai_moi != request.user.username:
-            if User.objects.filter(username=so_dien_thoai_moi).exclude(pk=request.user.pk).exists():
-                messages.error(request, "Số điện thoại đã được sử dụng cho tài khoản khác")
-                return redirect("profile")
-            request.user.username = so_dien_thoai_moi
-            request.user.save()
+        if not re.fullmatch(r"^\d{9,15}$", so_dien_thoai_moi):
+            messages.error(request, "Số điện thoại phải gồm 9-15 chữ số.")
+            return redirect("profile")
 
-        benh_nhan.ho_ten = request.POST["ho_ten"]
-        benh_nhan.ngay_sinh = request.POST["ngay_sinh"]
-        benh_nhan.gioi_tinh = request.POST["gioi_tinh"]
-        benh_nhan.dia_chi = request.POST["dia_chi"]
-        if so_dien_thoai_moi:
-            benh_nhan.so_dien_thoai = so_dien_thoai_moi
+        if BenhNhan.objects.filter(so_dien_thoai=so_dien_thoai_moi).exclude(pk=benh_nhan.pk).exists():
+            messages.error(request, "Số điện thoại đã được sử dụng cho hồ sơ bệnh nhân khác.")
+            return redirect("profile")
+
+        benh_nhan.user = request.user
+        benh_nhan.ho_ten = request.POST.get("ho_ten", "").strip()
+        benh_nhan.ngay_sinh = request.POST.get("ngay_sinh", "").strip()
+        benh_nhan.gioi_tinh = request.POST.get("gioi_tinh", "").strip()
+        benh_nhan.dia_chi = request.POST.get("dia_chi", "").strip()
+        benh_nhan.so_dien_thoai = so_dien_thoai_moi
 
         # BHYT
-        ma_bhyt = request.POST.get("ma_bhyt", "").strip()
+        ma_bhyt = request.POST.get("ma_bhyt", "").strip().upper()
         ngay_cap = request.POST.get("ngay_cap", "").strip()
         ngay_het_han = request.POST.get("ngay_het_han", "").strip()
 
+        if not ma_bhyt and (ngay_cap or ngay_het_han):
+            messages.error(request, "Vui lòng nhập mã BHYT khi khai báo ngày cấp hoặc ngày hết hạn.")
+            return redirect("profile")
+
         if ma_bhyt:
+            if not re.fullmatch(r"^[A-Za-z]{2}\d{8}$", ma_bhyt):
+                messages.error(request, "Mã BHYT phải gồm 2 chữ cái và 8 chữ số (ví dụ: AB12345678).")
+                return redirect("profile")
+
             if not ngay_cap or not ngay_het_han:
                 messages.error(request, "Vui lòng nhập ngày cấp và ngày hết hạn của BHYT")
+                return redirect("profile")
+
+            try:
+                ngay_cap_date = datetime.date.fromisoformat(ngay_cap)
+                ngay_het_han_date = datetime.date.fromisoformat(ngay_het_han)
+            except ValueError:
+                messages.error(request, "Ngày cấp hoặc ngày hết hạn BHYT không hợp lệ.")
+                return redirect("profile")
+
+            if ngay_cap_date >= ngay_het_han_date:
+                messages.error(request, "Ngày cấp BHYT phải nhỏ hơn ngày hết hạn.")
                 return redirect("profile")
 
             bhyt, created = BaoHiemYTe.objects.get_or_create(
                 ma_bhyt=ma_bhyt,
                 defaults={
-                    "ngay_cap": ngay_cap,
-                    "ngay_het_han": ngay_het_han,
+                    "ngay_cap": ngay_cap_date,
+                    "ngay_het_han": ngay_het_han_date,
                 },
             )
 
-            if not created and (
-                str(bhyt.ngay_cap) != ngay_cap or str(bhyt.ngay_het_han) != ngay_het_han
-            ):
-                bhyt.ngay_cap = ngay_cap
-                bhyt.ngay_het_han = ngay_het_han
+            try:
+                owner = bhyt.benh_nhan
+            except BenhNhan.DoesNotExist:
+                owner = None
+            if owner and owner.pk != benh_nhan.pk:
+                messages.error(request, "Mã BHYT này đã được gán cho bệnh nhân khác.")
+                return redirect("profile")
+
+            if not created:
+                bhyt.ngay_cap = ngay_cap_date
+                bhyt.ngay_het_han = ngay_het_han_date
+
+            try:
+                bhyt.full_clean()
                 bhyt.save()
+            except ValidationError as exc:
+                for field_errors in exc.message_dict.values():
+                    if field_errors:
+                        messages.error(request, field_errors[0])
+                        break
+                return redirect("profile")
 
             benh_nhan.bhyt = bhyt
+
+        try:
+            benh_nhan.full_clean()
+        except ValidationError as exc:
+            for field_errors in exc.message_dict.values():
+                if field_errors:
+                    messages.error(request, field_errors[0])
+                    break
+            return redirect("profile")
 
         benh_nhan.save()
 

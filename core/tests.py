@@ -11,6 +11,7 @@ from django.utils import timezone
 from core.forms import AdminBenhVienForm
 from core.models import (
     BacSi,
+    BaoHiemYTe,
     BenhNhan,
     BenhVien,
     GioLamViecBacSi,
@@ -291,6 +292,71 @@ class AppointmentBookingTests(TestCase):
             ).exists()
         )
 
+    def test_booking_rejects_empty_note(self):
+        response = self.client.post(
+            reverse("dat_lich", args=[self.hospital.id]),
+            {
+                "khoa": str(self.department.id),
+                "bac_si": self.doctor.id,
+                "ngay_kham": self.next_monday.isoformat(),
+                "gio_kham": "09:00",
+                "ghi_chu": "   ",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ghi_chu", response.context["form"].errors)
+        self.assertIn("Vui lòng nhập ghi chú.", response.context["form"].errors["ghi_chu"])
+        self.assertFalse(LichKham.objects.filter(benh_nhan=self.patient).exists())
+
+    def test_booking_rejects_time_outside_doctor_working_hours(self):
+        response = self.client.post(
+            reverse("dat_lich", args=[self.hospital.id]),
+            {
+                "khoa": str(self.department.id),
+                "bac_si": self.doctor.id,
+                "ngay_kham": self.next_monday.isoformat(),
+                "gio_kham": "18:00",
+                "ghi_chu": "Kham ngoai gio",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("gio_kham", response.context["form"].errors)
+        self.assertIn(
+            "Giờ khám ngoài khung giờ làm việc của bác sĩ.",
+            response.context["form"].errors["gio_kham"],
+        )
+        self.assertContains(response, "Giờ khám ngoài khung giờ làm việc của bác sĩ.")
+        self.assertNotContains(response, "Không thể đặt lịch. Vui lòng kiểm tra lại thông tin.")
+        self.assertNotContains(response, "Vui lòng kiểm tra lại thông tin:")
+        self.assertFalse(LichKham.objects.filter(benh_nhan=self.patient).exists())
+
+    def test_booking_rejects_second_appointment_in_same_day(self):
+        LichKham.objects.create(
+            benh_nhan=self.patient,
+            bac_si=self.doctor,
+            ngay_kham=self.next_monday,
+            gio_kham=datetime.time(9, 0),
+            trang_thai="cho",
+            ghi_chu="Lich dau",
+        )
+
+        response = self.client.post(
+            reverse("dat_lich", args=[self.hospital.id]),
+            {
+                "khoa": str(self.department.id),
+                "bac_si": self.doctor.id,
+                "ngay_kham": self.next_monday.isoformat(),
+                "gio_kham": "10:00",
+                "ghi_chu": "Lich thu hai",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ngay_kham", response.context["form"].errors)
+        self.assertContains(response, "Mỗi ngày bạn chỉ được đặt 1 lịch khám.")
+
     def test_booking_can_reuse_slot_when_previous_was_cancelled(self):
         LichKham.objects.create(
             benh_nhan=self.patient,
@@ -322,6 +388,100 @@ class AppointmentBookingTests(TestCase):
             ).count(),
             2,
         )
+
+
+class ProfileAccountTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="user123",
+            password="OldPass@123",
+            email="user123@example.com",
+        )
+        self.patient = BenhNhan.objects.create(
+            user=self.user,
+            ho_ten="Nguoi dung A",
+            ngay_sinh=datetime.date(1999, 1, 1),
+            gioi_tinh="nam",
+            so_dien_thoai="0911222333",
+            dia_chi="TP.HCM",
+        )
+        self.client.login(username="user123", password="OldPass@123")
+
+    def test_profile_update_phone_does_not_change_username(self):
+        response = self.client.post(
+            reverse("profile"),
+            {
+                "action": "update_profile",
+                "ho_ten": "Nguoi dung A",
+                "so_dien_thoai": "0911222444",
+                "ngay_sinh": "1999-01-01",
+                "gioi_tinh": "nam",
+                "dia_chi": "TP.HCM",
+                "ma_bhyt": "",
+                "ngay_cap": "",
+                "ngay_het_han": "",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.patient.refresh_from_db()
+        self.assertEqual(self.user.username, "user123")
+        self.assertEqual(self.patient.so_dien_thoai, "0911222444")
+
+    def test_profile_rejects_invalid_bhyt_format(self):
+        response = self.client.post(
+            reverse("profile"),
+            {
+                "action": "update_profile",
+                "ho_ten": "Nguoi dung A",
+                "so_dien_thoai": "0911222333",
+                "ngay_sinh": "1999-01-01",
+                "gioi_tinh": "nam",
+                "dia_chi": "TP.HCM",
+                "ma_bhyt": "ABC123",
+                "ngay_cap": "2026-01-01",
+                "ngay_het_han": "2027-01-01",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Mã BHYT phải gồm 2 chữ cái và 8 chữ số")
+        self.assertFalse(BaoHiemYTe.objects.filter(ma_bhyt="ABC123").exists())
+
+    def test_profile_rejects_bhyt_issue_date_not_before_expiry(self):
+        response = self.client.post(
+            reverse("profile"),
+            {
+                "action": "update_profile",
+                "ho_ten": "Nguoi dung A",
+                "so_dien_thoai": "0911222333",
+                "ngay_sinh": "1999-01-01",
+                "gioi_tinh": "nam",
+                "dia_chi": "TP.HCM",
+                "ma_bhyt": "AB12345678",
+                "ngay_cap": "2026-01-01",
+                "ngay_het_han": "2026-01-01",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Ngày cấp BHYT phải nhỏ hơn ngày hết hạn.")
+
+    def test_profile_change_password_success(self):
+        response = self.client.post(
+            reverse("profile"),
+            {
+                "action": "change_password",
+                "current_password": "OldPass@123",
+                "new_password": "NewPass@456",
+                "confirm_password": "NewPass@456",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password("NewPass@456"))
 
 
 class AdminDashboardTests(TestCase):

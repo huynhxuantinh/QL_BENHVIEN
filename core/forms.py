@@ -1,4 +1,4 @@
-import datetime
+﻿import datetime
 
 from django import forms
 from django.contrib.auth.models import User
@@ -11,6 +11,16 @@ class DatLichForm(forms.ModelForm):
     class Meta:
         model = LichKham
         fields = ["bac_si", "ngay_kham", "gio_kham", "ghi_chu"]
+        error_messages = {
+            "ngay_kham": {
+                "required": "Vui lÃ²ng chá»n ngÃ y khÃ¡m.",
+                "invalid": "NgÃ y khÃ¡m khÃ´ng há»£p lá»‡.",
+            },
+            "gio_kham": {
+                "required": "Vui lÃ²ng chá»n giá» khÃ¡m.",
+                "invalid": "Giá» khÃ¡m khÃ´ng há»£p lá»‡.",
+            },
+        }
 
         widgets = {
             "ngay_kham": forms.DateInput(attrs={
@@ -33,48 +43,75 @@ class DatLichForm(forms.ModelForm):
     bac_si = forms.ModelChoiceField(
         queryset=BacSi.objects.none(),
         widget=forms.Select(attrs={"class": "form-control"}),
+        error_messages={
+            "required": "Vui lÃ²ng chá»n bÃ¡c sÄ©.",
+            "invalid_choice": "BÃ¡c sÄ© Ä‘Ã£ chá»n khÃ´ng há»£p lá»‡.",
+        },
     )
+    ghi_chu = forms.CharField(
+        required=True,
+        widget=forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+        error_messages={
+            "required": "Vui lòng nhập ghi chú.",
+        },
+    )
+
+    def clean_gio_kham(self):
+        gio_kham = self.cleaned_data.get("gio_kham")
+        if gio_kham and (
+            gio_kham.minute not in {0, 30}
+            or gio_kham.second != 0
+            or gio_kham.microsecond != 0
+        ):
+            raise forms.ValidationError("Giá» khÃ¡m chá»‰ nháº­n cÃ¡c má»‘c 30 phÃºt (00 hoáº·c 30).")
+        return gio_kham
+
+    def clean_ghi_chu(self):
+        ghi_chu = (self.cleaned_data.get("ghi_chu") or "").strip()
+        if not ghi_chu:
+            raise forms.ValidationError("Vui lòng nhập ghi chú.")
+        return ghi_chu
 
 
 class ContactFeedbackForm(forms.Form):
     ho_ten = forms.CharField(
         max_length=120,
-        label="Họ tên",
+        label="Há» tÃªn",
         error_messages={
-            "required": "Vui lòng nhập họ tên.",
-            "max_length": "Họ tên tối đa 120 ký tự.",
+            "required": "Vui lÃ²ng nháº­p há» tÃªn.",
+            "max_length": "Há» tÃªn tá»‘i Ä‘a 120 kÃ½ tá»±.",
         },
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyễn Văn A"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyá»…n VÄƒn A"}),
     )
     email = forms.EmailField(
-        label="Email liên hệ",
+        label="Email liÃªn há»‡",
         error_messages={
-            "required": "Vui lòng nhập email liên hệ.",
-            "invalid": "Email không đúng định dạng.",
+            "required": "Vui lÃ²ng nháº­p email liÃªn há»‡.",
+            "invalid": "Email khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng.",
         },
         widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ban@email.com"}),
     )
     chu_de = forms.CharField(
         max_length=180,
-        label="Chủ đề",
+        label="Chá»§ Ä‘á»",
         error_messages={
-            "required": "Vui lòng nhập chủ đề.",
-            "max_length": "Chủ đề tối đa 180 ký tự.",
+            "required": "Vui lÃ²ng nháº­p chá»§ Ä‘á».",
+            "max_length": "Chá»§ Ä‘á» tá»‘i Ä‘a 180 kÃ½ tá»±.",
         },
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Góp ý về chức năng đặt lịch"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "GÃ³p Ã½ vá» chá»©c nÄƒng Ä‘áº·t lá»‹ch"}),
     )
     noi_dung = forms.CharField(
         min_length=10,
-        label="Nội dung góp ý",
+        label="Ná»™i dung gÃ³p Ã½",
         error_messages={
-            "required": "Vui lòng nhập nội dung góp ý.",
-            "min_length": "Nội dung góp ý tối thiểu 10 ký tự.",
+            "required": "Vui lÃ²ng nháº­p ná»™i dung gÃ³p Ã½.",
+            "min_length": "Ná»™i dung gÃ³p Ã½ tá»‘i thiá»ƒu 10 kÃ½ tá»±.",
         },
         widget=forms.Textarea(
             attrs={
                 "class": "form-control",
                 "rows": 6,
-                "placeholder": "Nhập góp ý hoặc vấn đề bạn gặp...",
+                "placeholder": "Nháº­p gÃ³p Ã½ hoáº·c váº¥n Ä‘á» báº¡n gáº·p...",
             }
         ),
     )
@@ -85,13 +122,13 @@ class AdminBenhVienForm(forms.ModelForm):
         min_value=-90,
         max_value=90,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="Vĩ độ",
+        label="VÄ© Ä‘á»™",
     )
     lon = forms.FloatField(
         min_value=-180,
         max_value=180,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="Kinh độ",
+        label="Kinh Ä‘á»™",
     )
 
     class Meta:
@@ -107,12 +144,12 @@ class AdminBenhVienForm(forms.ModelForm):
             "loai_hinh",
         ]
         labels = {
-            "ten": "Tên bệnh viện",
-            "dia_chi": "Địa chỉ",
-            "phuong": "Phường",
-            "cap_cuu_24h": "Cấp cứu 24/7",
-            "co_bhyt": "Có BHYT",
-            "loai_hinh": "Loại hình",
+            "ten": "TÃªn bá»‡nh viá»‡n",
+            "dia_chi": "Äá»‹a chá»‰",
+            "phuong": "PhÆ°á»ng",
+            "cap_cuu_24h": "Cáº¥p cá»©u 24/7",
+            "co_bhyt": "CÃ³ BHYT",
+            "loai_hinh": "Loáº¡i hÃ¬nh",
         }
         widgets = {
             "ten": forms.TextInput(attrs={"class": "form-control"}),
@@ -180,7 +217,7 @@ class AdminBacSiForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["khoa"].queryset = Khoa.objects.none()
         self.fields["user"].required = False
-        self.fields["user"].label = "Tài khoản liên kết (tùy chọn)"
+        self.fields["user"].label = "TÃ i khoáº£n liÃªn káº¿t (tÃ¹y chá»n)"
 
         benh_vien_id = None
         if self.is_bound:
@@ -199,7 +236,7 @@ class AdminBacSiForm(forms.ModelForm):
         benh_vien = cleaned_data.get("benh_vien")
         khoa = cleaned_data.get("khoa")
         if benh_vien and khoa and khoa.benh_vien_id != benh_vien.id:
-            self.add_error("khoa", "Khoa không thuộc bệnh viện đã chọn.")
+            self.add_error("khoa", "Khoa khÃ´ng thuá»™c bá»‡nh viá»‡n Ä‘Ã£ chá»n.")
         return cleaned_data
 
 
@@ -230,21 +267,21 @@ class AdminUserForm(forms.ModelForm):
 
     role = forms.ChoiceField(
         required=True,
-        label="Vai trò",
+        label="Vai trÃ²",
         choices=(
-            (ROLE_USER, "Người dùng"),
-            (ROLE_DOCTOR, "Bác sĩ"),
+            (ROLE_USER, "NgÆ°á»i dÃ¹ng"),
+            (ROLE_DOCTOR, "BÃ¡c sÄ©"),
             (ROLE_ADMIN, "Admin"),
         ),
         widget=forms.Select(attrs={"class": "form-control"}),
-        help_text="Bác sĩ phải được liên kết trong danh mục Bác sĩ.",
+        help_text="BÃ¡c sÄ© pháº£i Ä‘Æ°á»£c liÃªn káº¿t trong danh má»¥c BÃ¡c sÄ©.",
     )
 
     password = forms.CharField(
         required=False,
-        label="Mật khẩu mới",
+        label="Máº­t kháº©u má»›i",
         widget=forms.PasswordInput(render_value=False, attrs={"class": "form-control"}),
-        help_text="Để trống nếu không đổi mật khẩu.",
+        help_text="Äá»ƒ trá»‘ng náº¿u khÃ´ng Ä‘á»•i máº­t kháº©u.",
     )
 
     class Meta:
@@ -280,7 +317,7 @@ class AdminUserForm(forms.ModelForm):
 
         if not self.instance or not self.instance.pk:
             self.fields["password"].required = True
-            self.fields["password"].help_text = "Bắt buộc khi tạo tài khoản."
+            self.fields["password"].help_text = "Báº¯t buá»™c khi táº¡o tÃ i khoáº£n."
 
     def clean(self):
         cleaned_data = super().clean()
@@ -291,13 +328,13 @@ class AdminUserForm(forms.ModelForm):
         if role == self.ROLE_DOCTOR and not has_doctor_profile:
             self.add_error(
                 "role",
-                "Tài khoản này chưa liên kết bác sĩ. Hãy vào danh mục Bác sĩ để liên kết trước.",
+                "TÃ i khoáº£n nÃ y chÆ°a liÃªn káº¿t bÃ¡c sÄ©. HÃ£y vÃ o danh má»¥c BÃ¡c sÄ© Ä‘á»ƒ liÃªn káº¿t trÆ°á»›c.",
             )
 
         if role in {self.ROLE_USER, self.ROLE_ADMIN} and has_doctor_profile:
             self.add_error(
                 "role",
-                "Tài khoản đang liên kết Bác sĩ. Hãy gỡ liên kết ở danh mục Bác sĩ nếu muốn đổi vai trò.",
+                "TÃ i khoáº£n Ä‘ang liÃªn káº¿t BÃ¡c sÄ©. HÃ£y gá»¡ liÃªn káº¿t á»Ÿ danh má»¥c BÃ¡c sÄ© náº¿u muá»‘n Ä‘á»•i vai trÃ².",
             )
         return cleaned_data
 
@@ -319,6 +356,7 @@ class AdminUserForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
 
 
 

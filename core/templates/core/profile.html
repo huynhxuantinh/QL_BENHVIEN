@@ -246,13 +246,21 @@
 
             <div class="grid">
                 <div class="field">
+                    <label>T&#234;n ng&#432;&#7901;i d&#249;ng</label>
+                    <input type="text" value="{{ request.user.username }}" readonly>
+                    <p class="subtle">T&#234;n ng&#432;&#7901;i d&#249;ng kh&#244;ng th&#7875; thay &#273;&#7893;i.</p>
+                </div>
+
+                <div class="field">
                     <label>H&#7885; t&#234;n</label>
                     <input type="text" name="ho_ten" value="{{ bn.ho_ten }}">
                 </div>
 
                 <div class="field">
                     <label>S&#7889; &#273;i&#7879;n tho&#7841;i</label>
-                    <input type="text" name="so_dien_thoai" value="{{ bn.so_dien_thoai }}">
+                    <input type="text" name="so_dien_thoai" value="{{ bn.so_dien_thoai }}"
+                           pattern="\d{9,15}" maxlength="15" inputmode="numeric"
+                           title="S&#7889; &#273;i&#7879;n tho&#7841;i g&#7891;m 9-15 ch&#7919; s&#7889;.">
                 </div>
 
                 <div class="field">
@@ -284,7 +292,11 @@
                 <div class="field">
                     <label>M&#227; BHYT</label>
                     <input type="text" name="ma_bhyt"
-                           value="{% if bn.bhyt %}{{ bn.bhyt.ma_bhyt }}{% endif %}">
+                           value="{% if bn.bhyt %}{{ bn.bhyt.ma_bhyt }}{% endif %}"
+                           placeholder="AB12345678" maxlength="10"
+                           pattern="[A-Za-z]{2}\d{8}"
+                           title="M&#227; BHYT g&#7891;m 2 ch&#7919; c&#225;i v&#224; 8 ch&#7919; s&#7889; (v&#237; d&#7909;: AB12345678).">
+                    <p class="subtle">M&#7863;c &#273;&#7883;nh: 2 ch&#7919; c&#225;i + 8 ch&#7919; s&#7889;.</p>
                 </div>
 
                 <div class="field">

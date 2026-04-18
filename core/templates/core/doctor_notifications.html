@@ -164,7 +164,10 @@
                 <h1>Th&#244;ng b&#225;o b&#225;c s&#297;</h1>
                 <span>C&#7853;p nh&#7853;t l&#7883;ch kh&#225;m v&#224; nh&#7855;c l&#7883;ch cho b&#225;c s&#297;</span>
             </div>
-            <a class="btn ghost" href="{% url 'bac_si_home' %}">&#8592; Trang b&#225;c s&#297;</a>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn ghost" href="{% url 'bac_si_home' %}">&#8592; Trang b&#225;c s&#297;</a>
+                <a class="btn ghost" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+            </div>
         </header>
 
         {% if messages %}

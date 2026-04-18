@@ -19,6 +19,10 @@ name_validator = RegexValidator(
     regex=r".*[A-Za-zÀ-ỹ].*",
     message="Tên phải có ít nhất một chữ cái."
 )
+bhyt_code_validator = RegexValidator(
+    regex=r"^[A-Za-z]{2}\d{8}$",
+    message="Mã BHYT phải gồm 2 chữ cái và 8 chữ số (ví dụ: AB12345678).",
+)
 
 # ========================= 
 # BỆNH VIỆN
@@ -321,15 +325,19 @@ class GioLamViecBacSi(models.Model):
 # BẢO HIỂM Y TẾ
 # ========================= 
 class BaoHiemYTe(models.Model):
-    ma_bhyt = models.CharField(max_length=50, unique=True)
+    ma_bhyt = models.CharField(
+        max_length=50,
+        unique=True,
+        validators=[bhyt_code_validator],
+    )
     ngay_cap = models.DateField()
     ngay_het_han = models.DateField(db_index=True)
 
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(ngay_cap__lte=models.F("ngay_het_han")),
-                name="bhyt_ngay_cap_lte_ngay_het_han",
+                condition=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
+                name="bhyt_ngay_cap_lt_ngay_het_han",
             ),
         ]
         verbose_name = 'Bảo hiểm y tế'
@@ -337,8 +345,10 @@ class BaoHiemYTe(models.Model):
 
     def clean(self):
         super().clean()
-        if self.ngay_cap and self.ngay_het_han and self.ngay_cap > self.ngay_het_han:
-            raise ValidationError({"ngay_het_han": "Ngày hết hạn phải sau hoặc bằng ngày cấp."})
+        if self.ma_bhyt:
+            self.ma_bhyt = self.ma_bhyt.upper()
+        if self.ngay_cap and self.ngay_het_han and self.ngay_cap >= self.ngay_het_han:
+            raise ValidationError({"ngay_het_han": "Ngày hết hạn phải sau ngày cấp."})
         if self.ngay_het_han and self.ngay_het_han < timezone.localdate():
             raise ValidationError({"ngay_het_han": "BHYT đã hết hạn."})
 
@@ -434,6 +444,11 @@ class LichKham(models.Model):
         ]
         constraints = [
             models.UniqueConstraint(
+                fields=["benh_nhan", "ngay_kham"],
+                condition=~models.Q(trang_thai="huy"),
+                name="lichkham_benhnhan_ngay_active_unique",
+            ),
+            models.UniqueConstraint(
                 fields=["benh_nhan", "ngay_kham", "gio_kham"],
                 condition=~models.Q(trang_thai="huy"),
                 name="lichkham_benhnhan_ngay_gio_active_unique",
@@ -456,6 +471,9 @@ class LichKham(models.Model):
         if self.gio_kham and self.gio_kham.minute % 30 != 0:
             raise ValidationError({"gio_kham": "Giờ khám chỉ nhận các mốc 30 phút (00 hoặc 30)."})
 
+        if not (self.ghi_chu or "").strip():
+            raise ValidationError({"ghi_chu": "Vui lòng nhập ghi chú khi đặt lịch khám."})
+
         if self.benh_nhan_id and self.ngay_kham:
             qs = LichKham.objects.filter(
                 benh_nhan=self.benh_nhan,
@@ -464,7 +482,7 @@ class LichKham(models.Model):
             if self.pk:
                 qs = qs.exclude(pk=self.pk)
             if qs.exists():
-                raise ValidationError({"ngay_kham": "Bệnh nhân đã có lịch trong ngày này."})
+                raise ValidationError({"ngay_kham": "Mỗi ngày bạn chỉ được đặt 1 lịch khám."})
 
         if self.bac_si_id and self.ngay_kham and self.gio_kham:
             thu = (self.ngay_kham.weekday() + 1) % 7

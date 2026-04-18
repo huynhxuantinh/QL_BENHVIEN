@@ -352,28 +352,8 @@
                 <div class="card">
                     <h2 class="section-title">Đặt lịch</h2>
 
-                    {% if messages %}
-                        <div class="stack" style="margin-bottom:12px;">
-                            {% for message in messages %}
-                                <div class="alert">{{ message }}</div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-
-                    {% if form.errors %}
-                        <div class="alert" style="margin-bottom:12px;">
-                            Vui lòng kiểm tra lại thông tin:
-                            <ul>
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <li>{{ field.label }}: {{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                    {% if booking_error_message %}
+                        <div class="alert" style="margin-bottom:12px;">{{ booking_error_message }}</div>
                     {% endif %}
 
                     <form method="get" class="field" style="margin-bottom:12px;">
@@ -387,7 +367,7 @@
                     </form>
 
                     {% if bac_sis %}
-                        <form method="post">
+                        <form method="post" novalidate>
                             {% csrf_token %}
                             <input type="hidden" name="khoa" value="{{ khoa_id }}">
 

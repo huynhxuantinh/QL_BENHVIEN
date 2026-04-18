@@ -1843,6 +1843,16 @@ def _get_valid_forgot_password_flow(request):
     return state
 
 
+def _translate_password_validation_message(message):
+    mapping = {
+        "This password is too short. It must contain at least 8 characters.": "Mật khẩu quá ngắn. Mật khẩu phải có ít nhất 8 ký tự.",
+        "This password is too common.": "Mật khẩu quá phổ biến, vui lòng chọn mật khẩu khác an toàn hơn.",
+        "This password is entirely numeric.": "Mật khẩu không được chỉ gồm chữ số.",
+        "The password is too similar to the username.": "Mật khẩu quá giống với tên người dùng.",
+    }
+    return mapping.get(message, message)
+
+
 def forgot_password(request):
     if request.method == "POST":
         step = (request.POST.get("step") or "").strip()
@@ -1964,10 +1974,18 @@ def forgot_password(request):
                 messages.error(request, "Tài khoản không tồn tại. Vui lòng thử lại.")
                 return redirect("forgot_password")
 
+            if user.check_password(new_password):
+                messages.error(request, "Mật khẩu mới không được trùng với mật khẩu cũ.")
+                return redirect("forgot_password")
+
             try:
                 validate_password(new_password, user=user)
             except ValidationError as exc:
-                messages.error(request, " ".join(exc.messages))
+                for raw_message in exc.messages:
+                    messages.error(
+                        request,
+                        _translate_password_validation_message(raw_message),
+                    )
                 return redirect("forgot_password")
 
             user.set_password(new_password)

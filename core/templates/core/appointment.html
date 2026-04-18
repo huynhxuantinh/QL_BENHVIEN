@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Äáº·t lá»‹ch khÃ¡m</title>
+    <title>Đặt lịch khám</title>
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
@@ -315,42 +315,42 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Äáº·t lá»‹ch khÃ¡m</h1>
+                <h1>Đặt lịch khám</h1>
                 <span>{{ benh_vien.ten }} - {{ benh_vien.phuong }}</span>
             </div>
-            <a class="btn ghost" href="{% url 'hospital_detail' benh_vien.id %}">â† ThÃ´ng tin bá»‡nh viá»‡n</a>
+            <a class="btn ghost" href="{% url 'hospital_detail' benh_vien.id %}">← Thông tin bệnh viện</a>
         </header>
 
         <section class="layout">
             <aside class="stack">
                 <div class="card">
-                    <h2 class="section-title">Bá»‡nh viá»‡n</h2>
+                    <h2 class="section-title">Bệnh viện</h2>
                     <div class="meta-grid">
-                        <div class="meta-row"><strong>Äá»‹a chá»‰:</strong> {{ benh_vien.dia_chi }}</div>
+                        <div class="meta-row"><strong>Địa chỉ:</strong> {{ benh_vien.dia_chi }}</div>
                         <div class="meta-row">
-                            <strong>Giá» hoáº¡t Ä‘á»™ng:</strong>
+                            <strong>Giờ hoạt động:</strong>
                             {{ benh_vien.gio_mo|time:"H\hi" }} - {{ benh_vien.gio_dong|time:"H\hi" }}
                         </div>
                     </div>
                     <div class="service-row">
-                        <span class="badge {% if not benh_vien.co_bhyt %}warn{% endif %}">{% if benh_vien.co_bhyt %}CÃ³ BHYT{% else %}KhÃ´ng BHYT{% endif %}</span>
+                        <span class="badge {% if not benh_vien.co_bhyt %}warn{% endif %}">{% if benh_vien.co_bhyt %}Có BHYT{% else %}Không BHYT{% endif %}</span>
                         <span class="badge {% if not benh_vien.cap_cuu_24h %}warn{% endif %}">{% if benh_vien.cap_cuu_24h %}C&#7845;p c&#7913;u 24/7{% else %}Kh&#244;ng c&#7845;p c&#7913;u 24/7{% endif %}</span>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h2 class="section-title">Bá»‡nh nhÃ¢n</h2>
+                    <h2 class="section-title">Bệnh nhân</h2>
                     <div class="meta-grid">
-                        <div class="meta-row"><strong>Há» tÃªn:</strong> {{ benh_nhan.ho_ten }}</div>
-                        <div class="meta-row"><strong>Sá»‘ Ä‘iá»‡n thoáº¡i:</strong> {{ benh_nhan.so_dien_thoai }}</div>
-                        <div class="meta-row"><strong>NgÃ y sinh:</strong> {{ benh_nhan.ngay_sinh|date:"d/m/Y" }}</div>
+                        <div class="meta-row"><strong>Họ tên:</strong> {{ benh_nhan.ho_ten }}</div>
+                        <div class="meta-row"><strong>Số điện thoại:</strong> {{ benh_nhan.so_dien_thoai }}</div>
+                        <div class="meta-row"><strong>Ngày sinh:</strong> {{ benh_nhan.ngay_sinh|date:"d/m/Y" }}</div>
                     </div>
                 </div>
             </aside>
 
             <div class="stack">
                 <div class="card">
-                    <h2 class="section-title">Äáº·t lá»‹ch</h2>
+                    <h2 class="section-title">Đặt lịch</h2>
 
                     {% if messages %}
                         <div class="stack" style="margin-bottom:12px;">
@@ -362,7 +362,7 @@
 
                     {% if form.errors %}
                         <div class="alert" style="margin-bottom:12px;">
-                            Vui lÃ²ng kiá»ƒm tra láº¡i thÃ´ng tin:
+                            Vui lòng kiểm tra lại thông tin:
                             <ul>
                                 {% for field in form %}
                                     {% for error in field.errors %}
@@ -377,9 +377,9 @@
                     {% endif %}
 
                     <form method="get" class="field" style="margin-bottom:12px;">
-                        <label for="khoa-select">Chá»n khoa</label>
+                        <label for="khoa-select">Chọn khoa</label>
                         <select id="khoa-select" name="khoa" onchange="this.form.submit()">
-                            <option value="">-- Chá»n khoa --</option>
+                            <option value="">-- Chọn khoa --</option>
                             {% for k in khoas %}
                                 <option value="{{ k.id }}" {% if k.id|stringformat:"s" == khoa_id %}selected{% endif %}>{{ k.ten }}</option>
                             {% endfor %}
@@ -392,39 +392,39 @@
                             <input type="hidden" name="khoa" value="{{ khoa_id }}">
 
                             <div class="field">
-                                <label>BÃ¡c sÄ©</label>
+                                <label>Bác sĩ</label>
                                 {{ form.bac_si }}
                             </div>
 
                             <div class="field">
-                                <label>NgÃ y khÃ¡m</label>
+                                <label>Ngày khám</label>
                                 {{ form.ngay_kham }}
-                                <p class="hint">Chá»n ngÃ y tá»« hÃ´m nay trá»Ÿ Ä‘i.</p>
+                                <p class="hint">Chọn ngày từ hôm nay trở đi.</p>
                             </div>
 
                             <div class="field">
-                                <label>Giá» khÃ¡m</label>
+                                <label>Giờ khám</label>
                                 {{ form.gio_kham }}
-                                <p class="hint">Chá»‰ nháº­n má»‘c 30 phÃºt: 00 hoáº·c 30.</p>
+                                <p class="hint">Chỉ nhận mốc 30 phút: 00 hoặc 30.</p>
                             </div>
 
                             <div class="field">
-                                <label>Ghi chÃº</label>
+                                <label>Ghi chú</label>
                                 {{ form.ghi_chu }}
                             </div>
 
                             <div class="actions">
-                                <button class="btn primary" type="submit">XÃ¡c nháº­n Ä‘áº·t lá»‹ch</button>
-                                <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Xem lá»‹ch Ä‘Ã£ Ä‘áº·t</a>
+                                <button class="btn primary" type="submit">Xác nhận đặt lịch</button>
+                                <a class="btn ghost" href="{% url 'upcoming_appointments' %}">Xem lịch đã đặt</a>
                             </div>
                         </form>
                     {% else %}
-                        <div class="empty">Vui lÃ²ng chá»n khoa Ä‘á»ƒ hiá»ƒn thá»‹ danh sÃ¡ch bÃ¡c sÄ© vÃ  táº¡o lá»‹ch khÃ¡m.</div>
+                        <div class="empty">Vui lòng chọn khoa để hiển thị danh sách bác sĩ và tạo lịch khám.</div>
                     {% endif %}
                 </div>
 
                 <div class="card">
-                    <h2 class="section-title">Lá»‹ch lÃ m viá»‡c bÃ¡c sÄ©</h2>
+                    <h2 class="section-title">Lịch làm việc bác sĩ</h2>
                     {% if bac_si_schedules %}
                         <div class="schedule-grid">
                             {% for item in bac_si_schedules %}
@@ -435,20 +435,20 @@
                                             <div class="schedule-row">
                                                 {{ glv.get_thu_display }}:
                                                 {% if glv.nghi %}
-                                                    Nghá»‰
+                                                    Nghỉ
                                                 {% else %}
                                                     {{ glv.gio_bat_dau|time:"H\hi" }} - {{ glv.gio_ket_thuc|time:"H\hi" }}
                                                 {% endif %}
                                             </div>
                                         {% endfor %}
                                     {% else %}
-                                        <div class="schedule-row">ChÆ°a cÃ³ lá»‹ch lÃ m viá»‡c.</div>
+                                        <div class="schedule-row">Chưa có lịch làm việc.</div>
                                     {% endif %}
                                 </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="empty">Chá»n khoa Ä‘á»ƒ xem lá»‹ch lÃ m viá»‡c cá»§a bÃ¡c sÄ©.</div>
+                        <div class="empty">Chọn khoa để xem lịch làm việc của bác sĩ.</div>
                     {% endif %}
                 </div>
             </div>

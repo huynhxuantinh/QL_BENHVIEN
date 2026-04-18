@@ -2,6 +2,7 @@
 import datetime
 import math
 import random
+import re
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
@@ -740,6 +741,7 @@ def phieu_kham_detail(request, phieu_id):
             id=phieu_id,
             lich_kham__bac_si=bac_si,
         )
+
         edit_logs = LogHeThong.objects.filter(
             model_name="PhieuKham",
             object_id=phieu.id,
@@ -823,7 +825,14 @@ def doctor_exam(request, lich_id):
         bac_si=bac_si
     )
 
+    if lich.trang_thai == "huy":
+        messages.error(request, "Lịch đã hủy, không thể khám.")
+        return redirect("bac_si_home")
+
     if hasattr(lich, "phieu_kham"):
+        if lich.trang_thai != "xong":
+            lich.trang_thai = "xong"
+            lich.save(update_fields=["trang_thai", "ngay_cap_nhat"])
         messages.info(request, "Lịch khám này đã có phiếu khám.")
         return redirect("bac_si_home")
 
@@ -872,6 +881,10 @@ def doctor_exam(request, lich_id):
 
         return redirect("bac_si_home")
 
+    if lich.trang_thai == "cho":
+        lich.trang_thai = "dang"
+        lich.save(update_fields=["trang_thai", "ngay_cap_nhat"])
+
 
     return render(request, "core/doctor_exam.html", {
         "lich": lich
@@ -914,10 +927,22 @@ def register(request):
             messages.success(request, "Đổi mật khẩu thành công.")
             return redirect("profile")
 
-        username = request.POST["username"]
-        password = request.POST["password"]
-        name = request.POST["name"]
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip()
+
+        if not name or not username or not password:
+            messages.error(request, "Vui lòng nhập đầy đủ họ tên, tên người dùng và mật khẩu.")
+            return redirect("register")
+
+        username_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$"
+        if not re.fullmatch(username_pattern, username):
+            messages.error(
+                request,
+                "Tên người dùng phải không dấu, không khoảng trắng và phải gồm cả chữ lẫn số.",
+            )
+            return redirect("register")
 
         if not email:
             messages.error(request, "Vui lòng nhập email")
@@ -963,8 +988,16 @@ def register(request):
 # ==========================
 def user_login(request):
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+
+        if not username:
+            messages.error(request, "Vui lòng nhập tên người dùng.")
+            return render(request, "core/login.html")
+
+        if username.isdigit():
+            messages.error(request, "Vui lòng đăng nhập bằng tên người dùng.")
+            return render(request, "core/login.html")
 
         user = authenticate(
             request,
@@ -1357,6 +1390,8 @@ def _build_filter_meta(model, list_filter, params):
 
 ALLOWED_HOSPITAL_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp"}
 MAX_HOSPITAL_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+ALLOWED_EXAM_IMAGE_EXTS = {"jpg", "jpeg", "png", "webp"}
+MAX_EXAM_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 
 
 def _parse_int_set(values):
@@ -1378,6 +1413,23 @@ def _validate_hospital_images(uploaded_images):
             errors.append(f"Ảnh '{name}' không đúng định dạng (jpg, jpeg, png, webp).")
             continue
         if uploaded.size and uploaded.size > MAX_HOSPITAL_IMAGE_SIZE_BYTES:
+            errors.append(f"Ảnh '{name}' vượt quá 5MB.")
+            continue
+        content_type = (getattr(uploaded, "content_type", "") or "").lower()
+        if content_type and not content_type.startswith("image/"):
+            errors.append(f"Tệp '{name}' không phải ảnh hợp lệ.")
+    return errors
+
+
+def _validate_exam_images(uploaded_images):
+    errors = []
+    for uploaded in uploaded_images:
+        name = uploaded.name or "tep_khong_ten"
+        ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+        if ext not in ALLOWED_EXAM_IMAGE_EXTS:
+            errors.append(f"Ảnh '{name}' không đúng định dạng (jpg, jpeg, png, webp).")
+            continue
+        if uploaded.size and uploaded.size > MAX_EXAM_IMAGE_SIZE_BYTES:
             errors.append(f"Ảnh '{name}' vượt quá 5MB.")
             continue
         content_type = (getattr(uploaded, "content_type", "") or "").lower()
@@ -1429,6 +1481,32 @@ def _sync_hospital_images(hospital, uploaded_images, delete_ids=None, cover_imag
 
     BenhVienHinhAnh.objects.filter(benh_vien=hospital).update(la_anh_dai_dien=False)
     BenhVienHinhAnh.objects.filter(benh_vien=hospital, id=target_cover_id).update(la_anh_dai_dien=True)
+
+
+def _sync_exam_images(phieu, uploaded_images, delete_ids=None):
+    delete_ids = delete_ids or set()
+
+    if delete_ids:
+        PhieuKhamHinhAnh.objects.filter(phieu_kham=phieu, id__in=delete_ids).delete()
+
+    if not uploaded_images:
+        return
+
+    current_max = (
+        PhieuKhamHinhAnh.objects.filter(phieu_kham=phieu)
+        .aggregate(value=Max("thu_tu"))
+        .get("value")
+        or 0
+    )
+
+    for idx, uploaded in enumerate(uploaded_images, start=1):
+        item = PhieuKhamHinhAnh(
+            phieu_kham=phieu,
+            hinh_anh=uploaded,
+            thu_tu=current_max + idx,
+        )
+        item.full_clean()
+        item.save()
 
 
 HOSPITAL_WEEKDAY_CHOICES = [
@@ -1578,22 +1656,30 @@ def custom_admin_model_create(request, model_key):
     config = _get_admin_config(model_key)
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
+    is_exam_record = model_key == "phieu-kham"
 
     form = form_class(request.POST or None, request.FILES or None)
     schedule_rows = []
     schedule_errors = []
     uploaded_images = []
     upload_errors = []
+    exam_uploaded_images = []
+    exam_upload_errors = []
     if is_hospital:
         schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, None)
         if request.method == "POST":
             uploaded_images = request.FILES.getlist("hospital_images")
             upload_errors = _validate_hospital_images(uploaded_images)
+    elif is_exam_record and request.method == "POST":
+        exam_uploaded_images = request.FILES.getlist("exam_images")
+        exam_upload_errors = _validate_exam_images(exam_uploaded_images)
 
     if request.method == "POST":
         for err in schedule_errors:
             form.add_error(None, err)
         for err in upload_errors:
+            form.add_error(None, err)
+        for err in exam_upload_errors:
             form.add_error(None, err)
 
         if form.is_valid():
@@ -1602,6 +1688,8 @@ def custom_admin_model_create(request, model_key):
                 if is_hospital:
                     _save_hospital_schedule_rows(obj, schedule_rows)
                     _sync_hospital_images(obj, uploaded_images)
+                elif is_exam_record:
+                    _sync_exam_images(obj, exam_uploaded_images)
             messages.success(request, f"Đã tạo {config['title'].lower()}.")
             return redirect("custom_admin_model_list", model_key=model_key)
 
@@ -1613,8 +1701,11 @@ def custom_admin_model_create(request, model_key):
         "show_hospital_layout": is_hospital,
         "show_hospital_schedule": is_hospital,
         "show_hospital_image_manager": is_hospital,
+        "show_exam_image_manager": is_exam_record,
         "hospital_images": [],
+        "exam_images": [],
         "selected_delete_ids": set(),
+        "selected_delete_exam_ids": set(),
         "selected_cover_id": "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
@@ -1631,6 +1722,7 @@ def custom_admin_model_edit(request, model_key, pk):
     obj = get_object_or_404(model, pk=pk)
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
+    is_exam_record = model_key == "phieu-kham"
 
     form = form_class(request.POST or None, request.FILES or None, instance=obj)
     schedule_rows = []
@@ -1639,6 +1731,9 @@ def custom_admin_model_edit(request, model_key, pk):
     upload_errors = []
     selected_delete_ids = set()
     selected_cover_id = ""
+    exam_uploaded_images = []
+    exam_upload_errors = []
+    selected_delete_exam_ids = set()
     if is_hospital:
         schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, obj)
         if request.method == "POST":
@@ -1652,13 +1747,19 @@ def custom_admin_model_edit(request, model_key, pk):
                 except ValueError:
                     selected_cover_id = ""
                     form.add_error(None, "Ảnh đại diện không hợp lệ.")
-            if selected_cover_id and selected_cover_id in selected_delete_ids:
-                form.add_error(None, "Không thể chọn ảnh vừa đánh dấu xóa làm ảnh đại diện.")
+                if selected_cover_id and selected_cover_id in selected_delete_ids:
+                    form.add_error(None, "Không thể chọn ảnh vừa đánh dấu xóa làm ảnh đại diện.")
+    elif is_exam_record and request.method == "POST":
+        exam_uploaded_images = request.FILES.getlist("exam_images")
+        exam_upload_errors = _validate_exam_images(exam_uploaded_images)
+        selected_delete_exam_ids = _parse_int_set(request.POST.getlist("delete_exam_image_ids"))
 
     if request.method == "POST":
         for err in schedule_errors:
             form.add_error(None, err)
         for err in upload_errors:
+            form.add_error(None, err)
+        for err in exam_upload_errors:
             form.add_error(None, err)
 
         if form.is_valid():
@@ -1671,6 +1772,12 @@ def custom_admin_model_edit(request, model_key, pk):
                         uploaded_images,
                         delete_ids=selected_delete_ids,
                         cover_image_id=selected_cover_id if selected_cover_id else None,
+                    )
+                elif is_exam_record:
+                    _sync_exam_images(
+                        updated_obj,
+                        exam_uploaded_images,
+                        delete_ids=selected_delete_exam_ids,
                     )
             if isinstance(updated_obj, User) and request.user.pk == updated_obj.pk and form.cleaned_data.get("password"):
                 # Keep current admin session alive when changing own password.
@@ -1687,8 +1794,11 @@ def custom_admin_model_edit(request, model_key, pk):
         "show_hospital_layout": is_hospital,
         "show_hospital_schedule": is_hospital,
         "show_hospital_image_manager": is_hospital,
+        "show_exam_image_manager": is_exam_record,
         "hospital_images": list(obj.hinh_anhs.all()) if is_hospital else [],
+        "exam_images": list(obj.hinh_anhs.all()) if is_exam_record else [],
         "selected_delete_ids": selected_delete_ids,
+        "selected_delete_exam_ids": selected_delete_exam_ids,
         "selected_cover_id": str(selected_cover_id) if selected_cover_id else "",
         "schedule_rows": schedule_rows,
         "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
@@ -2078,16 +2188,26 @@ def bac_si_home(request):
     range_filter = request.GET.get("range", "").strip()
     shift_filter = request.GET.get("shift", "").strip()
 
-    lich_khams = bac_si.lich_khams.all()
+    base_qs = bac_si.lich_khams.all()
+
+    completed_appointment_ids = set(
+        PhieuKham.objects.filter(lich_kham__bac_si=bac_si).values_list("lich_kham_id", flat=True)
+    )
+    if completed_appointment_ids:
+        base_qs.filter(id__in=completed_appointment_ids).exclude(trang_thai="xong").update(
+            trang_thai="xong"
+        )
+
+    lich_khams = base_qs
 
     today = timezone.localdate()
-    today_qs = bac_si.lich_khams.filter(ngay_kham=today)
+    stats_qs = base_qs.filter(ngay_kham__gte=today)
     stats = {
-        "tong": today_qs.count(),
-        "cho": today_qs.filter(trang_thai="cho").count(),
-        "dang": today_qs.filter(trang_thai="dang").count(),
-        "xong": today_qs.filter(trang_thai="xong").count(),
-        "huy": today_qs.filter(trang_thai="huy").count(),
+        "tong": stats_qs.count(),
+        "cho": stats_qs.filter(trang_thai="cho").count(),
+        "dang": stats_qs.filter(trang_thai="dang").count(),
+        "xong": stats_qs.filter(trang_thai="xong").count(),
+        "huy": stats_qs.filter(trang_thai="huy").count(),
     }
     if status_filter in {"cho", "dang", "xong", "huy"}:
         lich_khams = lich_khams.filter(trang_thai=status_filter)

@@ -135,19 +135,19 @@
                     </div>
 
                     {% if show_hospital_image_manager %}
-                        <div class="section-title">HÃ¬nh áº£nh bá»‡nh viá»‡n</div>
+                        <div class="section-title">Hình ảnh bệnh viện</div>
                         <div class="image-manager">
                             <div class="field">
-                                <label for="hospital_images">Táº£i áº£nh má»›i (cÃ³ thá»ƒ chá»n nhiá»u áº£nh)</label>
+                                <label for="hospital_images">Tải ảnh mới (có thể chọn nhiều ảnh)</label>
                                 <input id="hospital_images" name="hospital_images" type="file" accept="image/*" multiple>
-                                <p class="hint">Äá»‹nh dáº¡ng: JPG, JPEG, PNG, WEBP. Tá»‘i Ä‘a 5MB má»—i áº£nh.</p>
+                                <p class="hint">Định dạng: JPG, JPEG, PNG, WEBP. Tối đa 5MB mỗi ảnh.</p>
                             </div>
 
                             {% if hospital_images %}
                                 <div class="image-grid">
                                     {% for image in hospital_images %}
                                         <div class="image-item">
-                                            <img src="{{ image.hinh_anh.url }}" alt="áº¢nh bá»‡nh viá»‡n {{ forloop.counter }}">
+                                            <img src="{{ image.hinh_anh.url }}" alt="Ảnh bệnh viện {{ forloop.counter }}">
                                             <div class="image-actions">
                                                 <label>
                                                     <input
@@ -160,7 +160,7 @@
                                                             checked
                                                         {% endif %}
                                                     >
-                                                    áº¢nh Ä‘áº¡i diá»‡n
+                                                    Ảnh đại diện
                                                 </label>
                                                 <label>
                                                     <input
@@ -169,14 +169,14 @@
                                                         value="{{ image.id }}"
                                                         {% if image.id in selected_delete_ids %}checked{% endif %}
                                                     >
-                                                    XÃ³a áº£nh nÃ y
+                                                    Xóa ảnh này
                                                 </label>
                                             </div>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <div class="empty-images">ChÆ°a cÃ³ áº£nh nÃ o cho bá»‡nh viá»‡n nÃ y.</div>
+                                <div class="empty-images">Chưa có ảnh nào cho bệnh viện này.</div>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -194,6 +194,40 @@
                             {% endif %}
                         </div>
                     {% endfor %}
+
+                    {% if show_exam_image_manager %}
+                        <div class="section-title">Ảnh phiếu khám</div>
+                        <div class="image-manager">
+                            <div class="field">
+                                <label for="exam_images">Tải ảnh mới (có thể chọn nhiều ảnh)</label>
+                                <input id="exam_images" name="exam_images" type="file" accept="image/*" multiple>
+                                <p class="hint">Định dạng: JPG, JPEG, PNG, WEBP. Tối đa 5MB mỗi ảnh.</p>
+                            </div>
+
+                            {% if exam_images %}
+                                <div class="image-grid">
+                                    {% for image in exam_images %}
+                                        <div class="image-item">
+                                            <img src="{{ image.hinh_anh.url }}" alt="Ảnh phiếu khám {{ forloop.counter }}">
+                                            <div class="image-actions">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="delete_exam_image_ids"
+                                                        value="{{ image.id }}"
+                                                        {% if image.id in selected_delete_exam_ids %}checked{% endif %}
+                                                    >
+                                                    Xóa ảnh này
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-images">Chưa có ảnh nào cho phiếu khám này.</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endif %}
 
                 {% if show_map_picker %}
@@ -384,8 +418,8 @@
                         position: "topleft",
                         collapsed: true,
                         defaultMarkGeocode: false,
-                        placeholder: "TÃ¬m Ä‘á»‹a chá»‰...",
-                        errorMessage: "KhÃ´ng tÃ¬m tháº¥y Ä‘á»‹a chá»‰"
+                        placeholder: "Tìm địa chỉ...",
+                        errorMessage: "Không tìm thấy địa chỉ"
                     };
                     if (L.Control.Geocoder && typeof L.Control.Geocoder.nominatim === "function") {
                         geocoderOptions.geocoder = L.Control.Geocoder.nominatim({
@@ -400,11 +434,11 @@
                         .on("markgeocode", function (e) {
                             if (!e || !e.geocode || !e.geocode.center) return;
                             setMapLocation(e.geocode.center, 17);
-                            setMapNote("ÄÃ£ chá»n: " + (e.geocode.name || "Vá»‹ trÃ­"));
+                            setMapNote("Đã chọn: " + (e.geocode.name || "Vị trí"));
                         })
                         .addTo(map);
                 } else {
-                    setMapNote("KhÃ´ng táº£i Ä‘Æ°á»£c thanh tÃ¬m kiáº¿m trÃªn báº£n Ä‘á»“. Báº¡n váº«n cÃ³ thá»ƒ báº¥m lÃªn báº£n Ä‘á»“ Ä‘á»ƒ chá»n vá»‹ trÃ­.");
+                    setMapNote("Không tải được thanh tìm kiếm trên bản đồ. Bạn vẫn có thể bấm lên bản đồ để chọn vị trí.");
                 }
             })();
         </script>

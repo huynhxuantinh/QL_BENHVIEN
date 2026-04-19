@@ -231,3 +231,6 @@ Lưu ý triển khai trong project:
 
 ## chạy lệnh này để sửa ảnh trùng 
 venv\Scripts\python.exe manage.py relink_hospital_images
+
+
+/NGÂHAHAHHA

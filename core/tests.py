@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from core.forms import AdminBenhVienForm
+from core.views import FORGOT_PASSWORD_SESSION_KEY
 from core.models import (
     BacSi,
     BaoHiemYTe,
@@ -389,6 +390,55 @@ class AppointmentBookingTests(TestCase):
             2,
         )
 
+    def test_booking_rejects_past_time_in_current_day(self):
+        today = timezone.localdate()
+        thu_hom_nay = (today.weekday() + 1) % 7
+        GioLamViecBacSi.objects.update_or_create(
+            bac_si=self.doctor,
+            thu=thu_hom_nay,
+            defaults={
+                "gio_bat_dau": datetime.time(0, 0),
+                "gio_ket_thuc": datetime.time(23, 59),
+                "nghi": False,
+            },
+        )
+        GioLamViecBenhVien.objects.update_or_create(
+            benh_vien=self.hospital,
+            thu=thu_hom_nay,
+            defaults={
+                "gio_mo": datetime.time(0, 0),
+                "gio_dong": datetime.time(23, 59),
+                "nghi": False,
+            },
+        )
+
+        past_dt = timezone.localtime() - datetime.timedelta(hours=1)
+        slot_minute = 30 if past_dt.minute >= 30 else 0
+        past_time = past_dt.time().replace(minute=slot_minute, second=0, microsecond=0)
+
+        response = self.client.post(
+            reverse("dat_lich", args=[self.hospital.id]),
+            {
+                "khoa": str(self.department.id),
+                "bac_si": self.doctor.id,
+                "ngay_kham": today.isoformat(),
+                "gio_kham": past_time.strftime("%H:%M"),
+                "ghi_chu": "Dat lich trong ngay",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("gio_kham", response.context["form"].errors)
+        self.assertContains(response, "Không thể đặt lịch ở khung giờ đã qua trong ngày hôm nay.")
+        self.assertFalse(
+            LichKham.objects.filter(
+                benh_nhan=self.patient,
+                bac_si=self.doctor,
+                ngay_kham=today,
+                gio_kham=past_time,
+            ).exists()
+        )
+
 
 class ProfileAccountTests(TestCase):
     def setUp(self):
@@ -505,6 +555,53 @@ class RegisterFlowTests(TestCase):
         benh_nhan = BenhNhan.objects.get(user=user)
         self.assertEqual(benh_nhan.so_dien_thoai, "0911222333")
         self.assertEqual(benh_nhan.ho_ten, "Nguyen Van A")
+
+
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+    DEFAULT_FROM_EMAIL="no-reply@test.local",
+)
+class ForgotPasswordFlowTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="user_reset_01",
+            password="OldPass@123",
+            email="reset01@example.com",
+        )
+
+    def test_forgot_password_requires_matching_username_and_email(self):
+        response = self.client.post(
+            reverse("forgot_password"),
+            {
+                "step": "username",
+                "username": "user_reset_01",
+                "email": "wrong@example.com",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Tên người dùng và email không khớp.")
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertIsNone(self.client.session.get(FORGOT_PASSWORD_SESSION_KEY))
+
+    def test_forgot_password_sends_otp_when_username_and_email_match(self):
+        response = self.client.post(
+            reverse("forgot_password"),
+            {
+                "step": "username",
+                "username": "user_reset_01",
+                "email": "reset01@example.com",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Đã gửi mã OTP 6 số đến email của bạn.")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["reset01@example.com"])
+        flow = self.client.session.get(FORGOT_PASSWORD_SESSION_KEY)
+        self.assertIsNotNone(flow)
+        self.assertEqual(flow.get("username"), "user_reset_01")
+        self.assertEqual(flow.get("email"), "reset01@example.com")
 
 
 class AdminDashboardTests(TestCase):

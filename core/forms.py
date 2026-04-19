@@ -26,12 +26,12 @@ class DatLichForm(forms.ModelForm):
         fields = ["bac_si", "ngay_kham", "gio_kham", "ghi_chu"]
         error_messages = {
             "ngay_kham": {
-                "required": "Vui lÃ²ng chá»n ngÃ y khÃ¡m.",
-                "invalid": "NgÃ y khÃ¡m khÃ´ng há»£p lá»‡.",
+                "required": "Vui lòng chọn ngày khám.",
+                "invalid": "Ngày khám không hợp lệ.",
             },
             "gio_kham": {
-                "required": "Vui lÃ²ng chá»n giá» khÃ¡m.",
-                "invalid": "Giá» khÃ¡m khÃ´ng há»£p lá»‡.",
+                "required": "Vui lòng chọn giờ khám.",
+                "invalid": "Giờ khám không hợp lệ.",
             },
         }
 
@@ -57,8 +57,8 @@ class DatLichForm(forms.ModelForm):
         queryset=BacSi.objects.none(),
         widget=forms.Select(attrs={"class": "form-control"}),
         error_messages={
-            "required": "Vui lÃ²ng chá»n bÃ¡c sÄ©.",
-            "invalid_choice": "BÃ¡c sÄ© Ä‘Ã£ chá»n khÃ´ng há»£p lá»‡.",
+            "required": "Vui lòng chọn bác sĩ.",
+            "invalid_choice": "Bác sĩ đã chọn không hợp lệ.",
         },
     )
     ghi_chu = forms.CharField(
@@ -76,7 +76,7 @@ class DatLichForm(forms.ModelForm):
             or gio_kham.second != 0
             or gio_kham.microsecond != 0
         ):
-            raise forms.ValidationError("Giá» khÃ¡m chá»‰ nháº­n cÃ¡c má»‘c 30 phÃºt (00 hoáº·c 30).")
+            raise forms.ValidationError("Giờ khám chỉ nhận các mốc 30 phút (00 hoặc 30).")
         return gio_kham
 
     def clean_ghi_chu(self):
@@ -89,42 +89,42 @@ class DatLichForm(forms.ModelForm):
 class ContactFeedbackForm(forms.Form):
     ho_ten = forms.CharField(
         max_length=120,
-        label="Há» tÃªn",
+        label="Họ tên",
         error_messages={
-            "required": "Vui lÃ²ng nháº­p há» tÃªn.",
-            "max_length": "Há» tÃªn tá»‘i Ä‘a 120 kÃ½ tá»±.",
+            "required": "Vui lòng nhập họ tên.",
+            "max_length": "Họ tên tối đa 120 ký tự.",
         },
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyá»…n VÄƒn A"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Nguyễn Văn A"}),
     )
     email = forms.EmailField(
-        label="Email liÃªn há»‡",
+        label="Email liên hệ",
         error_messages={
-            "required": "Vui lÃ²ng nháº­p email liÃªn há»‡.",
-            "invalid": "Email khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng.",
+            "required": "Vui lòng nhập email liên hệ.",
+            "invalid": "Email không đúng định dạng.",
         },
         widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "ban@email.com"}),
     )
     chu_de = forms.CharField(
         max_length=180,
-        label="Chá»§ Ä‘á»",
+        label="Chủ đề",
         error_messages={
-            "required": "Vui lÃ²ng nháº­p chá»§ Ä‘á».",
-            "max_length": "Chá»§ Ä‘á» tá»‘i Ä‘a 180 kÃ½ tá»±.",
+            "required": "Vui lòng nhập chủ đề.",
+            "max_length": "Chủ đề tối đa 180 ký tự.",
         },
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "GÃ³p Ã½ vá» chá»©c nÄƒng Ä‘áº·t lá»‹ch"}),
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Góp ý về chức năng đặt lịch"}),
     )
     noi_dung = forms.CharField(
         min_length=10,
-        label="Ná»™i dung gÃ³p Ã½",
+        label="Nội dung góp ý",
         error_messages={
-            "required": "Vui lÃ²ng nháº­p ná»™i dung gÃ³p Ã½.",
-            "min_length": "Ná»™i dung gÃ³p Ã½ tá»‘i thiá»ƒu 10 kÃ½ tá»±.",
+            "required": "Vui lòng nhập nội dung góp ý.",
+            "min_length": "Nội dung góp ý tối thiểu 10 ký tự.",
         },
         widget=forms.Textarea(
             attrs={
                 "class": "form-control",
                 "rows": 6,
-                "placeholder": "Nháº­p gÃ³p Ã½ hoáº·c váº¥n Ä‘á» báº¡n gáº·p...",
+                "placeholder": "Nhập góp ý hoặc vấn đề bạn gặp...",
             }
         ),
     )
@@ -135,13 +135,13 @@ class AdminBenhVienForm(forms.ModelForm):
         min_value=-90,
         max_value=90,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="VÄ© Ä‘á»™",
+        label="Vĩ độ",
     )
     lon = forms.FloatField(
         min_value=-180,
         max_value=180,
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "any"}),
-        label="Kinh Ä‘á»™",
+        label="Kinh độ",
     )
 
     class Meta:
@@ -157,12 +157,12 @@ class AdminBenhVienForm(forms.ModelForm):
             "loai_hinh",
         ]
         labels = {
-            "ten": "TÃªn bá»‡nh viá»‡n",
-            "dia_chi": "Äá»‹a chá»‰",
-            "phuong": "PhÆ°á»ng",
-            "cap_cuu_24h": "Cáº¥p cá»©u 24/7",
-            "co_bhyt": "CÃ³ BHYT",
-            "loai_hinh": "Loáº¡i hÃ¬nh",
+            "ten": "Tên bệnh viện",
+            "dia_chi": "Địa chỉ",
+            "phuong": "Phường",
+            "cap_cuu_24h": "Cấp cứu 24/7",
+            "co_bhyt": "Có BHYT",
+            "loai_hinh": "Loại hình",
         }
         widgets = {
             "ten": forms.TextInput(attrs={"class": "form-control"}),
@@ -179,12 +179,10 @@ class AdminBenhVienForm(forms.ModelForm):
             self.fields["lat"].initial = self.instance.vi_tri.y
             self.fields["lon"].initial = self.instance.vi_tri.x
 
-    def clean(self):
-        cleaned_data = super().clean()
-        cap_cuu_24h = bool(cleaned_data.get("cap_cuu_24h"))
-        # Keep backward-compatible field in sync while UI only exposes 24/7.
-        cleaned_data["co_cap_cuu"] = cap_cuu_24h
-        return cleaned_data
+    def _post_clean(self):
+        # Keep backward-compatible field in sync before model validation.
+        self.instance.co_cap_cuu = bool(self.cleaned_data.get("cap_cuu_24h"))
+        super()._post_clean()
 
     def save(self, commit=True):
         obj = super().save(commit=False)
@@ -230,7 +228,7 @@ class AdminBacSiForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["khoa"].queryset = Khoa.objects.none()
         self.fields["user"].required = False
-        self.fields["user"].label = "TÃ i khoáº£n liÃªn káº¿t (tÃ¹y chá»n)"
+        self.fields["user"].label = "Tài khoản liên kết (tùy chọn)"
 
         benh_vien_id = None
         if self.is_bound:
@@ -249,7 +247,7 @@ class AdminBacSiForm(forms.ModelForm):
         benh_vien = cleaned_data.get("benh_vien")
         khoa = cleaned_data.get("khoa")
         if benh_vien and khoa and khoa.benh_vien_id != benh_vien.id:
-            self.add_error("khoa", "Khoa khÃ´ng thuá»™c bá»‡nh viá»‡n Ä‘Ã£ chá»n.")
+            self.add_error("khoa", "Khoa không thuộc bệnh viện đã chọn.")
         return cleaned_data
 
 
@@ -284,7 +282,7 @@ class AdminUserForm(forms.ModelForm):
         choices=(
             (ROLE_USER, "Người dùng"),
             (ROLE_DOCTOR, "Bác sĩ"),
-            (ROLE_ADMIN, "Admin"),
+            (ROLE_ADMIN, "Quản trị"),
         ),
         widget=forms.Select(attrs={"class": "form-control"}),
         help_text="Bác sĩ phải được liên kết trong danh mục Bác sĩ.",
@@ -322,6 +320,20 @@ class AdminUserForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+        labels = {
+            "username": "Tên đăng nhập",
+            "email": "Email",
+            "first_name": "Họ",
+            "last_name": "Tên",
+            "is_active": "Đang hoạt động",
+        }
+        help_texts = {
+            "username": "Tối đa 150 ký tự. Chỉ gồm chữ, số và các ký tự @/./+/-/_.",
+            "email": "Nên dùng email thật để nhận OTP quên mật khẩu.",
+            "first_name": "",
+            "last_name": "",
+            "is_active": "Bỏ chọn để khóa đăng nhập tài khoản này.",
         }
 
     def __init__(self, *args, **kwargs):

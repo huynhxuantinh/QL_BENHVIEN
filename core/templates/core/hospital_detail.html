@@ -887,7 +887,7 @@
                     const accuracy = Number(pos.coords.accuracy);
                     if (!isValidLatLon(lat, lon)) {
                         setLocateButtonActive(false);
-                        alert("Tá»a Ä‘á»™ vá»‹ trÃ­ khÃ´ng há»£p lá»‡.");
+                        alert("T\u1ecda \u0111\u1ed9 v\u1ecb tr\u00ed kh\u00f4ng h\u1ee3p l\u1ec7.");
                         resolve(null);
                         return;
                     }
@@ -927,7 +927,7 @@
                 return { lat, lon };
             }
             if ((routeLatInput?.value || "").trim() || (routeLonInput?.value || "").trim()) {
-                setRouteStatus("Tá»a Ä‘á»™ khÃ´ng há»£p lá»‡. VÄ© Ä‘á»™ trong [-90, 90], kinh Ä‘á»™ trong [-180, 180].");
+                setRouteStatus("T\u1ecda \u0111\u1ed9 kh\u00f4ng h\u1ee3p l\u1ec7. V\u0129 \u0111\u1ed9 trong [-90, 90], kinh \u0111\u1ed9 trong [-180, 180].");
             }
             return currentUserCoords;
         }

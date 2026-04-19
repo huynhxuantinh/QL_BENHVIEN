@@ -1398,7 +1398,7 @@ def _user_role_label(user):
     if not isinstance(user, User):
         return ""
     if user.is_superuser or user.is_staff:
-        return "Admin"
+        return "Quản trị"
     if hasattr(user, "bac_si"):
         return "Bác sĩ"
     return "Người dùng"
@@ -1463,7 +1463,7 @@ def _build_filter_meta(model, list_filter, params):
                 "selected": selected,
                 "type": "select",
                 "options": [
-                    {"value": "admin", "label": "Admin"},
+                    {"value": "admin", "label": "Quản trị"},
                     {"value": "bac_si", "label": "Bác sĩ"},
                     {"value": "nguoi_dung", "label": "Người dùng"},
                 ],
@@ -2064,13 +2064,14 @@ def forgot_password(request):
 
         if step == "restart":
             _clear_forgot_password_flow(request)
-            messages.success(request, "Mời bạn nhập lại tên người dùng.")
+            messages.success(request, "Mời bạn nhập lại tên người dùng và email.")
             return redirect("forgot_password")
 
         if step == "username":
             username = request.POST.get("username", "").strip()
-            if not username:
-                messages.error(request, "Vui lòng nhập tên người dùng.")
+            email_input = request.POST.get("email", "").strip()
+            if not username or not email_input:
+                messages.error(request, "Vui lòng nhập đầy đủ tên người dùng và email đã đăng ký.")
                 return redirect("forgot_password")
 
             user = User.objects.filter(username=username).first()
@@ -2084,6 +2085,9 @@ def forgot_password(request):
                     request,
                     "Tài khoản này chưa có email, không thể gửi mã xác thực.",
                 )
+                return redirect("forgot_password")
+            if email.lower() != email_input.lower():
+                messages.error(request, "Tên người dùng và email không khớp.")
                 return redirect("forgot_password")
 
             otp_code = f"{random.randint(0, 999999):06d}"

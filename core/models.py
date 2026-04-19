@@ -77,10 +77,10 @@ class BenhVien(models.Model):
 
     def clean(self):
         super().clean()
+        # App only exposes "Cấp cứu 24/7", so keep legacy field synced.
+        self.co_cap_cuu = bool(self.cap_cuu_24h)
         if self.gio_mo and self.gio_dong and self.gio_mo >= self.gio_dong:
             raise ValidationError({"gio_dong": "Giờ đóng phải sau giờ mở."})
-        if self.cap_cuu_24h and not self.co_cap_cuu:
-            raise ValidationError({"cap_cuu_24h": "Bệnh viện không có cấp cứu thì không thể là 24h."})
         if self.vi_tri:
             x = self.vi_tri.x
             y = self.vi_tri.y
@@ -114,6 +114,12 @@ class BenhVien(models.Model):
             raise ValidationError({
                 "vi_tri": "Tọa độ không hợp lệ. Hệ thống yêu cầu tọa độ WGS84 (EPSG:4326)."
             })
+
+    def save(self, *args, **kwargs):
+        # Always persist both fields consistently.
+        self.co_cap_cuu = bool(self.cap_cuu_24h)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.ten
 
@@ -473,6 +479,10 @@ class LichKham(models.Model):
 
         if self.gio_kham and self.gio_kham.minute % 30 != 0:
             raise ValidationError({"gio_kham": "Giờ khám chỉ nhận các mốc 30 phút (00 hoặc 30)."})
+        if self.ngay_kham == today and self.gio_kham:
+            current_time = timezone.localtime().time()
+            if self.gio_kham <= current_time:
+                raise ValidationError({"gio_kham": "Không thể đặt lịch ở khung giờ đã qua trong ngày hôm nay."})
 
         if not (self.ghi_chu or "").strip():
             raise ValidationError({"ghi_chu": "Vui lòng nhập ghi chú khi đặt lịch khám."})

@@ -974,12 +974,20 @@ def register(request):
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
+        confirm_password = request.POST.get("confirm_password", "")
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip()
         so_dien_thoai = request.POST.get("so_dien_thoai", "").strip()
 
-        if not name or not username or not password or not so_dien_thoai:
-            messages.error(request, "Vui lòng nhập đầy đủ họ tên, tên người dùng, số điện thoại và mật khẩu.")
+        if not name or not username or not password or not confirm_password or not so_dien_thoai:
+            messages.error(
+                request,
+                "Vui lòng nhập đầy đủ họ tên, tên người dùng, số điện thoại, mật khẩu và xác nhận mật khẩu.",
+            )
+            return redirect("register")
+
+        if password != confirm_password:
+            messages.error(request, "Mật khẩu và xác nhận mật khẩu không khớp.")
             return redirect("register")
 
         username_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$"

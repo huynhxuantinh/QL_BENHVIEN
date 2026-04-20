@@ -544,6 +544,7 @@ class RegisterFlowTests(TestCase):
                 "email": "user1234@example.com",
                 "so_dien_thoai": "0911222333",
                 "password": "StrongPass@123",
+                "confirm_password": "StrongPass@123",
             },
             follow=True,
         )
@@ -555,6 +556,23 @@ class RegisterFlowTests(TestCase):
         benh_nhan = BenhNhan.objects.get(user=user)
         self.assertEqual(benh_nhan.so_dien_thoai, "0911222333")
         self.assertEqual(benh_nhan.ho_ten, "Nguyen Van A")
+
+    def test_register_rejects_when_confirm_password_not_match(self):
+        response = self.client.post(
+            reverse("register"),
+            {
+                "name": "Nguyen Van B",
+                "username": "user5678",
+                "email": "user5678@example.com",
+                "so_dien_thoai": "0911222444",
+                "password": "StrongPass@123",
+                "confirm_password": "StrongPass@999",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Mật khẩu và xác nhận mật khẩu không khớp.")
+        self.assertFalse(User.objects.filter(username="user5678").exists())
 
 
 @override_settings(

@@ -13,8 +13,11 @@ urlpatterns = [
 
 handler404 = "core.views.custom_404"
 
+# Always expose media files when running this Django app directly
+# so uploaded hospital images work even if DEBUG is false in local demos.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += [
         re_path(r"^.*$", core_views.custom_404_debug),
     ]

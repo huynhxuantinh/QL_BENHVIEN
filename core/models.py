@@ -802,6 +802,56 @@ class ThongBao(models.Model):
         return self.tieu_de
 
 
+# =========================
+# NỘI DUNG TRANG GIỚI THIỆU
+# =========================
+class NoiDungGioiThieu(models.Model):
+    tieu_de_trang = models.CharField(max_length=255, default="Hệ thống tra cứu và đặt lịch khám bệnh tích hợp GIS")
+    nut_lien_he = models.CharField(max_length=100, default="Liên hệ")
+    nut_kham_pha = models.CharField(max_length=100, default="Khám phá ngay")
+    tieu_de_gioi_thieu = models.CharField(max_length=255, default="Giới thiệu hệ thống")
+    noi_dung_gioi_thieu = models.TextField(
+        default="Đây là nền tảng web tra cứu bệnh viện và đặt lịch khám trực tuyến, được xây dựng theo định hướng gắn dữ liệu y tế với bản đồ số."
+    )
+    tieu_de_van_de = models.CharField(max_length=255, default="Vấn đề & mục tiêu")
+    noi_dung_van_de = models.TextField(
+        default="Mục tiêu của đề tài là xây dựng hệ thống trực quan hóa vị trí bệnh viện bằng GIS, hỗ trợ tìm kiếm theo nhiều tiêu chí và cung cấp công cụ ước lượng khoảng cách."
+    )
+    tieu_de_chuc_nang = models.CharField(max_length=255, default="Chức năng chính")
+    ds_chuc_nang = models.TextField(
+        default="Tra cứu bệnh viện theo từ khóa, phường, loại hình, BHYT, trạng thái hoạt động.\nXem chi tiết bệnh viện: địa chỉ, giờ làm việc, khoa, bác sĩ, hình ảnh.\nĐịnh vị vị trí người dùng và so sánh khoảng cách tới bệnh viện.\nTìm tuyến đường tới bệnh viện và hiển thị quãng đường, thời gian dự kiến.\nĐặt lịch khám trực tuyến và theo dõi lịch khám theo tài khoản.",
+        help_text="Mỗi dòng là một chức năng.",
+    )
+    tieu_de_gis = models.CharField(max_length=255, default="Thành phần GIS")
+    ds_thanh_phan_gis = models.TextField(
+        default="Hiển thị bản đồ và marker bệnh viện bằng Leaflet.\nLưu và xử lý tọa độ bệnh viện bằng PointField (PostGIS).\nTính khoảng cách từ vị trí người dùng bằng hàm Distance của GeoDjango.\nTìm đường đi bằng dịch vụ OSRM để ước lượng quãng đường và thời gian.",
+        help_text="Mỗi dòng là một thành phần GIS.",
+    )
+    tieu_de_cong_nghe = models.CharField(max_length=255, default="Công nghệ sử dụng")
+    ds_cong_nghe = models.TextField(
+        default="Django\nGeoDjango\nPostgreSQL + PostGIS\nLeaflet\nOpenStreetMap\nOSRM\nNominatim\nJavaScript",
+        help_text="Mỗi dòng là một công nghệ.",
+    )
+    tieu_de_cta = models.CharField(max_length=255, default="Khám phá ngay")
+    mo_ta_cta = models.TextField(default="Truy cập trang chủ để trải nghiệm bộ lọc bệnh viện, bản đồ và các chức năng đặt lịch khám.")
+    anh_banner = models.ImageField(upload_to="about/", null=True, blank=True)
+    hien_ban_do = models.BooleanField(default=True)
+    thu_tu = models.PositiveIntegerField(default=1, unique=True, editable=False)
+    ngay_cap_nhat = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Nội dung giới thiệu"
+        verbose_name_plural = "Nội dung giới thiệu"
+
+    def save(self, *args, **kwargs):
+        if not self.thu_tu:
+            self.thu_tu = 1
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.tieu_de_trang
+
+
 # ========================= 
 # SIGNALS - AUTO LOG
 # ========================= 

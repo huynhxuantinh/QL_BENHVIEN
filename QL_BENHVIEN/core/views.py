@@ -38,6 +38,7 @@ from .models import (
     LogLichKham,
     LogHeThong,
     ThongBao,
+    NoiDungGioiThieu,
 )
 
 from .forms import (
@@ -382,6 +383,7 @@ def home(request):
 # GIOI THIEU
 # ==========================
 def gioi_thieu(request):
+    content, _ = NoiDungGioiThieu.objects.get_or_create(thu_tu=1)
     bvs = BenhVien.objects.only("id", "ten", "phuong", "vi_tri").order_by("ten")
 
     def point_to_latlon(point):
@@ -421,6 +423,10 @@ def gioi_thieu(request):
         })
 
     return render(request, "core/about.html", {
+        "content": content,
+        "features": [line.strip() for line in content.ds_chuc_nang.splitlines() if line.strip()],
+        "gis_components": [line.strip() for line in content.ds_thanh_phan_gis.splitlines() if line.strip()],
+        "tech_tags": [line.strip() for line in content.ds_cong_nghe.splitlines() if line.strip()],
         "map_data": map_data,
         "total_hospitals": len(map_data),
     })
@@ -1076,6 +1082,12 @@ def custom_admin_dashboard(request):
 
 
 ADMIN_MODEL_CONFIG = {
+    "noi-dung-gioi-thieu": {
+        "title": "Nội dung giới thiệu",
+        "model": NoiDungGioiThieu,
+        "list_display": ("tieu_de_trang", "ngay_cap_nhat"),
+        "ordering": ("thu_tu",),
+    },
     "benh-vien": {
         "title": "Bệnh viện",
         "model": BenhVien,
@@ -1306,6 +1318,23 @@ ADMIN_FIELD_LABELS = {
     "is_active": "Đang hoạt động",
     "date_joined": "Ngày tạo",
     "password": "Mật khẩu",
+    "tieu_de_trang": "Tiêu đề trang",
+    "nut_lien_he": "Nút liên hệ",
+    "nut_kham_pha": "Nút khám phá",
+    "tieu_de_gioi_thieu": "Tiêu đề giới thiệu",
+    "noi_dung_gioi_thieu": "Nội dung giới thiệu",
+    "tieu_de_van_de": "Tiêu đề vấn đề & mục tiêu",
+    "noi_dung_van_de": "Nội dung vấn đề & mục tiêu",
+    "tieu_de_chuc_nang": "Tiêu đề chức năng chính",
+    "ds_chuc_nang": "Danh sách chức năng",
+    "tieu_de_gis": "Tiêu đề thành phần GIS",
+    "ds_thanh_phan_gis": "Danh sách thành phần GIS",
+    "tieu_de_cong_nghe": "Tiêu đề công nghệ",
+    "ds_cong_nghe": "Danh sách công nghệ",
+    "tieu_de_cta": "Tiêu đề CTA",
+    "mo_ta_cta": "Mô tả CTA",
+    "thu_tu": "Thứ tự",
+    "ngay_cap_nhat": "Ngày cập nhật",
 }
 
 

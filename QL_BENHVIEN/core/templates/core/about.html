@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
-    <title>Hệ thống tra cứu và đặt lịch khám bệnh tích hợp GIS</title>
+    <title>{{ content.tieu_de_trang }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600;700&display=swap");
@@ -276,11 +276,11 @@
     <div class="page">
         <header class="topbar">
             <div class="brand">
-                <h1>Hệ thống tra cứu và đặt lịch khám bệnh tích hợp GIS</h1>
+                <h1>{{ content.tieu_de_trang }}</h1>
             </div>
             <div class="top-actions">
-                <a class="btn ghost" href="{% url 'contact_feedback' %}">Liên hệ</a>
-                <a class="btn primary" href="{% url 'home' %}">Khám phá ngay</a>
+                <a class="btn ghost" href="{% url 'contact_feedback' %}">{{ content.nut_lien_he }}</a>
+                <a class="btn primary" href="{% url 'home' %}">{{ content.nut_kham_pha }}</a>
             </div>
         </header>
 
@@ -290,65 +290,39 @@
 
         <section class="section-stack">
             <article class="card">
-                <h3>Giới thiệu hệ thống</h3>
-                <p>
-                    Đây là nền tảng web tra cứu bệnh viện và đặt lịch khám trực tuyến, được xây dựng theo định hướng gắn
-                    dữ liệu y tế với bản đồ số. Hệ thống tập trung thông tin bệnh viện theo từng thuộc tính nghiệp vụ như
-                    địa chỉ, loại hình, dịch vụ, bảo hiểm và trạng thái hoạt động để người dùng tra cứu tại một nơi duy nhất.
-                </p>
-                <p>
-                    Điểm mạnh của hệ thống là kết hợp giao diện bản đồ trực quan với bộ lọc chi tiết. Người dùng có thể quan sát
-                    vị trí bệnh viện trên bản đồ, mở thông tin chi tiết, so sánh khoảng cách và đưa ra quyết định khám bệnh nhanh hơn.
-                    Về phía quản trị, dữ liệu được cập nhật tập trung giúp giảm sai lệch thông tin giữa các kênh.
-                </p>
+                <h3>{{ content.tieu_de_gioi_thieu }}</h3>
+                <p>{{ content.noi_dung_gioi_thieu|linebreaksbr }}</p>
             </article>
             <article class="card">
-                <h3>Vấn đề & mục tiêu</h3>
-                <p>
-                    Bài toán thực tế là dữ liệu y tế thường phân tán ở nhiều nguồn, thông tin không đồng nhất và khó kiểm chứng
-                    theo thời gian. Khi cần đi khám gấp, người dùng phải tự tổng hợp nhiều dữ liệu rời rạc nên mất thời gian,
-                    đặc biệt khó khăn khi phải cân nhắc quãng đường, khả năng tiếp nhận và chuyên khoa phù hợp.
-                </p>
-                <p>
-                    Mục tiêu của đề tài là xây dựng một hệ thống có khả năng trực quan hóa vị trí bệnh viện bằng GIS,
-                    hỗ trợ tìm kiếm theo nhiều tiêu chí và cung cấp công cụ ước lượng khoảng cách, thời gian di chuyển.
-                    Từ đó, hệ thống giúp giảm chi phí tìm kiếm thông tin cho người dân và tăng hiệu quả quản trị dữ liệu cho đơn vị vận hành.
-                </p>
+                <h3>{{ content.tieu_de_van_de }}</h3>
+                <p>{{ content.noi_dung_van_de|linebreaksbr }}</p>
             </article>
         </section>
 
         <article class="card wide-card">
-            <h3>Chức năng chính</h3>
+            <h3>{{ content.tieu_de_chuc_nang }}</h3>
             <ul class="list">
-                <li>Tra cứu bệnh viện theo từ khóa, phường, loại hình, BHYT, trạng thái hoạt động.</li>
-                <li>Xem chi tiết bệnh viện: địa chỉ, giờ làm việc, khoa, bác sĩ, hình ảnh.</li>
-                <li>Định vị vị trí người dùng và so sánh khoảng cách tới bệnh viện.</li>
-                <li>Tìm tuyến đường tới bệnh viện và hiển thị quãng đường, thời gian dự kiến.</li>
-                <li>Đặt lịch khám trực tuyến và theo dõi lịch khám theo tài khoản.</li>
+                {% for item in features %}
+                <li>{{ item }}</li>
+                {% endfor %}
             </ul>
         </article>
 
         <section class="section-grid">
             <article class="card">
-                <h3>Thành phần GIS</h3>
+                <h3>{{ content.tieu_de_gis }}</h3>
                 <ul class="list">
-                    <li>Hiển thị bản đồ và marker bệnh viện bằng Leaflet.</li>
-                    <li>Lưu và xử lý tọa độ bệnh viện bằng PointField (PostGIS).</li>
-                    <li>Tính khoảng cách từ vị trí người dùng bằng hàm Distance của GeoDjango.</li>
-                    <li>Tìm đường đi bằng dịch vụ OSRM để ước lượng quãng đường và thời gian.</li>
+                    {% for item in gis_components %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
                 </ul>
             </article>
             <article class="card">
-                <h3>Công nghệ sử dụng</h3>
+                <h3>{{ content.tieu_de_cong_nghe }}</h3>
                 <div class="tech-tags">
-                    <span class="tag">Django</span>
-                    <span class="tag">GeoDjango</span>
-                    <span class="tag">PostgreSQL + PostGIS</span>
-                    <span class="tag">Leaflet</span>
-                    <span class="tag">OpenStreetMap</span>
-                    <span class="tag">OSRM</span>
-                    <span class="tag">Nominatim</span>
-                    <span class="tag">JavaScript</span>
+                    {% for item in tech_tags %}
+                    <span class="tag">{{ item }}</span>
+                    {% endfor %}
                 </div>
             </article>
         </section>
@@ -360,9 +334,9 @@
         </article>
 
         <section class="card cta">
-            <h3>Khám phá ngay</h3>
-            <p>Truy cập trang chủ để trải nghiệm bộ lọc bệnh viện, bản đồ và các chức năng đặt lịch khám.</p>
-            <a class="btn primary" href="{% url 'home' %}">Khám phá ngay</a>
+            <h3>{{ content.tieu_de_cta }}</h3>
+            <p>{{ content.mo_ta_cta }}</p>
+            <a class="btn primary" href="{% url 'home' %}">{{ content.nut_kham_pha }}</a>
         </section>
     </div>
 

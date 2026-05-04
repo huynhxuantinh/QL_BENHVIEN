@@ -14,6 +14,7 @@ from .models import (
     LichSuKhamBenh,
     LogHeThong,
     LogLichKham,
+    NoiDungGioiThieu,
     PhieuKham,
     ThongBao,
 )
@@ -185,3 +186,48 @@ class ThongBaoAdmin(admin.ModelAdmin):
     list_filter = ("loai", "da_doc", "thoi_gian")
     date_hierarchy = "thoi_gian"
     ordering = ("-thoi_gian",)
+
+
+@admin.register(NoiDungGioiThieu)
+class NoiDungGioiThieuAdmin(admin.ModelAdmin):
+    list_display = ("tieu_de_trang", "hien_ban_do", "ngay_cap_nhat")
+    readonly_fields = ("thu_tu", "ngay_cap_nhat")
+    ordering = ("thu_tu",)
+    
+    fieldsets = (
+        ("🏥 Thông tin trang", {
+            "fields": ("tieu_de_trang", "anh_banner", "hien_ban_do", "thu_tu", "ngay_cap_nhat"),
+            "description": "Cấu hình chung cho trang giới thiệu"
+        }),
+        ("📱 Nút CTA (Call-To-Action)", {
+            "fields": ("nut_lien_he", "nut_kham_pha"),
+            "description": "Tên hiển thị các nút trên trang chủ"
+        }),
+        ("📖 Phần Giới thiệu", {
+            "fields": ("tieu_de_gioi_thieu", "noi_dung_gioi_thieu"),
+            "classes": ("collapse",)
+        }),
+        ("🎯 Phần Vấn đề & Mục tiêu", {
+            "fields": ("tieu_de_van_de", "noi_dung_van_de"),
+            "classes": ("collapse",)
+        }),
+        ("⚙️ Phần Chức năng chính", {
+            "fields": ("tieu_de_chuc_nang", "ds_chuc_nang"),
+            "description": "Mỗi dòng là một chức năng (dùng Enter để ngắt dòng)",
+            "classes": ("collapse",)
+        }),
+        ("🗺️ Phần Thành phần GIS", {
+            "fields": ("tieu_de_gis", "ds_thanh_phan_gis"),
+            "description": "Mỗi dòng là một thành phần GIS",
+            "classes": ("collapse",)
+        }),
+        ("💻 Phần Công nghệ", {
+            "fields": ("tieu_de_cong_nghe", "ds_cong_nghe"),
+            "description": "Mỗi dòng là một công nghệ",
+            "classes": ("collapse",)
+        }),
+        ("🚀 Phần Khám phá ngay (CTA cuối)", {
+            "fields": ("tieu_de_cta", "mo_ta_cta"),
+            "classes": ("collapse",)
+        }),
+    )

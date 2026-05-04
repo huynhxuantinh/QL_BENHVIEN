@@ -14,6 +14,7 @@ from .models import (
     LichSuKhamBenh,
     LogHeThong,
     LogLichKham,
+    NoiDungGioiThieu,
     PhieuKham,
     ThongBao,
 )
@@ -185,3 +186,9 @@ class ThongBaoAdmin(admin.ModelAdmin):
     list_filter = ("loai", "da_doc", "thoi_gian")
     date_hierarchy = "thoi_gian"
     ordering = ("-thoi_gian",)
+
+
+@admin.register(NoiDungGioiThieu)
+class NoiDungGioiThieuAdmin(admin.ModelAdmin):
+    list_display = ("tieu_de_trang", "ngay_cap_nhat")
+    ordering = ("thu_tu",)

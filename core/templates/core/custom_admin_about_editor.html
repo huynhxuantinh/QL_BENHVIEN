@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f2f6f5; color: #1f2a27; }
+        .page { max-width: 1360px; margin: 0 auto; padding: 16px; }
+        .layout { display: grid; grid-template-columns: 430px 1fr; gap: 14px; }
+        .card { background: #fff; border: 1px solid #d7e4df; border-radius: 14px; padding: 14px; }
+        h1 { margin: 0 0 10px; font-size: 24px; }
+        .field { margin-bottom: 10px; }
+        .field label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 13px; }
+        input, textarea { width: 100%; box-sizing: border-box; border: 1px solid #cbdbd5; border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+        textarea { resize: vertical; }
+        .check { display: flex; align-items: center; gap: 8px; margin: 8px 0 10px; }
+        .check input { width: auto; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .btn { display: inline-flex; text-decoration: none; border: 1px solid #cedcd7; border-radius: 999px; padding: 8px 13px; font-size: 13px; color: #0f7d69; background: #fff; }
+        .btn.primary { background: #0f7d69; border-color: #0f7d69; color: #fff; }
+        .errorlist { margin: 4px 0 0; color: #8a2f2f; font-size: 12px; padding-left: 16px; }
+        .preview-title { margin: 0 0 8px; font-weight: 700; color: #1d3e37; }
+        .preview-banner { width: 100%; aspect-ratio: 12/4; object-fit: cover; border-radius: 12px; border: 1px solid #d7e4df; background: #eef4f2; }
+        .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .box { border: 1px solid #d7e4df; border-radius: 12px; padding: 10px; background: #fbfefd; }
+        .box h3 { margin: 0 0 8px; font-size: 18px; }
+        .list { margin: 0; padding-left: 18px; font-size: 13px; }
+        #preview-map { height: 300px; border-radius: 10px; border: 1px solid #d7e4df; }
+        @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="layout">
+            <form class="card" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <h1>{{ title }}</h1>
+                {% if form.non_field_errors %}
+                    <ul class="errorlist">
+                        {% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% for field in form %}
+                    {% if field.name == "hien_ban_do" %}
+                        <label class="check">{{ field }} {{ field.label }}</label>
+                    {% else %}
+                        <div class="field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <ul class="errorlist">{% for err in field.errors %}<li>{{ err }}</li>{% endfor %}</ul>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <div class="actions">
+                    <button class="btn primary" type="submit">Lưu nội dung</button>
+                    <a class="btn" href="{{ back_href }}">Quay lại</a>
+                    <a class="btn" href="{% url 'gioi_thieu' %}" target="_blank">Xem trang user</a>
+                </div>
+            </form>
+
+            <div class="card">
+                <p class="preview-title">Xem trước giao diện giới thiệu</p>
+                {% if form.instance.anh_banner %}
+                    <img class="preview-banner" src="{{ form.instance.anh_banner.url }}" alt="Banner giới thiệu">
+                {% else %}
+                    <div class="preview-banner"></div>
+                {% endif %}
+
+                <div class="preview-grid">
+                    <div class="box">
+                        <h3>{{ form.instance.tieu_de_gioi_thieu }}</h3>
+                        <div>{{ form.instance.noi_dung_gioi_thieu|linebreaksbr }}</div>
+                    </div>
+                    <div class="box">
+                        <h3>{{ form.instance.tieu_de_van_de }}</h3>
+                        <div>{{ form.instance.noi_dung_van_de|linebreaksbr }}</div>
+                    </div>
+                </div>
+
+                <div class="preview-grid">
+                    <div class="box">
+                        <h3>{{ form.instance.tieu_de_chuc_nang }}</h3>
+                        <ul class="list">
+                            {% for line in preview_features %}
+                                <li>{{ line }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="box">
+                        <h3>{{ form.instance.tieu_de_cong_nghe }}</h3>
+                        <ul class="list">
+                            {% for line in preview_tech_tags %}
+                                <li>{{ line }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if form.instance.hien_ban_do %}
+                    <div style="margin-top:10px;">
+                        <div id="preview-map"></div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if form.instance.hien_ban_do %}
+        {{ map_data|json_script:"about-map-data" }}
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            (function () {
+                const mapData = JSON.parse(document.getElementById("about-map-data").textContent || "[]");
+                const map = L.map("preview-map");
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    maxZoom: 19,
+                    referrerPolicy: "strict-origin-when-cross-origin",
+                    attribution: "&copy; OpenStreetMap"
+                }).addTo(map);
+                if (!mapData.length) { map.setView([10.77, 106.7], 11); return; }
+                const bounds = [];
+                mapData.forEach((item) => {
+                    L.marker([item.lat, item.lon]).addTo(map);
+                    bounds.push([item.lat, item.lon]);
+                });
+                map.fitBounds(bounds, { padding: [20, 20] });
+            })();
+        </script>
+    {% endif %}
+</body>
+</html>

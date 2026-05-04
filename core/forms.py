@@ -7,7 +7,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 
-from .models import BacSi, BenhNhan, BenhVien, GioLamViecBacSi, Khoa, LichKham
+from .models import BacSi, BenhNhan, BenhVien, GioLamViecBacSi, Khoa, LichKham, NoiDungGioiThieu
 
 
 def _translate_password_validation_message(message):
@@ -429,6 +429,31 @@ class AdminUserForm(forms.ModelForm):
                 benh_nhan.save(update_fields=["so_dien_thoai", "user"])
 
         return user
+
+
+class AdminNoiDungGioiThieuForm(forms.ModelForm):
+    class Meta:
+        model = NoiDungGioiThieu
+        exclude = ["thu_tu", "ngay_cap_nhat"]
+        widgets = {
+            "tieu_de_trang": forms.TextInput(attrs={"class": "form-control"}),
+            "nut_lien_he": forms.TextInput(attrs={"class": "form-control"}),
+            "nut_kham_pha": forms.TextInput(attrs={"class": "form-control"}),
+            "tieu_de_gioi_thieu": forms.TextInput(attrs={"class": "form-control"}),
+            "noi_dung_gioi_thieu": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "tieu_de_van_de": forms.TextInput(attrs={"class": "form-control"}),
+            "noi_dung_van_de": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "tieu_de_chuc_nang": forms.TextInput(attrs={"class": "form-control"}),
+            "ds_chuc_nang": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
+            "tieu_de_gis": forms.TextInput(attrs={"class": "form-control"}),
+            "ds_thanh_phan_gis": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
+            "tieu_de_cong_nghe": forms.TextInput(attrs={"class": "form-control"}),
+            "ds_cong_nghe": forms.Textarea(attrs={"class": "form-control", "rows": 6}),
+            "tieu_de_cta": forms.TextInput(attrs={"class": "form-control"}),
+            "mo_ta_cta": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "anh_banner": forms.ClearableFileInput(attrs={"class": "form-control"}),
+            "hien_ban_do": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
 
 
 

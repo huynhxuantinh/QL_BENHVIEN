@@ -40,6 +40,7 @@ from .models import (
     LogLichKham,
     LogHeThong,
     ThongBao,
+    NoiDungGioiThieu,
 )
 
 from .forms import (
@@ -47,6 +48,7 @@ from .forms import (
     AdminBenhVienForm,
     AdminGioLamViecBacSiForm,
     AdminKhoaForm,
+    AdminNoiDungGioiThieuForm,
     AdminUserForm,
     ContactFeedbackForm,
     DatLichForm,
@@ -451,6 +453,21 @@ def home(request):
 # GIOI THIEU
 # ==========================
 def gioi_thieu(request):
+    content, _ = NoiDungGioiThieu.objects.get_or_create(thu_tu=1)
+    map_data = _build_about_map_data()
+
+    return render(request, "core/about.html", {
+        "content": content,
+        "features": [line.strip() for line in content.ds_chuc_nang.splitlines() if line.strip()],
+        "gis_components": [line.strip() for line in content.ds_thanh_phan_gis.splitlines() if line.strip()],
+        "tech_tags": [line.strip() for line in content.ds_cong_nghe.splitlines() if line.strip()],
+        "map_data": map_data,
+        "show_map": content.hien_ban_do,
+        "total_hospitals": len(map_data),
+    })
+
+
+def _build_about_map_data():
     bvs = BenhVien.objects.only("id", "ten", "phuong", "vi_tri").order_by("ten")
 
     def point_to_latlon(point):
@@ -488,11 +505,7 @@ def gioi_thieu(request):
             "lat": lat,
             "lon": lon,
         })
-
-    return render(request, "core/about.html", {
-        "map_data": map_data,
-        "total_hospitals": len(map_data),
-    })
+    return map_data
 
 
 # ==========================
@@ -1141,6 +1154,13 @@ def custom_admin_dashboard(request):
 
 
 ADMIN_MODEL_CONFIG = {
+    "noi-dung-gioi-thieu": {
+        "title": "Nội dung giới thiệu",
+        "model": NoiDungGioiThieu,
+        "form_class": AdminNoiDungGioiThieuForm,
+        "list_display": ("tieu_de_trang", "ngay_cap_nhat"),
+        "ordering": ("thu_tu",),
+    },
     "benh-vien": {
         "title": "Bệnh viện",
         "model": BenhVien,
@@ -1382,6 +1402,25 @@ ADMIN_FIELD_LABELS = {
     "is_active": "Đang hoạt động",
     "date_joined": "Ngày tạo",
     "password": "Mật khẩu",
+    "tieu_de_trang": "Tiêu đề trang",
+    "nut_lien_he": "Nút liên hệ",
+    "nut_kham_pha": "Nút khám phá",
+    "tieu_de_gioi_thieu": "Tiêu đề giới thiệu",
+    "noi_dung_gioi_thieu": "Nội dung giới thiệu",
+    "tieu_de_van_de": "Tiêu đề vấn đề & mục tiêu",
+    "noi_dung_van_de": "Nội dung vấn đề & mục tiêu",
+    "tieu_de_chuc_nang": "Tiêu đề chức năng chính",
+    "ds_chuc_nang": "Danh sách chức năng",
+    "tieu_de_gis": "Tiêu đề thành phần GIS",
+    "ds_thanh_phan_gis": "Danh sách thành phần GIS",
+    "tieu_de_cong_nghe": "Tiêu đề công nghệ",
+    "ds_cong_nghe": "Danh sách công nghệ",
+    "tieu_de_cta": "Tiêu đề CTA",
+    "mo_ta_cta": "Mô tả CTA",
+    "anh_banner": "Ảnh banner",
+    "hien_ban_do": "Hiển thị bản đồ",
+    "thu_tu": "Thứ tự",
+    "ngay_cap_nhat": "Ngày cập nhật",
 }
 
 
@@ -1773,6 +1812,7 @@ def custom_admin_model_create(request, model_key):
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
     is_exam_record = model_key == "phieu-kham"
+    is_about_content = model_key == "noi-dung-gioi-thieu"
 
     form = form_class(request.POST or None, request.FILES or None)
     schedule_rows = []
@@ -1809,6 +1849,17 @@ def custom_admin_model_create(request, model_key):
             messages.success(request, f"Đã tạo {config['title'].lower()}.")
             return redirect("custom_admin_model_list", model_key=model_key)
 
+    if is_about_content:
+        preview_instance = form.instance
+        return render(request, "core/custom_admin_about_editor.html", {
+            "title": f"Tạo {config['title']}",
+            "form": form,
+            "back_href": f"/quan-tri/du-lieu/{model_key}/",
+            "map_data": _build_about_map_data(),
+            "preview_features": [line.strip() for line in (preview_instance.ds_chuc_nang or "").splitlines() if line.strip()],
+            "preview_tech_tags": [line.strip() for line in (preview_instance.ds_cong_nghe or "").splitlines() if line.strip()],
+        })
+
     return render(request, "core/custom_admin_form.html", {
         "title": f"Tạo {config['title']}",
         "form": form,
@@ -1838,6 +1889,7 @@ def custom_admin_model_edit(request, model_key, pk):
     form_class = _get_admin_form_class(config)
     is_hospital = model_key == "benh-vien"
     is_exam_record = model_key == "phieu-kham"
+    is_about_content = model_key == "noi-dung-gioi-thieu"
 
     form = form_class(request.POST or None, request.FILES or None, instance=obj)
     schedule_rows = []
@@ -1888,6 +1940,18 @@ def custom_admin_model_edit(request, model_key, pk):
                 update_session_auth_hash(request, updated_obj)
             messages.success(request, f"Đã cập nhật {config['title'].lower()}.")
             return redirect("custom_admin_model_list", model_key=model_key)
+
+    if is_about_content:
+        preview_instance = form.instance
+        return render(request, "core/custom_admin_about_editor.html", {
+            "title": f"Sửa {config['title']}",
+            "form": form,
+            "object_name": str(obj),
+            "back_href": f"/quan-tri/du-lieu/{model_key}/",
+            "map_data": _build_about_map_data(),
+            "preview_features": [line.strip() for line in (preview_instance.ds_chuc_nang or "").splitlines() if line.strip()],
+            "preview_tech_tags": [line.strip() for line in (preview_instance.ds_cong_nghe or "").splitlines() if line.strip()],
+        })
 
     return render(request, "core/custom_admin_form.html", {
         "title": f"Sửa {config['title']}",
@@ -1983,6 +2047,45 @@ def custom_admin_doctor_edit(request, pk):
 @login_required
 def custom_admin_doctor_delete(request, pk):
     return custom_admin_model_delete(request, "bac-si", pk)
+
+
+@login_required
+def custom_admin_about_content(request):
+    """Quản lý nội dung trang giới thiệu"""
+    denied = _admin_access_or_redirect(request)
+    if denied:
+        return denied
+    
+    # Lấy hoặc tạo object giới thiệu (chỉ có 1 object duy nhất)
+    obj, created = NoiDungGioiThieu.objects.get_or_create(thu_tu=1)
+    
+    if request.method == "POST":
+        form = AdminNoiDungGioiThieuForm(request.POST, request.FILES, instance=obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Cập nhật nội dung trang giới thiệu thành công!")
+            return redirect("custom_admin_about_content")
+        else:
+            messages.error(request, "❌ Có lỗi trong form. Vui lòng kiểm tra lại.")
+    else:
+        form = AdminNoiDungGioiThieuForm(instance=obj)
+    
+    # Xây dựng dữ liệu preview
+    map_data = _build_about_map_data()
+    preview_features = [line.strip() for line in obj.ds_chuc_nang.splitlines() if line.strip()]
+    preview_tech_tags = [line.strip() for line in obj.ds_cong_nghe.splitlines() if line.strip()]
+    
+    context = {
+        "title": "Quản lý nội dung trang Giới thiệu",
+        "form": form,
+        "obj": obj,
+        "is_add": created,
+        "map_data": map_data,
+        "preview_features": preview_features,
+        "preview_tech_tags": preview_tech_tags,
+        "back_href": "/quan-tri/",
+    }
+    return render(request, "core/custom_admin_about_editor.html", context)
 
 
 @login_required

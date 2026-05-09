@@ -286,3 +286,92 @@ pip install openpyxl
 - [ ] File `.env` đã tạo với đúng thông tin (đặc biệt đường dẫn GDAL)
 - [ ] Đã chạy `python manage.py migrate` thành công
 - [ ] Server chạy được tại http://127.0.0.1:8000/
+
+---
+
+## PHẦN E — KHÔI PHỤC TỪ FILE BACKUP (Backup.sql)
+
+> Dùng cách này **thay thế** cho bước B4 (migrate) + B6 (seed) nếu bạn đã có file backup sẵn.  
+> File backup: `docx/Backup.sql`
+
+### E1. Tạo database từ lệnh trong Backup.sql
+
+File `Backup.sql` chứa lệnh tạo database:
+
+```sql
+CREATE DATABASE ql_benhvien001;
+```
+
+#### Cách 1: Chạy qua pgAdmin
+
+1. Mở **pgAdmin 4** → đăng nhập.
+2. Click chuột phải vào **Databases** → **Query Tool**.
+3. Dán lệnh sau và nhấn **F5** (hoặc bấm nút Run):
+   ```sql
+   CREATE DATABASE ql_benhvien001;
+   ```
+4. Sau khi tạo xong, click vào database `ql_benhvien001` → mở **Query Tool** → bật PostGIS:
+   ```sql
+   CREATE EXTENSION IF NOT EXISTS postgis;
+   ```
+
+#### Cách 2: Chạy qua PowerShell (psql)
+
+```powershell
+# Thay YOUR_PASSWORD bằng mật khẩu postgres của bạn
+$env:PGPASSWORD = "YOUR_PASSWORD"
+psql -U postgres -f "docx\Backup.sql"
+```
+
+---
+
+### E2. Kích hoạt PostGIS cho database vừa tạo
+
+```powershell
+$env:PGPASSWORD = "YOUR_PASSWORD"
+psql -U postgres -d ql_benhvien001 -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+```
+
+---
+
+### E3. Cập nhật file `.env`
+
+Đảm bảo `DB_NAME` trong `.env` khớp với tên database vừa tạo:
+
+```env
+DB_NAME=ql_benhvien001
+```
+
+> ⚠️ Tên database trong file Backup.sql là `ql_benhvien001` (có hậu tố `001`), khác với tên mặc định `ql_benhvien` trong hướng dẫn B3.
+
+---
+
+### E4. Chạy migrate Django
+
+Dù đã có database, vẫn cần chạy migrate để Django tạo các bảng nghiệp vụ:
+
+```powershell
+python manage.py migrate
+```
+
+---
+
+### E5. (Tùy chọn) Tạo superuser và seed dữ liệu
+
+```powershell
+python manage.py createsuperuser
+python manage.py seed_core
+```
+
+---
+
+### Tóm tắt luồng dùng Backup.sql
+
+```
+[Backup.sql] → psql chạy → database ql_benhvien001 tạo xong
+    → Bật PostGIS (CREATE EXTENSION postgis)
+    → Cập nhật .env (DB_NAME=ql_benhvien001)
+    → python manage.py migrate
+    → python manage.py createsuperuser
+    → python manage.py runserver
+```

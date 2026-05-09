@@ -15,6 +15,7 @@
 4. ⚠️ **QUAN TRỌNG**: Tích chọn **"Add Python to PATH"** trước khi bấm Install.
 5. Bấm **Install Now**.
 6. Sau khi cài xong, mở PowerShell và kiểm tra:
+
    ```powershell
    python --version
    ```
@@ -260,118 +261,28 @@ pip install python-dotenv
 
 ---
 
-### Lỗi 4: `No module named 'openpyxl'`
-
-```
-Missing dependency openpyxl
-```
-
-**Cách fix**:
-
-```powershell
-pip install openpyxl
-```
-
----
-
-## PHẦN D — CHECKLIST TRƯỚC KHI CHẠY
-
-- [ ] **Python 3.12+** đã cài và `python --version` chạy được
-- [ ] **PostgreSQL** đang chạy (kiểm tra trong Services)
-- [ ] Database `ql_benhvien` đã tạo trong pgAdmin
-- [ ] Extension `postgis` đã được kích hoạt trong database
-- [ ] **OSGeo4W** đã cài, có file `gdal*.dll` và `geos_c.dll` trong `C:\OSGeo4W\bin\`
-- [ ] Môi trường ảo `venv` đã kích hoạt (có `(venv)` ở đầu dòng lệnh)
-- [ ] Đã chạy `pip install -r requirements.txt` và `pip install python-dotenv openpyxl`
-- [ ] File `.env` đã tạo với đúng thông tin (đặc biệt đường dẫn GDAL)
-- [ ] Đã chạy `python manage.py migrate` thành công
-- [ ] Server chạy được tại http://127.0.0.1:8000/
-
----
-
 ## PHẦN E — KHÔI PHỤC TỪ FILE BACKUP (Backup.sql)
 
-> Dùng cách này **thay thế** cho bước B4 (migrate) + B6 (seed) nếu bạn đã có file backup sẵn.  
+> Dùng cách này **thay thế** cho bước B4 (migrate) + B6 (seed) nếu bạn đã có file backup sẵn.
 > File backup: `docx/Backup.sql`
 
-### E1. Tạo database từ lệnh trong Backup.sql
+### Bước 1: Tạo database mới trong pgAdmin
 
-File `Backup.sql` chứa lệnh tạo database:
+> ⚠️ Tên database phải giống với `DB_NAME` trong file `.env` của project.
+> Ví dụ project này dùng: `ql_benhvien001`
 
-```sql
-CREATE DATABASE ql_benhvien001;
-```
-
-#### Cách 1: Chạy qua pgAdmin
-
-1. Mở **pgAdmin 4** → đăng nhập.
-2. Click chuột phải vào **Databases** → **Query Tool**.
-3. Dán lệnh sau và nhấn **F5** (hoặc bấm nút Run):
-   ```sql
-   CREATE DATABASE ql_benhvien001;
-   ```
-4. Sau khi tạo xong, click vào database `ql_benhvien001` → mở **Query Tool** → bật PostGIS:
-   ```sql
-   CREATE EXTENSION IF NOT EXISTS postgis;
-   ```
-
-#### Cách 2: Chạy qua PowerShell (psql)
-
-```powershell
-# Thay YOUR_PASSWORD bằng mật khẩu postgres của bạn
-$env:PGPASSWORD = "YOUR_PASSWORD"
-psql -U postgres -f "docx\Backup.sql"
-```
+1. Mở **pgAdmin 4** (tìm trong Start Menu).
+2. Đăng nhập bằng mật khẩu `postgres` đã đặt lúc cài.
+3. Ở cây bên trái, click chuột phải vào **Databases** → **Create** → **Database...**
+4. Ở ô **Database**, nhập tên đúng với `DB_NAME` trong `.env` (ví dụ: `ql_benhvien001`).
+5. Bấm **Save**.
 
 ---
 
-### E2. Kích hoạt PostGIS cho database vừa tạo
+### Bước 2: Restore file SQL backup vào database đó
 
-```powershell
-$env:PGPASSWORD = "YOUR_PASSWORD"
-psql -U postgres -d ql_benhvien001 -c "CREATE EXTENSION IF NOT EXISTS postgis;"
-```
-
----
-
-### E3. Cập nhật file `.env`
-
-Đảm bảo `DB_NAME` trong `.env` khớp với tên database vừa tạo:
-
-```env
-DB_NAME=ql_benhvien001
-```
-
-> ⚠️ Tên database trong file Backup.sql là `ql_benhvien001` (có hậu tố `001`), khác với tên mặc định `ql_benhvien` trong hướng dẫn B3.
-
----
-
-### E4. Chạy migrate Django
-
-Dù đã có database, vẫn cần chạy migrate để Django tạo các bảng nghiệp vụ:
-
-```powershell
-python manage.py migrate
-```
-
----
-
-### E5. (Tùy chọn) Tạo superuser và seed dữ liệu
-
-```powershell
-python manage.py createsuperuser
-python manage.py seed_core
-```
-
----
-
-### Tóm tắt luồng dùng Backup.sql
-
-```
-[Backup.sql] → psql chạy → database ql_benhvien001 tạo xong
-    → Bật PostGIS (CREATE EXTENSION postgis)
-    → Cập nhật .env (DB_NAME=ql_benhvien001)
-    → python manage.py migrate
-    → python manage.py createsuperuser
-    → python manage.py runserver
-```
+1. Trong pgAdmin, **chuột phải vào database vừa tạo** (`ql_benhvien001`) → chọn **Restore...**
+2. Ở mục **Format**, chọn **Plain** (vì file là `.sql` dạng plain text).
+3. Ở mục **Filename**, bấm biểu tượng 📁 → duyệt đến và chọn file `docx/Backup.sql`.
+4. Bấm **Restore** để bắt đầu khôi phục.
+5. Chờ đến khi cửa sổ log hiện **Successfully completed** là xong.

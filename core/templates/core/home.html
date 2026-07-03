@@ -327,7 +327,7 @@
                             <a class="btn ghost" href="{% url 'gioi_thieu' %}">Gi&#7899;i thi&#7879;u</a>
                             <a class="btn ghost" href="{% url 'contact_feedback' %}">Li&#234;n h&#7879; / G&#243;p &#253;</a>
                         {% endif %}
-                        <a class="btn primary" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+                        <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="btn primary">&#272;&#259;ng xu&#7845;t</button></form>
                     </div>
                 {% else %}
                     <div class="user-actions">

@@ -119,7 +119,7 @@
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay l&#7841;i</a>
-                <a class="btn ghost" href="{% url 'logout' %}">&#272;&#259;ng xu&#7845;t</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="btn ghost">&#272;&#259;ng xu&#7845;t</button></form>
             </div>
         </header>
 

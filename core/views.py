@@ -7,6 +7,7 @@ import random
 import re
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -24,6 +25,7 @@ from django.db import models as db_models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from .models import BaoHiemYTe
+from .utils import point_to_latlon, _translate_password_validation_message
 
 from .models import (
     BenhVien,
@@ -213,6 +215,7 @@ def home(request):
 
     now = timezone.localtime()
     time_bucket = now.strftime("%Y%m%d%H%M")
+    cache_version = cache.get("benhvien_cache_version", 1)
     cache_payload = {
         "lat": user_lat,
         "lon": user_lon,
@@ -225,6 +228,7 @@ def home(request):
         "phuong": phuong_filter or "all",
         "q": search_query.lower(),
         "bucket": time_bucket,
+        "version": cache_version,
     }
     cache_key = "home_filter:" + hashlib.sha256(
         json.dumps(cache_payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
@@ -302,21 +306,6 @@ def home(request):
         if radius_km:
             bvs = bvs.filter(distance_m__lte=radius_km * 1000)
         bvs = bvs.order_by("distance_m")
-
-    def point_to_latlon(point):
-        # GIS: convert Point to lat/lon (handle Web Mercator or WGS84)
-        if not point:
-            return None, None
-        x = point.x
-        y = point.y
-        is_web_mercator = point.srid == 3857 or abs(x) > 180 or abs(y) > 90
-        if is_web_mercator:
-            from core.utils import mercator_to_wgs84
-            lon, lat = mercator_to_wgs84(x, y)
-            if abs(lat) <= 90 and abs(lon) <= 180:
-                return lat, lon
-            return None, None
-        return y, x
 
     thu = (now.weekday() + 1) % 7
     computed_bvs = []
@@ -460,20 +449,6 @@ def gioi_thieu(request):
 
 def _build_about_map_data():
     bvs = BenhVien.objects.only("id", "ten", "phuong", "vi_tri").order_by("ten")
-
-    def point_to_latlon(point):
-        if not point:
-            return None, None
-        x = point.x
-        y = point.y
-        is_web_mercator = point.srid == 3857 or abs(x) > 180 or abs(y) > 90
-        if is_web_mercator:
-            from core.utils import mercator_to_wgs84
-            lon, lat = mercator_to_wgs84(x, y)
-            if abs(lat) <= 90 and abs(lon) <= 180:
-                return lat, lon
-            return None, None
-        return y, x
 
     map_data = []
     for bv in bvs:
@@ -699,17 +674,20 @@ def upcoming_appointments(request):
         lich_dt = datetime.datetime.combine(lich.ngay_kham, lich.gio_kham)
         lich_dt = timezone.make_aware(lich_dt, tz)
         if now <= lich_dt <= window_end:
-            ThongBao.objects.get_or_create(
+            if not ThongBao.objects.filter(
                 nguoi_nhan=request.user,
                 loai="nhac_nho",
-                lien_ket=f"/lich-kham-sap-toi/?lich={lich.id}",
-                defaults={
-                    "tieu_de": "Nhắc lịch khám",
-                    "noi_dung": (
+                lien_ket__contains=f"lich={lich.id}"
+            ).exists():
+                ThongBao.objects.create(
+                    nguoi_nhan=request.user,
+                    loai="nhac_nho",
+                    lien_ket=f"/lich-kham-sap-toi/?lich={lich.id}",
+                    tieu_de="Nhắc lịch khám",
+                    noi_dung=(
                         f"Bạn có lịch khám vào ngày {lich.ngay_kham} lúc {lich.gio_kham} với bác sĩ {lich.bac_si.ho_ten}."
-                    ),
-                },
-            )
+                    )
+                )
 
     return render(request, "core/upcoming_appointments.html", {
         "benh_nhan": benh_nhan,
@@ -846,27 +824,6 @@ def phieu_kham_detail(request, phieu_id):
     })
 
 
-# ==========================
-# DASHBOARD BÁC SĨ
-# ==========================
-@login_required
-def doctor_dashboard(request):
-
-    try:
-        bac_si = request.user.bac_si
-    except BacSi.DoesNotExist:
-        return redirect("home")
-
-
-    lich_khams = LichKham.objects.filter(
-        bac_si=bac_si
-    ).order_by("ngay_kham", "gio_kham")
-
-
-    return render(request, "core/doctor_dashboard.html", {
-        "bac_si": bac_si,
-        "lich_khams": lich_khams
-    })
 
 
 # ==========================
@@ -966,11 +923,14 @@ def register(request):
         name = request.POST.get("name", "").strip()
         email = request.POST.get("email", "").strip()
         so_dien_thoai = request.POST.get("so_dien_thoai", "").strip()
+        ngay_sinh = request.POST.get("ngay_sinh", "").strip()
+        gioi_tinh = request.POST.get("gioi_tinh", "").strip()
+        dia_chi = request.POST.get("dia_chi", "").strip()
 
-        if not name or not username or not password or not confirm_password or not so_dien_thoai:
+        if not name or not username or not password or not confirm_password or not so_dien_thoai or not ngay_sinh or not gioi_tinh or not dia_chi:
             messages.error(
                 request,
-                "Vui lòng nhập đầy đủ họ tên, tên người dùng, số điện thoại, mật khẩu và xác nhận mật khẩu.",
+                "Vui lòng nhập đầy đủ thông tin (bao gồm ngày sinh, giới tính và địa chỉ).",
             )
             return redirect("register")
 
@@ -1017,9 +977,9 @@ def register(request):
                     user=user,
                     ho_ten=name,
                     so_dien_thoai=so_dien_thoai,
-                    ngay_sinh="2000-01-01",
-                    gioi_tinh="nam",
-                    dia_chi="Chưa cập nhật"
+                    ngay_sinh=ngay_sinh,
+                    gioi_tinh=gioi_tinh,
+                    dia_chi=dia_chi
                 )
         except IntegrityError:
             messages.error(request, "Tên đăng nhập, email hoặc số điện thoại đã tồn tại.")
@@ -1528,7 +1488,7 @@ def _parse_int_set(values):
     return result
 
 
-def _validate_hospital_images(uploaded_images):
+def _validate_images(uploaded_images, allowed_exts, max_size_bytes):
     errors = []
     try:
         from PIL import Image
@@ -1538,43 +1498,12 @@ def _validate_hospital_images(uploaded_images):
     for uploaded in uploaded_images:
         name = uploaded.name or "tep_khong_ten"
         ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-        if ext not in ALLOWED_HOSPITAL_IMAGE_EXTS:
+        if ext not in allowed_exts:
             errors.append(f"Ảnh '{name}' không đúng định dạng (jpg, jpeg, png, webp).")
             continue
-        if uploaded.size and uploaded.size > MAX_HOSPITAL_IMAGE_SIZE_BYTES:
-            errors.append(f"Ảnh '{name}' vượt quá 5MB.")
-            continue
-        content_type = (getattr(uploaded, "content_type", "") or "").lower()
-        if content_type and not content_type.startswith("image/"):
-            errors.append(f"Tệp '{name}' không phải ảnh hợp lệ.")
-            continue
-        if Image:
-            try:
-                with Image.open(uploaded.file) as img:
-                    img.verify()
-            except Exception:
-                errors.append(f"Tệp '{name}' không phải ảnh hợp lệ hoặc bị lỗi.")
-            finally:
-                if hasattr(uploaded.file, 'seek'):
-                    uploaded.file.seek(0)
-    return errors
-
-
-def _validate_exam_images(uploaded_images):
-    errors = []
-    try:
-        from PIL import Image
-    except ImportError:
-        Image = None
-
-    for uploaded in uploaded_images:
-        name = uploaded.name or "tep_khong_ten"
-        ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-        if ext not in ALLOWED_EXAM_IMAGE_EXTS:
-            errors.append(f"Ảnh '{name}' không đúng định dạng (jpg, jpeg, png, webp).")
-            continue
-        if uploaded.size and uploaded.size > MAX_EXAM_IMAGE_SIZE_BYTES:
-            errors.append(f"Ảnh '{name}' vượt quá 5MB.")
+        if uploaded.size and uploaded.size > max_size_bytes:
+            mb = max_size_bytes // (1024 * 1024)
+            errors.append(f"Ảnh '{name}' vượt quá {mb}MB.")
             continue
         content_type = (getattr(uploaded, "content_type", "") or "").lower()
         if content_type and not content_type.startswith("image/"):
@@ -1822,10 +1751,10 @@ def custom_admin_model_create(request, model_key):
         schedule_rows, schedule_errors = _build_hospital_schedule_rows(request, None)
         if request.method == "POST":
             uploaded_images = request.FILES.getlist("hospital_images")
-            upload_errors = _validate_hospital_images(uploaded_images)
+            upload_errors = _validate_images(uploaded_images, ALLOWED_HOSPITAL_IMAGE_EXTS, MAX_HOSPITAL_IMAGE_SIZE_BYTES)
     elif is_exam_record and request.method == "POST":
         exam_uploaded_images = request.FILES.getlist("exam_images")
-        exam_upload_errors = _validate_exam_images(exam_uploaded_images)
+        exam_upload_errors = _validate_images(exam_uploaded_images, ALLOWED_EXAM_IMAGE_EXTS, MAX_EXAM_IMAGE_SIZE_BYTES)
 
     if request.method == "POST":
         for err in schedule_errors:
@@ -1836,15 +1765,18 @@ def custom_admin_model_create(request, model_key):
             form.add_error(None, err)
 
         if form.is_valid():
-            with transaction.atomic():
-                obj = form.save()
-                if is_hospital:
-                    _save_hospital_schedule_rows(obj, schedule_rows)
-                    _sync_hospital_images(obj, uploaded_images)
-                elif is_exam_record:
-                    _sync_exam_images(obj, exam_uploaded_images)
-            messages.success(request, f"Đã tạo {config['title'].lower()}.")
-            return redirect("custom_admin_model_list", model_key=model_key)
+            try:
+                with transaction.atomic():
+                    obj = form.save()
+                    if is_hospital:
+                        _save_hospital_schedule_rows(obj, schedule_rows)
+                        _sync_hospital_images(obj, uploaded_images)
+                    elif is_exam_record:
+                        _sync_exam_images(obj, exam_uploaded_images)
+                messages.success(request, f"Đã tạo {config['title'].lower()}.")
+                return redirect("custom_admin_model_list", model_key=model_key)
+            except IntegrityError:
+                form.add_error(None, "Bản ghi này đã tồn tại hoặc vi phạm ràng buộc dữ liệu duy nhất (ví dụ: Nội dung giới thiệu chỉ được có 1 bản ghi).")
 
     if is_about_content:
         preview_instance = form.instance
@@ -2106,9 +2038,9 @@ def custom_admin_departments_api(request):
 
 
 def user_logout(request):
-
+    if request.method != "POST":
+        return redirect("home")
     logout(request)
-
     return redirect("login")
 
 # ==========================
@@ -2158,15 +2090,6 @@ def _get_valid_forgot_password_flow(request):
 
     return state
 
-
-def _translate_password_validation_message(message):
-    mapping = {
-        "This password is too short. It must contain at least 8 characters.": "Mật khẩu quá ngắn. Mật khẩu phải có ít nhất 8 ký tự.",
-        "This password is too common.": "Mật khẩu quá phổ biến, vui lòng chọn mật khẩu khác an toàn hơn.",
-        "This password is entirely numeric.": "Mật khẩu không được chỉ gồm chữ số.",
-        "The password is too similar to the username.": "Mật khẩu quá giống với tên người dùng.",
-    }
-    return mapping.get(message, message)
 
 
 def forgot_password(request):
@@ -2245,7 +2168,7 @@ def forgot_password(request):
                 "user_id": user.id,
                 "username": user.username,
                 "email": email,
-                "otp_code": otp_code,
+                "otp_hash": make_password(otp_code),
                 "verified": False,
                 "expires_at": expires_at.isoformat(),
                 "attempts": 0,
@@ -2274,7 +2197,7 @@ def forgot_password(request):
                 messages.error(request, "Vui lòng nhập đúng mã OTP gồm 6 chữ số.")
                 return redirect("forgot_password")
 
-            if otp_input != str(state.get("otp_code", "")):
+            if not check_password(otp_input, state.get("otp_hash", "")):
                 state["attempts"] = state.get("attempts", 0) + 1
                 if state["attempts"] >= 5:
                     # Lock for 15 minutes
@@ -2429,14 +2352,14 @@ def bac_si_home(request):
     range_filter = request.GET.get("range", "").strip()
     shift_filter = request.GET.get("shift", "").strip()
 
-    base_qs = bac_si.lich_khams.all()
+    today = timezone.localdate()
+    base_qs = bac_si.lich_khams.filter(ngay_kham__gte=today)
 
 
 
     lich_khams = base_qs
 
-    today = timezone.localdate()
-    stats_qs = base_qs.filter(ngay_kham__gte=today)
+    stats_qs = base_qs
     stats = {
         "tong": stats_qs.count(),
         "cho": stats_qs.filter(trang_thai="cho").count(),
@@ -2825,6 +2748,10 @@ def profile(request):
 
         benh_nhan.user = request.user
         benh_nhan.ho_ten = request.POST.get("ho_ten", "").strip()
+        ho, ten = _split_full_name(benh_nhan.ho_ten)
+        request.user.first_name = ho
+        request.user.last_name = ten
+        request.user.save(update_fields=["first_name", "last_name"])
         benh_nhan.ngay_sinh = request.POST.get("ngay_sinh", "").strip()
         benh_nhan.gioi_tinh = request.POST.get("gioi_tinh", "").strip()
         benh_nhan.dia_chi = request.POST.get("dia_chi", "").strip()

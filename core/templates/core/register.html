@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -240,6 +240,26 @@
                 <input name="so_dien_thoai" placeholder="Nh&#7853;p s&#7889; &#273;i&#7879;n tho&#7841;i"
                        pattern="0\d{9}" maxlength="10" inputmode="numeric"
                        title="S&#7889; &#273;i&#7879;n tho&#7841;i g&#7891;m &#273;&#250;ng 10 ch&#7919; s&#7889; v&#224; b&#7855;t &#273;&#7847;u b&#7857;ng 0.">
+            </div>
+
+            <div class="field">
+                <label>Ngày sinh</label>
+                <input type="date" name="ngay_sinh" required>
+            </div>
+
+            <div class="field">
+                <label>Giới tính</label>
+                <select name="gioi_tinh" required style="padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(31, 42, 43, 0.18); font-family: inherit; font-size: 14px; outline: none; background: white;">
+                    <option value="" disabled selected>Chọn giới tính</option>
+                    <option value="nam">Nam</option>
+                    <option value="nu">Nữ</option>
+                    <option value="khac">Khác</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Địa chỉ</label>
+                <input type="text" name="dia_chi" placeholder="Nhập địa chỉ của bạn" required>
             </div>
 
             <div class="field">

@@ -7,7 +7,7 @@ from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db.models.lookups import GreaterThanOrEqual, LessThanOrEqual
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
@@ -346,7 +346,7 @@ class BaoHiemYTe(models.Model):
             self.ma_bhyt = self.ma_bhyt.upper()
         if self.ngay_cap and self.ngay_het_han and self.ngay_cap >= self.ngay_het_han:
             raise ValidationError({"ngay_het_han": "Ngày hết hạn phải sau ngày cấp."})
-        if self.ngay_het_han and self.ngay_het_han < timezone.localdate():
+        if not self.pk and self.ngay_het_han and self.ngay_het_han < timezone.localdate():
             raise ValidationError({"ngay_het_han": "BHYT đã hết hạn."})
 
     def __str__(self):
@@ -508,21 +508,22 @@ class LichKham(models.Model):
                         if not (benh_vien.gio_mo <= self.gio_kham <= benh_vien.gio_dong):
                             raise ValidationError({"gio_kham": "Giờ khám ngoài giờ làm việc của bệnh viện."})
 
+            start_time = (datetime.datetime.combine(self.ngay_kham, self.gio_kham) - datetime.timedelta(minutes=29)).time()
+            end_time = (datetime.datetime.combine(self.ngay_kham, self.gio_kham) + datetime.timedelta(minutes=29)).time()
+
             existing = LichKham.objects.filter(
                 bac_si=self.bac_si,
                 ngay_kham=self.ngay_kham,
+                gio_kham__range=(start_time, end_time)
             ).exclude(trang_thai="huy")
+            
             if self.pk:
                 existing = existing.exclude(pk=self.pk)
+                
             if existing.exists():
-                current_dt = datetime.datetime.combine(self.ngay_kham, self.gio_kham)
-                for other in existing:
-                    other_dt = datetime.datetime.combine(other.ngay_kham, other.gio_kham)
-                    diff_minutes = abs((current_dt - other_dt).total_seconds()) / 60
-                    if diff_minutes < 30:
-                        raise ValidationError({
-                            "gio_kham": "Giờ khám phải cách các lịch khác ít nhất 30 phút."
-                        })
+                raise ValidationError({
+                    "gio_kham": "Giờ khám phải cách các lịch khác ít nhất 30 phút."
+                })
 
     def __str__(self):
         return f"{self.benh_nhan.ho_ten} - {self.ngay_kham}"
@@ -831,9 +832,17 @@ class NoiDungGioiThieu(models.Model):
         verbose_name_plural = "Nội dung giới thiệu"
 
     def save(self, *args, **kwargs):
-        if not self.thu_tu:
-            self.thu_tu = 1
+        self.pk = 1
+        self.thu_tu = 1
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
 
     def __str__(self):
         return self.tieu_de_trang
@@ -911,12 +920,19 @@ def tao_thong_bao_lich_kham(sender, instance, created, **kwargs):
 @receiver(post_save, sender=PhieuKham)
 def tao_thong_bao_phieu_kham(sender, instance, created, **kwargs):
     """Tự động tạo thông báo khi có phiếu khám hoàn thành"""
-    if created:
+    if created and instance.lich_kham.bac_si.user:
         ThongBao.objects.create(
-            nguoi_nhan=instance.lich_kham.bac_si.user if instance.lich_kham.bac_si.user else None,
+            nguoi_nhan=instance.lich_kham.bac_si.user,
             loai='phieu_kham',
             tieu_de='Phiếu khám mới',
             noi_dung=f"Đã hoàn thành phiếu khám cho bệnh nhân {instance.benh_nhan.ho_ten}",
             lien_ket=f"/phieu-kham/{instance.pk}/"
         )
+
+
+@receiver([post_save, post_delete], sender=BenhVien)
+def invalidate_benhvien_cache(sender, instance, **kwargs):
+    from django.core.cache import cache
+    version = cache.get("benhvien_cache_version", 1)
+    cache.set("benhvien_cache_version", version + 1, timeout=None)
 

@@ -5,7 +5,6 @@ URL configuration for hospital project.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path, re_path
-from core import views as core_views
 
 urlpatterns = [
     path("", include("core.urls")),

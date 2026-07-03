@@ -10,14 +10,7 @@ from django.core.exceptions import ValidationError
 from .models import BacSi, BenhNhan, BenhVien, GioLamViecBacSi, Khoa, LichKham, NoiDungGioiThieu
 
 
-def _translate_password_validation_message(message):
-    mapping = {
-        "This password is too short. It must contain at least 8 characters.": "Mật khẩu quá ngắn. Mật khẩu phải có ít nhất 8 ký tự.",
-        "This password is too common.": "Mật khẩu quá phổ biến, vui lòng chọn mật khẩu khác an toàn hơn.",
-        "This password is entirely numeric.": "Mật khẩu không được chỉ gồm chữ số.",
-        "The password is too similar to the username.": "Mật khẩu quá giống với tên người dùng.",
-    }
-    return mapping.get(message, message)
+from .utils import _translate_password_validation_message
 
 
 class DatLichForm(forms.ModelForm):
@@ -413,7 +406,7 @@ class AdminUserForm(forms.ModelForm):
         role = self.cleaned_data.get("role", self.ROLE_USER)
         if role == self.ROLE_ADMIN:
             user.is_staff = True
-            user.is_superuser = False
+            # Không set user.is_superuser = False ở đây để giữ quyền superuser nếu đã có
         else:
             user.is_staff = False
             user.is_superuser = False

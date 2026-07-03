@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import re
 
 from django import forms
@@ -249,6 +249,12 @@ class AdminBacSiForm(forms.ModelForm):
         if benh_vien and khoa and khoa.benh_vien_id != benh_vien.id:
             self.add_error("khoa", "Khoa không thuộc bệnh viện đã chọn.")
         return cleaned_data
+
+    def clean_user(self):
+        user = self.cleaned_data.get("user")
+        if user and hasattr(user, "benh_nhan"):
+            raise forms.ValidationError("Tài khoản này đã được liên kết với một Hồ sơ Bệnh nhân. Một tài khoản không thể vừa là bác sĩ vừa là bệnh nhân.")
+        return user
 
 
 class AdminGioLamViecBacSiForm(forms.ModelForm):

@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import math
 
 from django.contrib.gis.db import models
@@ -96,17 +96,8 @@ class BenhVien(models.Model):
 
             is_web_mercator = srid == 3857 or abs(x) > 180 or abs(y) > 90
             if is_web_mercator:
-                max_merc = 20037508.34
-                world_width = max_merc * 2
-                if x > max_merc or x < -max_merc:
-                    x = ((x + max_merc) % world_width) - max_merc
-                if y > max_merc:
-                    y = max_merc
-                elif y < -max_merc:
-                    y = -max_merc
-                lon = x * 180.0 / 20037508.34
-                lat = y * 180.0 / 20037508.34
-                lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+                from .utils import mercator_to_wgs84
+                lon, lat = mercator_to_wgs84(x, y)
                 if abs(lat) <= 90 and abs(lon) <= 180:
                     self.vi_tri = Point(lon, lat, srid=4326)
                     return
@@ -454,11 +445,7 @@ class LichKham(models.Model):
                 condition=~models.Q(trang_thai="huy"),
                 name="lichkham_benhnhan_ngay_active_unique",
             ),
-            models.UniqueConstraint(
-                fields=["benh_nhan", "ngay_kham", "gio_kham"],
-                condition=~models.Q(trang_thai="huy"),
-                name="lichkham_benhnhan_ngay_gio_active_unique",
-            ),
+
             models.UniqueConstraint(
                 fields=["bac_si", "ngay_kham", "gio_kham"],
                 condition=~models.Q(trang_thai="huy"),

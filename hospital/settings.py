@@ -25,10 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-zks&!%le7&vo#*)@6)m@v4u__4aek$3w*n3(ws@s%l61zwk+-$'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").strip().lower() in {"1", "true", "yes", "on"}
+DEBUG = os.getenv("DEBUG", "False").strip().lower() in {"1", "true", "yes", "on"}
 
 _allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
 ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts_env.split(",") if host.strip()]
@@ -147,7 +147,6 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-import os
 GDAL_LIBRARY_PATH = os.getenv('GDAL_PATH')
 GEOS_LIBRARY_PATH = os.getenv('GEOS_PATH')
 
@@ -171,6 +170,7 @@ EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", True)
 EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", False)
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@qlbenhvien.local")
+CONTACT_RECEIVER_EMAIL = os.getenv("CONTACT_RECEIVER_EMAIL", DEFAULT_FROM_EMAIL)
 
 # Auth redirects
 LOGIN_URL = '/login/'

@@ -18,8 +18,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--offset",
             type=int,
-            default=99,
-            help="Mapping offset: new_id = old_id - offset (default: 99).",
+            required=True,
+            help="Mapping offset: new_id = old_id - offset.",
         )
         parser.add_argument(
             "--dry-run",

@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 import datetime
 import hashlib
 import json
@@ -311,17 +311,8 @@ def home(request):
         y = point.y
         is_web_mercator = point.srid == 3857 or abs(x) > 180 or abs(y) > 90
         if is_web_mercator:
-            max_merc = 20037508.34
-            world_width = max_merc * 2
-            if x > max_merc or x < -max_merc:
-                x = ((x + max_merc) % world_width) - max_merc
-            if y > max_merc:
-                y = max_merc
-            elif y < -max_merc:
-                y = -max_merc
-            lon = x * 180.0 / 20037508.34
-            lat = y * 180.0 / 20037508.34
-            lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+            from core.utils import mercator_to_wgs84
+            lon, lat = mercator_to_wgs84(x, y)
             if abs(lat) <= 90 and abs(lon) <= 180:
                 return lat, lon
             return None, None
@@ -477,17 +468,8 @@ def _build_about_map_data():
         y = point.y
         is_web_mercator = point.srid == 3857 or abs(x) > 180 or abs(y) > 90
         if is_web_mercator:
-            max_merc = 20037508.34
-            world_width = max_merc * 2
-            if x > max_merc or x < -max_merc:
-                x = ((x + max_merc) % world_width) - max_merc
-            if y > max_merc:
-                y = max_merc
-            elif y < -max_merc:
-                y = -max_merc
-            lon = x * 180.0 / 20037508.34
-            lat = y * 180.0 / 20037508.34
-            lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+            from core.utils import mercator_to_wgs84
+            lon, lat = mercator_to_wgs84(x, y)
             if abs(lat) <= 90 and abs(lon) <= 180:
                 return lat, lon
             return None, None
@@ -533,17 +515,8 @@ def hospital_detail(request, id):
 
         is_web_mercator = bv.vi_tri.srid == 3857 or abs(x) > 180 or abs(y) > 90
         if is_web_mercator:
-            max_merc = 20037508.34
-            world_width = max_merc * 2
-            if x > max_merc or x < -max_merc:
-                x = ((x + max_merc) % world_width) - max_merc
-            if y > max_merc:
-                y = max_merc
-            elif y < -max_merc:
-                y = -max_merc
-            lon = x * 180.0 / 20037508.34
-            lat = y * 180.0 / 20037508.34
-            lat = 180.0 / math.pi * (2 * math.atan(math.exp(lat * math.pi / 180.0)) - math.pi / 2)
+            from core.utils import mercator_to_wgs84
+            lon, lat = mercator_to_wgs84(x, y)
             map_lat, map_lon = lat, lon
         else:
             map_lat, map_lon = y, x
@@ -941,13 +914,15 @@ def doctor_exam(request, lich_id):
 
         try:
             with transaction.atomic():
-                phieu = PhieuKham.objects.create(
+                phieu = PhieuKham(
                     benh_nhan=lich.benh_nhan,
                     lich_kham=lich,
                     trieu_chung=trieu_chung,
                     chan_doan=chan_doan,
                     huong_dieu_tri=huong_dieu_tri
                 )
+                phieu.full_clean()
+                phieu.save()
 
                 for idx, image in enumerate(uploaded_images):
                     hinh_anh = PhieuKhamHinhAnh(
@@ -1019,20 +994,6 @@ def register(request):
             messages.error(request, "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0.")
             return redirect("register")
 
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email đã được sử dụng")
-            return redirect("register")
-
-        if User.objects.filter(username=username).exists():
-
-            messages.error(request, "Tên tài khoản đã tồn tại, vui lòng đăng nhập.")
-
-            return redirect("register")
-
-        if BenhNhan.objects.filter(so_dien_thoai=so_dien_thoai).exists():
-            messages.error(request, "Số điện thoại đã được sử dụng.")
-            return redirect("register")
-
         try:
             validate_password(password, user=User(username=username, email=email))
         except ValidationError as exc:
@@ -1042,23 +1003,27 @@ def register(request):
 
         ho, ten = _split_full_name(name)
 
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            email=email,
-            first_name=ho,
-            last_name=ten,
-        )
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                    first_name=ho,
+                    last_name=ten,
+                )
 
-
-        BenhNhan.objects.create(
-            user=user,
-            ho_ten=name,
-            so_dien_thoai=so_dien_thoai,
-            ngay_sinh="2000-01-01",
-            gioi_tinh="nam",
-            dia_chi="Chưa cập nhật"
-        )
+                BenhNhan.objects.create(
+                    user=user,
+                    ho_ten=name,
+                    so_dien_thoai=so_dien_thoai,
+                    ngay_sinh="2000-01-01",
+                    gioi_tinh="nam",
+                    dia_chi="Chưa cập nhật"
+                )
+        except IntegrityError:
+            messages.error(request, "Tên đăng nhập, email hoặc số điện thoại đã tồn tại.")
+            return redirect("register")
 
 
         messages.success(request, "Đăng ký thành công")
@@ -1453,7 +1418,7 @@ def _user_role_label(user):
 
 def _list_column_value(obj, field_name):
     if field_name == "so_dien_thoai_tai_khoan":
-        benh_nhan = BenhNhan.objects.filter(user=obj).only("so_dien_thoai").first()
+        benh_nhan = getattr(obj, "benh_nhan", None)
         return benh_nhan.so_dien_thoai if benh_nhan else ""
     if field_name == "role_tai_khoan":
         return _user_role_label(obj)
@@ -1565,6 +1530,11 @@ def _parse_int_set(values):
 
 def _validate_hospital_images(uploaded_images):
     errors = []
+    try:
+        from PIL import Image
+    except ImportError:
+        Image = None
+
     for uploaded in uploaded_images:
         name = uploaded.name or "tep_khong_ten"
         ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
@@ -1577,11 +1547,26 @@ def _validate_hospital_images(uploaded_images):
         content_type = (getattr(uploaded, "content_type", "") or "").lower()
         if content_type and not content_type.startswith("image/"):
             errors.append(f"Tệp '{name}' không phải ảnh hợp lệ.")
+            continue
+        if Image:
+            try:
+                with Image.open(uploaded.file) as img:
+                    img.verify()
+            except Exception:
+                errors.append(f"Tệp '{name}' không phải ảnh hợp lệ hoặc bị lỗi.")
+            finally:
+                if hasattr(uploaded.file, 'seek'):
+                    uploaded.file.seek(0)
     return errors
 
 
 def _validate_exam_images(uploaded_images):
     errors = []
+    try:
+        from PIL import Image
+    except ImportError:
+        Image = None
+
     for uploaded in uploaded_images:
         name = uploaded.name or "tep_khong_ten"
         ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
@@ -1594,6 +1579,16 @@ def _validate_exam_images(uploaded_images):
         content_type = (getattr(uploaded, "content_type", "") or "").lower()
         if content_type and not content_type.startswith("image/"):
             errors.append(f"Tệp '{name}' không phải ảnh hợp lệ.")
+            continue
+        if Image:
+            try:
+                with Image.open(uploaded.file) as img:
+                    img.verify()
+            except Exception:
+                errors.append(f"Tệp '{name}' không phải ảnh hợp lệ hoặc bị lỗi.")
+            finally:
+                if hasattr(uploaded.file, 'seek'):
+                    uploaded.file.seek(0)
     return errors
 
 
@@ -1612,14 +1607,14 @@ def _sync_hospital_images(hospital, uploaded_images, delete_ids=None):
         )
         new_items = []
         for idx, uploaded in enumerate(uploaded_images, start=1):
-            new_items.append(
-                BenhVienHinhAnh(
-                    benh_vien=hospital,
-                    hinh_anh=uploaded,
-                    thu_tu=current_max + idx,
-                    la_anh_dai_dien=False,
-                )
+            item = BenhVienHinhAnh(
+                benh_vien=hospital,
+                hinh_anh=uploaded,
+                thu_tu=current_max + idx,
+                la_anh_dai_dien=False,
             )
+            item.full_clean()
+            new_items.append(item)
         BenhVienHinhAnh.objects.bulk_create(new_items)
 
     images = list(
@@ -1756,6 +1751,8 @@ def custom_admin_model_list(request, model_key):
     config = _get_admin_config(model_key)
     model = config["model"]
     queryset = model.objects.all()
+    if model_key == "tai-khoan":
+        queryset = queryset.select_related("benh_nhan", "bac_si")
 
     keyword = request.GET.get("q", "").strip()
     search_fields = config.get("search_fields", ())
@@ -1985,7 +1982,10 @@ def custom_admin_model_delete(request, model_key, pk):
         obj.delete()
         messages.success(request, f"Đã xóa {config['title'].lower()}.")
     except Exception as exc:
-        messages.error(request, f"Không thể xóa: {exc}")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Lỗi khi xóa đối tượng: {exc}", exc_info=True)
+        messages.error(request, "Đã xảy ra lỗi hệ thống khi xóa dữ liệu. Dữ liệu này có thể đang bị ràng buộc bởi các bảng khác.")
     return redirect("custom_admin_model_list", model_key=model_key)
 
 
@@ -2185,6 +2185,14 @@ def forgot_password(request):
                 messages.error(request, "Vui lòng nhập đầy đủ tên người dùng và email đã đăng ký.")
                 return redirect("forgot_password")
 
+            # Limit OTP requests to prevent spam/brute-force
+            client_ip = request.META.get("REMOTE_ADDR", "unknown")
+            cache_key = f"otp_req_{username}_{client_ip}"
+            req_count = cache.get(cache_key, 0)
+            if req_count >= 5:
+                messages.error(request, "Bạn đã yêu cầu gửi mã quá nhiều lần. Vui lòng thử lại sau 1 giờ.")
+                return redirect("forgot_password")
+
             user = User.objects.filter(username=username).first()
             if not user:
                 messages.error(request, "Tên người dùng không tồn tại.")
@@ -2200,6 +2208,9 @@ def forgot_password(request):
             if email.lower() != email_input.lower():
                 messages.error(request, "Tên người dùng và email không khớp.")
                 return redirect("forgot_password")
+
+            # Update request count (valid for 1 hour)
+            cache.set(cache_key, req_count + 1, timeout=3600)
 
             otp_code = f"{random.randint(0, 999999):06d}"
             expires_at = timezone.now() + datetime.timedelta(
@@ -2237,6 +2248,7 @@ def forgot_password(request):
                 "otp_code": otp_code,
                 "verified": False,
                 "expires_at": expires_at.isoformat(),
+                "attempts": 0,
             }
             messages.success(request, "Đã gửi mã OTP 6 số đến email của bạn.")
             return redirect("forgot_password")
@@ -2250,13 +2262,28 @@ def forgot_password(request):
                 )
                 return redirect("forgot_password")
 
+            locked_until_raw = state.get("locked_until")
+            if locked_until_raw:
+                locked_until = datetime.datetime.fromisoformat(locked_until_raw)
+                if timezone.now() < locked_until:
+                    messages.error(request, "Mã OTP này đã bị khóa do nhập sai quá nhiều lần. Vui lòng gửi lại mã mới.")
+                    return redirect("forgot_password")
+
             otp_input = request.POST.get("otp", "").strip()
             if not (otp_input.isdigit() and len(otp_input) == 6):
                 messages.error(request, "Vui lòng nhập đúng mã OTP gồm 6 chữ số.")
                 return redirect("forgot_password")
 
             if otp_input != str(state.get("otp_code", "")):
-                messages.error(request, "Mã OTP không đúng.")
+                state["attempts"] = state.get("attempts", 0) + 1
+                if state["attempts"] >= 5:
+                    # Lock for 15 minutes
+                    state["locked_until"] = (timezone.now() + datetime.timedelta(minutes=15)).isoformat()
+                    request.session[FORGOT_PASSWORD_SESSION_KEY] = state
+                    messages.error(request, "Bạn đã nhập sai mã OTP quá 5 lần. Mã đã bị khóa, vui lòng yêu cầu gửi lại mã mới.")
+                else:
+                    request.session[FORGOT_PASSWORD_SESSION_KEY] = state
+                    messages.error(request, f"Mã OTP không đúng. Bạn còn {5 - state['attempts']} lần thử.")
                 return redirect("forgot_password")
 
             state["verified"] = True
@@ -2404,13 +2431,7 @@ def bac_si_home(request):
 
     base_qs = bac_si.lich_khams.all()
 
-    completed_appointment_ids = set(
-        PhieuKham.objects.filter(lich_kham__bac_si=bac_si).values_list("lich_kham_id", flat=True)
-    )
-    if completed_appointment_ids:
-        base_qs.filter(id__in=completed_appointment_ids).exclude(trang_thai="xong").update(
-            trang_thai="xong"
-        )
+
 
     lich_khams = base_qs
 
@@ -2698,6 +2719,7 @@ def bac_si_phieu_kham_edit(request, phieu_id):
                 phieu.trieu_chung = trieu_chung
                 phieu.chan_doan = chan_doan
                 phieu.huong_dieu_tri = huong_dieu_tri
+                phieu.full_clean()
                 phieu.save()
 
                 if remove_image_ids:

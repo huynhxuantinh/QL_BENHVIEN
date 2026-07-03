@@ -64,9 +64,10 @@ def _parse_day(value):
         return None
     if text in {"cn", "chu nhat", "sun", "sunday"}:
         return 0
-    for digit in ("2", "3", "4", "5", "6", "7"):
-        if digit in text:
-            return int(digit) - 1
+    import re
+    match = re.search(r'\b(?:thu|thứ|t)?\s*(2|3|4|5|6|7)\b', text)
+    if match:
+        return int(match.group(1)) - 1
     return None
 
 
@@ -347,23 +348,30 @@ def _import_doctors(ws, benh_vien_cache):
             skipped += 1
             continue
 
-        if BacSi.objects.filter(so_dien_thoai=phone).exists():
-            bac_si = BacSi.objects.get(so_dien_thoai=phone)
-            bac_si.ho_ten = str(ho_ten).strip()
-            bac_si.chuyen_khoa = chuyen_khoa
-            bac_si.khoa = khoa
-            bac_si.benh_vien = benh_vien
-            bac_si.save()
-            updated += 1
-        else:
-            BacSi.objects.create(
-                ho_ten=str(ho_ten).strip(),
-                chuyen_khoa=chuyen_khoa,
-                khoa=khoa,
-                benh_vien=benh_vien,
-                so_dien_thoai=phone,
-            )
-            created += 1
+        try:
+            if BacSi.objects.filter(so_dien_thoai=phone).exists():
+                bac_si = BacSi.objects.get(so_dien_thoai=phone)
+                bac_si.ho_ten = str(ho_ten).strip()
+                bac_si.chuyen_khoa = chuyen_khoa
+                bac_si.khoa = khoa
+                bac_si.benh_vien = benh_vien
+                bac_si.full_clean()
+                bac_si.save()
+                updated += 1
+            else:
+                bac_si = BacSi(
+                    ho_ten=str(ho_ten).strip(),
+                    chuyen_khoa=chuyen_khoa,
+                    khoa=khoa,
+                    benh_vien=benh_vien,
+                    so_dien_thoai=phone,
+                )
+                bac_si.full_clean()
+                bac_si.save()
+                created += 1
+        except ValidationError:
+            skipped += 1
+            continue
 
     return {"created": created, "updated": updated, "skipped": skipped}
 

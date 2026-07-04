@@ -133,8 +133,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 if DEBUG:
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "ql_benhvien_home_cache",
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": "ql_benhvien_cache_table",
         }
     }
 else:

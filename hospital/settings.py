@@ -130,12 +130,20 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "ql_benhvien_home_cache",
+if DEBUG:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "ql_benhvien_home_cache",
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": os.getenv("CACHE_BACKEND", "django.core.cache.backends.db.DatabaseCache"),
+            "LOCATION": os.getenv("CACHE_LOCATION", "ql_benhvien_cache_table"),
+        }
+    }
 
 # OSM tile servers require Referer for browser requests.
 # Django default (same-origin) strips Referer on cross-origin tile calls.

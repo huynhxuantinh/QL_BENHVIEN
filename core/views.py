@@ -2908,7 +2908,9 @@ def custom_404_debug(request):
 import json
 from django.http import JsonResponse
 from core.models import GisWard
+from django.views.decorators.cache import cache_page
 
+@cache_page(60 * 60 * 24 * 7) # Cache 1 week
 def api_ward_geojson(request, ward_code):
     gis_ward = GisWard.objects.filter(ward_code_id=ward_code).first()
     if not gis_ward or not gis_ward.geom:

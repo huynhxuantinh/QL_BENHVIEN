@@ -91,7 +91,7 @@ def _split_full_name(full_name):
 # ==========================
 def home(request):
 
-    bvs = BenhVien.objects.all().prefetch_related("gio_lam_viecs")
+    bvs = BenhVien.objects.select_related("phuong_xa_fk").prefetch_related("gio_lam_viecs")
     unread_count = 0
     display_name = None
     doctor_info = None

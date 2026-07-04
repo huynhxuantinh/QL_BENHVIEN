@@ -75,11 +75,12 @@ venv\Scripts\python.exe -m pip install openpyxl
 
 ## 5) Khởi tạo database
 
-Chạy migrate:
+Chạy migrate và tạo bảng cache:
 
 ```powershell
 venv\Scripts\python.exe manage.py makemigrations
 venv\Scripts\python.exe manage.py migrate
+venv\Scripts\python.exe manage.py createcachetable ql_benhvien_cache_table
 ```
 
 ---

@@ -1010,6 +1010,14 @@ def user_login(request):
             messages.error(request, "Vui lòng đăng nhập bằng tên người dùng.")
             return render(request, "core/login.html")
 
+        client_ip = request.META.get("REMOTE_ADDR", "unknown")
+        cache_key = f"login_attempts_{username}_{client_ip}"
+        attempts = cache.get(cache_key, 0)
+
+        if attempts >= 5:
+            messages.error(request, "Bạn đã đăng nhập sai quá 5 lần. Vui lòng thử lại sau 15 phút.")
+            return render(request, "core/login.html")
+
         user = authenticate(
             request,
             username=username,
@@ -1017,6 +1025,7 @@ def user_login(request):
         )
 
         if user:
+            cache.delete(cache_key)
             login(request, user)
 
 
@@ -1029,7 +1038,9 @@ def user_login(request):
             # Nếu là bệnh nhân
             return redirect("home")
 
-        messages.error(request, "Sai tài khoản hoặc mật khẩu")
+        attempts += 1
+        cache.set(cache_key, attempts, timeout=900)
+        messages.error(request, f"Sai tài khoản hoặc mật khẩu. Bạn còn {5 - attempts} lần thử.")
 
     return render(request, "core/login.html")
 

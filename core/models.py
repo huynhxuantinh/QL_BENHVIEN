@@ -906,28 +906,36 @@ def log_thay_doi_trang_thai(sender, instance, **kwargs):
 @receiver(post_save, sender=LichKham)
 def tao_thong_bao_lich_kham(sender, instance, created, **kwargs):
     """Tự động tạo thông báo cho bác sĩ khi có lịch khám mới"""
-    if created and instance.bac_si.user:
-        ThongBao.objects.create(
-            nguoi_nhan=instance.bac_si.user,
-            loai='lich_kham',
-            tieu_de='Lịch khám mới',
-            noi_dung=f"Bệnh nhân {instance.benh_nhan.ho_ten} đã đặt lịch khám vào {instance.ngay_kham} lúc {instance.gio_kham}",
-            lien_ket=f"/lich-kham/{instance.pk}/"
-        )
+    if created:
+        try:
+            if instance.bac_si and instance.bac_si.user:
+                ThongBao.objects.create(
+                    nguoi_nhan=instance.bac_si.user,
+                    loai='lich_kham',
+                    tieu_de='Lịch khám mới',
+                    noi_dung=f"Bệnh nhân {instance.benh_nhan.ho_ten} đã đặt lịch khám vào {instance.ngay_kham} lúc {instance.gio_kham}",
+                    lien_ket=f"/lich-kham/{instance.pk}/"
+                )
+        except Exception:
+            pass
 
 
 # Auto tạo thông báo khi có phiếu khám mới
 @receiver(post_save, sender=PhieuKham)
 def tao_thong_bao_phieu_kham(sender, instance, created, **kwargs):
     """Tự động tạo thông báo khi có phiếu khám hoàn thành"""
-    if created and instance.lich_kham.bac_si.user:
-        ThongBao.objects.create(
-            nguoi_nhan=instance.lich_kham.bac_si.user,
-            loai='phieu_kham',
-            tieu_de='Phiếu khám mới',
-            noi_dung=f"Đã hoàn thành phiếu khám cho bệnh nhân {instance.benh_nhan.ho_ten}",
-            lien_ket=f"/phieu-kham/{instance.pk}/"
-        )
+    if created:
+        try:
+            if instance.lich_kham and instance.lich_kham.bac_si and instance.lich_kham.bac_si.user:
+                ThongBao.objects.create(
+                    nguoi_nhan=instance.lich_kham.bac_si.user,
+                    loai='phieu_kham',
+                    tieu_de='Phiếu khám mới',
+                    noi_dung=f"Đã hoàn thành phiếu khám cho bệnh nhân {instance.benh_nhan.ho_ten}",
+                    lien_ket=f"/phieu-kham/{instance.pk}/"
+                )
+        except Exception:
+            pass
 
 
 @receiver([post_save, post_delete], sender=BenhVien)

@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='baohiemyte',
-            constraint=models.CheckConstraint(condition=models.Q(('ngay_cap__lte', models.F('ngay_het_han'))), name='bhyt_ngay_cap_lte_ngay_het_han'),
+            constraint=models.CheckConstraint(check=models.Q(('ngay_cap__lte', models.F('ngay_het_han'))), name='bhyt_ngay_cap_lte_ngay_het_han'),
         ),
         migrations.AddConstraint(
             model_name='benhnhan',
@@ -57,19 +57,19 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='benhvien',
-            constraint=models.CheckConstraint(condition=models.Q(('gio_mo__lt', models.F('gio_dong'))), name='benhvien_gio_mo_lt_gio_dong'),
+            constraint=models.CheckConstraint(check=models.Q(('gio_mo__lt', models.F('gio_dong'))), name='benhvien_gio_mo_lt_gio_dong'),
         ),
         migrations.AddConstraint(
             model_name='benhvien',
-            constraint=models.CheckConstraint(condition=models.Q(('cap_cuu_24h', False), ('co_cap_cuu', True), _connector='OR'), name='benhvien_cap_cuu_24h_requires_cap_cuu'),
+            constraint=models.CheckConstraint(check=models.Q(('cap_cuu_24h', False), ('co_cap_cuu', True), _connector='OR'), name='benhvien_cap_cuu_24h_requires_cap_cuu'),
         ),
         migrations.AddConstraint(
             model_name='giolamviecbacsi',
-            constraint=models.CheckConstraint(condition=models.Q(('nghi', True), ('gio_bat_dau__lt', models.F('gio_ket_thuc')), _connector='OR'), name='giolamviec_bacsi_gio_bat_dau_lt_gio_ket_thuc'),
+            constraint=models.CheckConstraint(check=models.Q(('nghi', True), ('gio_bat_dau__lt', models.F('gio_ket_thuc')), _connector='OR'), name='giolamviec_bacsi_gio_bat_dau_lt_gio_ket_thuc'),
         ),
         migrations.AddConstraint(
             model_name='giolamviecbenhvien',
-            constraint=models.CheckConstraint(condition=models.Q(('nghi', True), ('gio_mo__lt', models.F('gio_dong')), _connector='OR'), name='giolamviec_benhvien_gio_mo_lt_gio_dong'),
+            constraint=models.CheckConstraint(check=models.Q(('nghi', True), ('gio_mo__lt', models.F('gio_dong')), _connector='OR'), name='giolamviec_benhvien_gio_mo_lt_gio_dong'),
         ),
         migrations.AddConstraint(
             model_name='lichkham',

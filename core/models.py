@@ -25,12 +25,91 @@ bhyt_code_validator = RegexValidator(
 )
 
 # ========================= 
+# DANH MỤC HÀNH CHÍNH (GIS)
+# ========================= 
+class AdministrativeRegion(models.Model):
+    id = models.IntegerField(primary_key=True)
+    name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255)
+    code_name = models.CharField(max_length=255, null=True, blank=True)
+    code_name_en = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'administrative_regions'
+
+class AdministrativeUnit(models.Model):
+    id = models.IntegerField(primary_key=True)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
+    full_name_en = models.CharField(max_length=255, null=True, blank=True)
+    short_name = models.CharField(max_length=255, null=True, blank=True)
+    short_name_en = models.CharField(max_length=255, null=True, blank=True)
+    code_name = models.CharField(max_length=255, null=True, blank=True)
+    code_name_en = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'administrative_units'
+
+class Province(models.Model):
+    code = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255, null=True, blank=True)
+    full_name = models.CharField(max_length=255)
+    full_name_en = models.CharField(max_length=255, null=True, blank=True)
+    code_name = models.CharField(max_length=255, null=True, blank=True)
+    administrative_unit = models.ForeignKey(AdministrativeUnit, on_delete=models.DO_NOTHING, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'provinces'
+
+class Ward(models.Model):
+    code = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=255)
+    name_en = models.CharField(max_length=255, null=True, blank=True)
+    full_name = models.CharField(max_length=255, null=True, blank=True)
+    full_name_en = models.CharField(max_length=255, null=True, blank=True)
+    code_name = models.CharField(max_length=255, null=True, blank=True)
+    province_code = models.ForeignKey(Province, on_delete=models.DO_NOTHING, db_column='province_code', null=True, blank=True)
+    administrative_unit = models.ForeignKey(AdministrativeUnit, on_delete=models.DO_NOTHING, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'wards'
+
+class GisProvince(models.Model):
+    id = models.AutoField(primary_key=True)
+    province_code = models.ForeignKey(Province, on_delete=models.DO_NOTHING, db_column='province_code')
+    gis_server_id = models.CharField(max_length=50, null=True, blank=True)
+    area_km2 = models.DecimalField(max_digits=12, decimal_places=5, null=True, blank=True)
+    bbox = models.PolygonField(srid=4326, null=True, blank=True)
+    geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'gis_provinces'
+
+class GisWard(models.Model):
+    id = models.AutoField(primary_key=True)
+    ward_code = models.ForeignKey(Ward, on_delete=models.DO_NOTHING, db_column='ward_code')
+    gis_server_id = models.CharField(max_length=50, null=True, blank=True)
+    area_km2 = models.DecimalField(max_digits=12, decimal_places=5, null=True, blank=True)
+    bbox = models.PolygonField(srid=4326, null=True, blank=True)
+    geom = models.MultiPolygonField(srid=4326, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = 'gis_wards'
+
+# ========================= 
 # BỆNH VIỆN
 # ========================= 
 class BenhVien(models.Model):
     ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     dia_chi = models.TextField()
     phuong = models.CharField(max_length=100, db_index=True)
+    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     vi_tri = models.PointField(srid=4326, spatial_index=True)
     co_cap_cuu = models.BooleanField(default=False, db_index=True)
     cap_cuu_24h = models.BooleanField(default=False, db_index=True)
@@ -55,15 +134,15 @@ class BenhVien(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(gio_mo__lt=models.F("gio_dong")),
+                check=models.Q(gio_mo__lt=models.F("gio_dong")),
                 name="benhvien_gio_mo_lt_gio_dong",
             ),
             models.CheckConstraint(
-                condition=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
+                check=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
                 name="benhvien_cap_cuu_24h_requires_cap_cuu",
             ),
             models.CheckConstraint(
-                condition=(
+                check=(
                     GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(-180))
                     & LessThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(180))
                     & GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_Y"), models.Value(-90))
@@ -187,7 +266,7 @@ class GioLamViecBenhVien(models.Model):
         ordering = ['benh_vien', 'thu']
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(nghi=True) | models.Q(gio_mo__lt=models.F("gio_dong")),
+                check=models.Q(nghi=True) | models.Q(gio_mo__lt=models.F("gio_dong")),
                 name="giolamviec_benhvien_gio_mo_lt_gio_dong",
             ),
         ]
@@ -302,7 +381,7 @@ class GioLamViecBacSi(models.Model):
         ordering = ['bac_si', 'thu']
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(nghi=True) | models.Q(gio_bat_dau__lt=models.F("gio_ket_thuc")),
+                check=models.Q(nghi=True) | models.Q(gio_bat_dau__lt=models.F("gio_ket_thuc")),
                 name="giolamviec_bacsi_gio_bat_dau_lt_gio_ket_thuc",
             ),
         ]
@@ -333,7 +412,7 @@ class BaoHiemYTe(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                condition=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
+                check=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
                 name="bhyt_ngay_cap_lt_ngay_het_han",
             ),
         ]
@@ -380,6 +459,7 @@ class BenhNhan(models.Model):
         unique=True,
     )
     dia_chi = models.TextField()
+    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
     bhyt = models.OneToOneField(
         BaoHiemYTe,
         on_delete=models.SET_NULL,

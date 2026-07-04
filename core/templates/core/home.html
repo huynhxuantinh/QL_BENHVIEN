@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -413,11 +413,20 @@
                             </select>
                         </div>
                         <div class="tool-field">
-                            <label for="phuong">Ph&#432;&#7901;ng</label>
-                            <select id="phuong" name="phuong" class="form-control">
-                                <option value="">T&#7845;t c&#7843;</option>
+                            <label for="province"><i class="fas fa-map-marker-alt"></i> Tỉnh/Thành phố</label>
+                            <select id="province" name="province" class="form-control" onchange="this.form.submit()">
+                                <option value="">Tất cả</option>
+                                {% for p in all_provinces %}
+                                    <option value="{{ p.code }}" {% if province_filter == p.code %}selected{% endif %}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="tool-field">
+                            <label for="phuong"><i class="fas fa-map-marker-alt"></i> Quận/Huyện/Phường/Xã</label>
+                            <select id="phuong" name="phuong" class="form-control" onchange="this.form.submit()">
+                                <option value="">Tất cả</option>
                                 {% for q in all_phuong %}
-                                    <option value="{{ q }}" {% if phuong_filter == q %}selected{% endif %}>{{ q }}</option>
+                                    <option value="{{ q.code }}" {% if phuong_filter == q.code %}selected{% endif %}>{{ q.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -439,8 +448,12 @@
                         <div class="tool-field">
                             <label>&nbsp;</label>
                             <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
+                                Có cấp cứu
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; margin-top:5px;">
                                 <input type="checkbox" name="cap_cuu_24h" value="1" {% if filter_cap_cuu_24h %}checked{% endif %}>
-                                C&#7845;p c&#7913;u 24/7
+                                Cấp cứu 24/7
                             </label>
                         </div>
                         <div class="tool-field">
@@ -479,7 +492,9 @@
                                 <span class="badge warn">Kh&#244;ng BHYT</span>
                             {% endif %}
                             {% if bv.cap_cuu_24h %}
-                                <span class="badge">C&#7845;p c&#7913;u 24/7</span>
+                                <span class="badge">Cấp cứu 24/7</span>
+                            {% elif bv.co_cap_cuu %}
+                                <span class="badge">Có cấp cứu</span>
                             {% else %}
                                 <span class="badge warn">Kh&#244;ng c&#7845;p c&#7913;u 24/7</span>
                             {% endif %}
@@ -581,7 +596,12 @@
         mapData.forEach(item => {
             const marker = L.marker([item.lat, item.lon]).addTo(map);
             const openText = item.open ? "&#272;ang m&#7903;" : "&#272;&#243;ng c&#7917;a";
-            const emergencyText = item.emergency ? "C&#7845;p c&#7913;u 24/7" : "Kh&#244;ng c&#7845;p c&#7913;u 24/7";
+            let emergencyText = "Không có cấp cứu";
+            if (item.cap_cuu_24h) {
+                emergencyText = "Cấp cứu 24/7";
+            } else if (item.emergency) {
+                emergencyText = "Có cấp cứu (không 24/7)";
+            }
             const distanceText = typeof item.distance_km === "number" ? `${item.distance_km} km` : "";
             const popupHtml = `
                 <div class="map-popup">
@@ -594,6 +614,28 @@
             `;
             marker.bindPopup(popupHtml);
         });
+
+        const selectedWardCode = document.getElementById("phuong").value;
+        if (selectedWardCode) {
+            fetch(`/api/ward/${selectedWardCode}/polygon/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.type === "Feature") {
+                        const geojsonLayer = L.geoJSON(data, {
+                            style: {
+                                color: "#007bff",
+                                weight: 2,
+                                opacity: 0.8,
+                                fillOpacity: 0.1
+                            }
+                        }).addTo(map);
+                        if (!document.getElementById("lat").value) {
+                            map.fitBounds(geojsonLayer.getBounds());
+                        }
+                    }
+                })
+                .catch(err => console.error("Error loading ward polygon:", err));
+        }
 
         function setLocateButtonActive(active) {
             if (!locateControlButton) {
@@ -736,11 +778,12 @@
             const loaiHinhValue = document.getElementById("loai_hinh")?.value?.trim() || "";
             const phuongValue = document.getElementById("phuong")?.value?.trim() || "";
             const openChecked = !!document.querySelector('input[name="open"]')?.checked;
+            const emergencyChecked = !!document.querySelector('input[name="emergency"]')?.checked;
             const capCuuChecked = !!document.querySelector('input[name="cap_cuu_24h"]')?.checked;
             const bhytChecked = !!document.querySelector('input[name="bhyt"]')?.checked;
 
             const hasAdvancedFilters = !!(
-                loaiHinhValue || phuongValue || openChecked || capCuuChecked || bhytChecked || (!qValue && radiusValue)
+                loaiHinhValue || phuongValue || openChecked || emergencyChecked || capCuuChecked || bhytChecked || (!qValue && radiusValue)
             );
 
             if (hasAdvancedFilters && (!latValue || !lonValue)) {

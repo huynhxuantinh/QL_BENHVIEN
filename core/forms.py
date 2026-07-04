@@ -142,7 +142,7 @@ class AdminBenhVienForm(forms.ModelForm):
         fields = [
             "ten",
             "dia_chi",
-            "phuong",
+            "phuong_xa_fk",
             "lat",
             "lon",
             "cap_cuu_24h",

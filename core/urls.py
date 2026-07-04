@@ -6,6 +6,7 @@ urlpatterns = [
     # Trang chủ
     path("", views.home, name="home"),
     path("gioi-thieu/", views.gioi_thieu, name="gioi_thieu"),
+    path("api/ward/<str:ward_code>/polygon/", views.api_ward_geojson, name="api_ward_geojson"),
 
     # Chi tiết bệnh viện
     path("benh-vien/<int:id>/", views.hospital_detail, name="hospital_detail"),

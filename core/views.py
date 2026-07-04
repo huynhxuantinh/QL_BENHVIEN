@@ -103,6 +103,7 @@ def home(request):
     filter_cap_cuu_24h = request.GET.get("cap_cuu_24h") == "1"
     loai_hinh = request.GET.get("loai_hinh")
     phuong_filter = (request.GET.get("phuong") or request.GET.get("quan") or "").strip()
+    province_filter = request.GET.get("province", "").strip()
     search_query = request.GET.get("q", "").strip()
 
     non_name_filter_requested = any(
@@ -116,11 +117,15 @@ def home(request):
         )
     )
 
-    all_phuong = (
-        BenhVien.objects.values_list("phuong", flat=True)
-        .distinct()
-        .order_by("phuong")
-    )
+    from core.models import Ward, Province
+    
+    # Get all provinces that have hospitals
+    active_provinces = Province.objects.filter(ward__benhvien__isnull=False).distinct().order_by("name")
+    
+    # Get all wards that have hospitals
+    all_phuong = Ward.objects.filter(benhvien__isnull=False).distinct().order_by("name")
+    if province_filter:
+        all_phuong = all_phuong.filter(province_code=province_filter)
 
     lat_str = request.GET.get("lat")
     lon_str = request.GET.get("lon")
@@ -148,6 +153,7 @@ def home(request):
         filter_cap_cuu_24h = False
         loai_hinh = None
         phuong_filter = ""
+        province_filter = ""
         radius_str = "5"
 
     if radius_str:
@@ -166,12 +172,15 @@ def home(request):
         loai_hinh = None
 
     if phuong_filter:
-        bvs = bvs.filter(phuong__iexact=phuong_filter)
+        bvs = bvs.filter(phuong_xa_fk__code=phuong_filter)
+    elif province_filter:
+        bvs = bvs.filter(phuong_xa_fk__province_code=province_filter)
+
     if search_query:
         bvs = bvs.filter(
             Q(ten__icontains=search_query)
             | Q(dia_chi__icontains=search_query)
-            | Q(phuong__icontains=search_query)
+            | Q(phuong_xa_fk__name__icontains=search_query)
         )
 
     if request.user.is_authenticated:
@@ -226,6 +235,7 @@ def home(request):
         "cap_cuu_24h": filter_cap_cuu_24h,
         "loai_hinh": loai_hinh or "all",
         "phuong": phuong_filter or "all",
+        "province": province_filter or "all",
         "q": search_query.lower(),
         "bucket": time_bucket,
         "version": cache_version,
@@ -249,6 +259,7 @@ def home(request):
             bv.map_lon = info.get("map_lon")
             bv.is_open = info.get("is_open", False)
             bv.emergency_active = info.get("emergency_active", False)
+            bv.cap_cuu_24h_active = info.get("cap_cuu_24h_active", False)
             bv.distance_km = info.get("distance_km")
             cached_bvs.append(bv)
         bvs = cached_bvs
@@ -263,11 +274,12 @@ def home(request):
             map_data.append({
                 "id": bv.id,
                 "name": bv.ten,
-                "phuong": bv.phuong,
+                "phuong": bv.phuong_xa_fk.name if bv.phuong_xa_fk else bv.phuong,
                 "lat": bv.map_lat,
                 "lon": bv.map_lon,
                 "open": bv.is_open,
                 "emergency": bv.emergency_active,
+                "cap_cuu_24h": bv.cap_cuu_24h_active,
                 "distance_km": bv.distance_km,
             })
 
@@ -290,7 +302,9 @@ def home(request):
             "filter_emergency": filter_emergency,
             "loai_hinh": loai_hinh,
             "phuong_filter": phuong_filter,
+            "province_filter": province_filter,
             "q": search_query,
+            "all_provinces": active_provinces,
             "all_phuong": all_phuong,
             "map_data": map_data,
         })
@@ -299,6 +313,8 @@ def home(request):
         bvs = bvs.filter(co_bhyt=True)
     if filter_cap_cuu_24h:
         bvs = bvs.filter(cap_cuu_24h=True)
+    if filter_emergency:
+        bvs = bvs.filter(co_cap_cuu=True)
 
     if user_point:
         # GIS: annotate distance from user, filter by radius, sort nearest first
@@ -327,13 +343,15 @@ def home(request):
         else:
             is_open = bv.gio_mo <= now.time() <= bv.gio_dong
 
-        emergency_active = bv.cap_cuu_24h
+        emergency_active = bv.co_cap_cuu
+        cap_cuu_24h_active = bv.cap_cuu_24h
 
         map_lat, map_lon = point_to_latlon(bv.vi_tri) if bv.vi_tri else (None, None)
         setattr(bv, "map_lat", map_lat)
         setattr(bv, "map_lon", map_lon)
         setattr(bv, "is_open", is_open)
         setattr(bv, "emergency_active", emergency_active)
+        setattr(bv, "cap_cuu_24h_active", cap_cuu_24h_active)
 
         distance_km = None
         if hasattr(bv, "distance_m") and bv.distance_m is not None:
@@ -382,11 +400,12 @@ def home(request):
         map_data.append({
             "id": bv.id,
             "name": bv.ten,
-            "phuong": bv.phuong,
+            "phuong": bv.phuong_xa_fk.name if bv.phuong_xa_fk else bv.phuong,
             "lat": bv.map_lat,
             "lon": bv.map_lon,
             "open": bv.is_open,
             "emergency": bv.emergency_active,
+            "cap_cuu_24h": bv.cap_cuu_24h_active,
             "distance_km": bv.distance_km,
         })
 
@@ -397,6 +416,7 @@ def home(request):
             "map_lon": getattr(bv, "map_lon", None),
             "is_open": getattr(bv, "is_open", False),
             "emergency_active": getattr(bv, "emergency_active", False),
+            "cap_cuu_24h_active": getattr(bv, "cap_cuu_24h_active", False),
             "distance_km": getattr(bv, "distance_km", None),
         }
     cache.set(cache_key, {
@@ -423,7 +443,9 @@ def home(request):
         "filter_emergency": filter_emergency,
         "loai_hinh": loai_hinh,
         "phuong_filter": phuong_filter,
+        "province_filter": province_filter,
         "q": search_query,
+        "all_provinces": active_provinces,
         "all_phuong": all_phuong,
         "map_data": map_data,
     })
@@ -448,7 +470,7 @@ def gioi_thieu(request):
 
 
 def _build_about_map_data():
-    bvs = BenhVien.objects.only("id", "ten", "phuong", "vi_tri").order_by("ten")
+    bvs = BenhVien.objects.select_related("phuong_xa_fk").only("id", "ten", "phuong", "phuong_xa_fk__name", "vi_tri").order_by("ten")
 
     map_data = []
     for bv in bvs:
@@ -458,7 +480,7 @@ def _build_about_map_data():
         map_data.append({
             "id": bv.id,
             "name": bv.ten,
-            "phuong": bv.phuong,
+            "phuong": bv.phuong_xa_fk.name if bv.phuong_xa_fk else bv.phuong,
             "lat": lat,
             "lon": lon,
         })
@@ -1101,9 +1123,9 @@ ADMIN_MODEL_CONFIG = {
         "title": "Bệnh viện",
         "model": BenhVien,
         "form_class": AdminBenhVienForm,
-        "list_display": ("ten", "phuong", "loai_hinh", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
-        "search_fields": ("ten", "dia_chi", "phuong"),
-        "list_filter": ("phuong", "loai_hinh", "cap_cuu_24h", "co_bhyt"),
+        "list_display": ("ten", "phuong_xa_fk", "loai_hinh", "cap_cuu_24h", "co_bhyt", "gio_mo", "gio_dong"),
+        "search_fields": ("ten", "dia_chi", "phuong_xa_fk__name"),
+        "list_filter": ("phuong_xa_fk__province_code", "loai_hinh", "cap_cuu_24h", "co_bhyt"),
         "ordering": ("ten",),
     },
     "gio-lam-viec-benh-vien": {
@@ -2825,7 +2847,6 @@ def profile(request):
 
                 benh_nhan.full_clean()
                 benh_nhan.save()
-
         except ValidationError as exc:
             for field_errors in exc.message_dict.values():
                 if field_errors:
@@ -2883,6 +2904,16 @@ def custom_404(request, exception):
 
 def custom_404_debug(request):
     return render(request, "404.html", status=404)
+
+import json
+from django.http import JsonResponse
+from core.models import GisWard
+
+def api_ward_geojson(request, ward_code):
+    gis_ward = GisWard.objects.filter(ward_code_id=ward_code).first()
+    if not gis_ward or not gis_ward.geom:
+        return JsonResponse({"error": "No GIS data found for this ward"}, status=404)
+    return JsonResponse({"type": "Feature", "geometry": json.loads(gis_ward.geom.geojson)})
 
 
 

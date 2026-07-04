@@ -25,7 +25,7 @@ from django.db import models as db_models
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from .models import BaoHiemYTe
-from .utils import point_to_latlon, _translate_password_validation_message
+from .utils import point_to_latlon, _translate_password_validation_message, get_client_ip
 
 from .models import (
     BenhVien,
@@ -1010,7 +1010,7 @@ def user_login(request):
             messages.error(request, "Vui lòng đăng nhập bằng tên người dùng.")
             return render(request, "core/login.html")
 
-        client_ip = request.META.get("REMOTE_ADDR", "unknown")
+        client_ip = get_client_ip(request)
         cache_key = f"login_attempts_{username}_{client_ip}"
         attempts = cache.get(cache_key, 0)
 
@@ -2118,7 +2118,7 @@ def forgot_password(request):
                 return redirect("forgot_password")
 
             # Limit OTP requests to prevent spam/brute-force
-            client_ip = request.META.get("REMOTE_ADDR", "unknown")
+            client_ip = get_client_ip(request)
             cache_key = f"otp_req_{username}_{client_ip}"
             req_count = cache.get(cache_key, 0)
             if req_count >= 5:

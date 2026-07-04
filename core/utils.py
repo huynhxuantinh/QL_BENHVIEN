@@ -48,3 +48,12 @@ def _translate_password_validation_message(message):
         "The password is too similar to the username.": "Mật khẩu quá giống với tên người dùng.",
     }
     return mapping.get(message, message)
+
+def get_client_ip(request):
+    """
+    Get the real client IP address, handling reverse proxies.
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')

@@ -120,10 +120,10 @@ def home(request):
     from core.models import Ward, Province
     
     # Get all provinces that have hospitals
-    active_provinces = Province.objects.filter(ward__benhvien__isnull=False).distinct().order_by("name")
+    active_provinces = Province.objects.filter(ward__benh_vien_set__isnull=False).distinct().order_by("name")
     
     # Get all wards that have hospitals
-    all_phuong = Ward.objects.filter(benhvien__isnull=False).distinct().order_by("name")
+    all_phuong = Ward.objects.filter(benh_vien_set__isnull=False).distinct().order_by("name")
     if province_filter:
         all_phuong = all_phuong.filter(province_code=province_filter)
 

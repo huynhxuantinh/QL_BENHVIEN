@@ -837,7 +837,7 @@ class NoiDungGioiThieu(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        pass
+        return (0, {})
 
     @classmethod
     def load(cls):

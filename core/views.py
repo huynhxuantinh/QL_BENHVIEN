@@ -2795,48 +2795,46 @@ def profile(request):
                 messages.error(request, "Ngày cấp BHYT phải nhỏ hơn ngày hết hạn.")
                 return redirect("profile")
 
-            bhyt, created = BaoHiemYTe.objects.get_or_create(
-                ma_bhyt=ma_bhyt,
-                defaults={
-                    "ngay_cap": ngay_cap_date,
-                    "ngay_het_han": ngay_het_han_date,
-                },
-            )
-
-            try:
-                owner = bhyt.benh_nhan
-            except BenhNhan.DoesNotExist:
-                owner = None
-            if owner and owner.pk != benh_nhan.pk:
-                messages.error(request, "Mã BHYT này đã được gán cho bệnh nhân khác.")
-                return redirect("profile")
-
-            if not created:
-                bhyt.ngay_cap = ngay_cap_date
-                bhyt.ngay_het_han = ngay_het_han_date
-
-            try:
-                bhyt.full_clean()
-                bhyt.save()
-            except ValidationError as exc:
-                for field_errors in exc.message_dict.values():
-                    if field_errors:
-                        messages.error(request, field_errors[0])
-                        break
-                return redirect("profile")
-
-            benh_nhan.bhyt = bhyt
+        from django.db import transaction
 
         try:
-            benh_nhan.full_clean()
+            with transaction.atomic():
+                if ma_bhyt:
+                    bhyt, created = BaoHiemYTe.objects.get_or_create(
+                        ma_bhyt=ma_bhyt,
+                        defaults={
+                            "ngay_cap": ngay_cap_date,
+                            "ngay_het_han": ngay_het_han_date,
+                        },
+                    )
+
+                    try:
+                        owner = bhyt.benh_nhan
+                    except BenhNhan.DoesNotExist:
+                        owner = None
+                    if owner and owner.pk != benh_nhan.pk:
+                        raise ValueError("Mã BHYT này đã được gán cho bệnh nhân khác.")
+
+                    if not created:
+                        bhyt.ngay_cap = ngay_cap_date
+                        bhyt.ngay_het_han = ngay_het_han_date
+
+                    bhyt.full_clean()
+                    bhyt.save()
+                    benh_nhan.bhyt = bhyt
+
+                benh_nhan.full_clean()
+                benh_nhan.save()
+
         except ValidationError as exc:
             for field_errors in exc.message_dict.values():
                 if field_errors:
                     messages.error(request, field_errors[0])
                     break
             return redirect("profile")
-
-        benh_nhan.save()
+        except ValueError as exc:
+            messages.error(request, str(exc))
+            return redirect("profile")
 
         messages.success(request, "Cập nhật thành công")
 

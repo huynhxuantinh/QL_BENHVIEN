@@ -1534,7 +1534,6 @@ def _sync_hospital_images(hospital, uploaded_images, delete_ids=None):
             .get("value")
             or 0
         )
-        new_items = []
         for idx, uploaded in enumerate(uploaded_images, start=1):
             item = BenhVienHinhAnh(
                 benh_vien=hospital,
@@ -1543,8 +1542,7 @@ def _sync_hospital_images(hospital, uploaded_images, delete_ids=None):
                 la_anh_dai_dien=False,
             )
             item.full_clean()
-            new_items.append(item)
-        BenhVienHinhAnh.objects.bulk_create(new_items)
+            item.save()
 
     images = list(
         BenhVienHinhAnh.objects.filter(benh_vien=hospital).order_by("thu_tu", "id")

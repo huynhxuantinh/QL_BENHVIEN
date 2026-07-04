@@ -149,6 +149,10 @@ else:
 # Django default (same-origin) strips Referer on cross-origin tile calls.
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
+# Reverse Proxy settings
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

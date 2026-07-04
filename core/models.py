@@ -109,7 +109,7 @@ class BenhVien(models.Model):
     ten = models.CharField(max_length=255, db_index=True, validators=[name_validator])
     dia_chi = models.TextField()
     phuong = models.CharField(max_length=100, db_index=True)
-    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True, related_name="benh_vien_set")
     vi_tri = models.PointField(srid=4326, spatial_index=True)
     co_cap_cuu = models.BooleanField(default=False, db_index=True)
     cap_cuu_24h = models.BooleanField(default=False, db_index=True)
@@ -459,7 +459,7 @@ class BenhNhan(models.Model):
         unique=True,
     )
     dia_chi = models.TextField()
-    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True)
+    phuong_xa_fk = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True, db_index=True, related_name="benh_nhan_set")
     bhyt = models.OneToOneField(
         BaoHiemYTe,
         on_delete=models.SET_NULL,

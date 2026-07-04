@@ -113,6 +113,7 @@ def home(request):
         (
             loai_hinh in {"cong", "tu", "qt"},
             bool(phuong_filter),
+            bool(province_filter),
             filter_open,
             filter_emergency,
             filter_bhyt,

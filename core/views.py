@@ -43,6 +43,9 @@ from .models import (
     LogHeThong,
     ThongBao,
     NoiDungGioiThieu,
+    Ward,
+    Province,
+    GisWard,
 )
 
 from .forms import (
@@ -116,9 +119,6 @@ def home(request):
             filter_cap_cuu_24h,
         )
     )
-
-    from core.models import Ward, Province
-    
     # Get all provinces that have hospitals
     active_provinces = Province.objects.filter(ward__benh_vien_set__isnull=False).distinct().order_by("name")
     
@@ -2907,7 +2907,6 @@ def custom_404_debug(request):
 
 import json
 from django.http import JsonResponse
-from core.models import GisWard
 from django.views.decorators.cache import cache_page
 
 @cache_page(60 * 60 * 24 * 7) # Cache 1 week

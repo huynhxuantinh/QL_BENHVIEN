@@ -225,21 +225,21 @@
                             {% csrf_token %}
                             <input name="khoa" type="hidden" value="{{ khoa_id }}"/>
 <div class="field">
-<label>Bác sĩ</label>
+                                {{ form.bac_si.label_tag }}
                                 {{ form.bac_si }}
                             </div>
 <div class="field">
-<label>Ngày khám</label>
+                                {{ form.ngay_kham.label_tag }}
                                 {{ form.ngay_kham }}
                                 <p class="hint">Chọn ngày từ hôm nay đến tối đa 15 ngày tới.</p>
 </div>
 <div class="field">
-<label>Giờ khám</label>
+                                {{ form.gio_kham.label_tag }}
                                 {{ form.gio_kham }}
                                 <p class="hint">Chỉ nhận mốc 30 phút: 00 hoặc 30.</p>
 </div>
 <div class="field">
-<label>Ghi chú</label>
+                                {{ form.ghi_chu.label_tag }}
                                 {{ form.ghi_chu }}
                             </div>
 <div class="actions">

@@ -29,8 +29,8 @@
                     <span class="user-name">Xin chào, {{ display_name|default:user.username }}!</span>
                 </div>
                 <div class="user-actions">
-                    <a href="{% url 'appointment_list' %}" class="btn ghost">Lịch khám</a>
-                    <a href="{% url 'profile_view' %}" class="btn ghost">Hồ sơ</a>
+                    <a href="{% url 'upcoming_appointments' %}" class="btn ghost">Lịch khám</a>
+                    <a href="{% url 'profile' %}" class="btn ghost">Hồ sơ</a>
                     <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                         {% csrf_token %}
                         <button type="submit" class="btn primary">Đăng xuất</button>

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -452,7 +453,7 @@
             dateInput.max = `${maxY}-${maxM}-${maxD}`;
         })();
     </script>
-    <script src="/static/core/js/form_validation_vi.js"></script>
+    <script src="{% static 'core/js/form_validation_vi.js' %}"></script>
 </body>
 </html>
 

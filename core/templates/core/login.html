@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -265,7 +266,7 @@
             Ch&#432;a c&#243; t&#224;i kho&#7843;n? <a href="/register/">&#272;&#259;ng k&#253;</a>
         </div>
     </div>
-    <script src="/static/core/js/form_validation_vi.js"></script>
+    <script src="{% static 'core/js/form_validation_vi.js' %}"></script>
     <script>
         (function () {
             const passwordInput = document.getElementById("login-password");

@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -328,7 +329,7 @@
             &#272;&#227; c&#243; t&#224;i kho&#7843;n? <a href="/login/">&#272;&#259;ng nh&#7853;p</a>
         </div>
     </div>
-    <script src="/static/core/js/form_validation_vi.js"></script>
+    <script src="{% static 'core/js/form_validation_vi.js' %}"></script>
     <script>
         (function () {
             const toggleButtons = document.querySelectorAll("[data-toggle-password]");

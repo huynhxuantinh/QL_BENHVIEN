@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -367,7 +368,7 @@
             loadDepartments(initialDepartmentId);
         })();
     </script>
-    <script src="/static/core/js/form_validation_vi.js"></script>
+    <script src="{% static 'core/js/form_validation_vi.js' %}"></script>
     <script>
         (function () {
             const input = document.getElementById("hospital_images");

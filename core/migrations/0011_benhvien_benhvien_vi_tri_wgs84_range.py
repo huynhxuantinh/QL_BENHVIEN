@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddConstraint(
             model_name='benhvien',
-            constraint=models.CheckConstraint(check=django.db.models.expressions.RawSQL('ST_X(vi_tri) BETWEEN -180 AND 180 AND ST_Y(vi_tri) BETWEEN -90 AND 90', [], output_field=models.BooleanField()), name='benhvien_vi_tri_wgs84_range'),
+            constraint=models.CheckConstraint(condition=django.db.models.expressions.RawSQL('ST_X(vi_tri) BETWEEN -180 AND 180 AND ST_Y(vi_tri) BETWEEN -90 AND 90', [], output_field=models.BooleanField()), name='benhvien_vi_tri_wgs84_range'),
         ),
     ]

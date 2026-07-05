@@ -1,0 +1,122 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
+
+:root {
+    --bg-1: #f5f7f4;
+    --bg-2: #edf3ef;
+    --ink: #1f2c2a;
+    --muted: #566563;
+    --primary: #0e6f60;
+    --primary-2: #13806f;
+    --card: #ffffff;
+    --ring: rgba(14, 111, 96, 0.2);
+    --border: rgba(18, 46, 42, 0.12);
+    --shadow-soft: 0 10px 28px rgba(16, 35, 31, 0.08);
+    --shadow-card: 0 14px 30px rgba(16, 35, 31, 0.1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Work Sans", "Segoe UI", sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(1200px 600px at 95% -10%, rgba(19, 128, 111, 0.13), transparent 58%),
+        radial-gradient(900px 500px at -10% 15%, rgba(110, 157, 143, 0.13), transparent 58%),
+        linear-gradient(120deg, var(--bg-1), var(--bg-2));
+    min-height: 100vh;
+}
+
+.page { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
+
+/* Topbar */
+.topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px 22px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.36s ease-out both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.brand-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; text-decoration: none; color: inherit; }
+.brand-logo {
+    width: 62px; height: 62px; border-radius: 10px; object-fit: cover;
+    border: none; background: transparent; flex-shrink: 0;
+}
+.brand { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.brand h1 { font-family: "Playfair Display", serif; font-size: 26px; margin: 0; letter-spacing: 0.4px; }
+.brand span { font-size: 13px; color: var(--muted); }
+
+.user-area { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 0; }
+.user-meta { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; text-align: right; }
+.user-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.user-name { font-weight: 600; color: var(--primary); }
+
+/* Buttons */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 10px 16px; border-radius: 999px; text-decoration: none;
+    font-weight: 600; font-size: 14px; border: 1px solid transparent;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    white-space: nowrap; cursor: pointer; font-family: inherit;
+}
+.btn.primary { background: var(--primary); color: #fff; box-shadow: 0 10px 18px rgba(14, 111, 96, 0.24); }
+.btn.primary:hover { background: var(--primary-2); transform: translateY(-1px); }
+.btn.ghost { color: var(--primary); border-color: rgba(14, 111, 96, 0.35); background: rgba(255, 255, 255, 0.95); }
+.btn.ghost:hover { box-shadow: 0 10px 16px rgba(14, 111, 96, 0.12); transform: translateY(-1px); }
+
+/* Cards */
+.card {
+    background: var(--card);
+    padding: 24px;
+    border-radius: 22px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(31, 42, 43, 0.08);
+}
+
+/* Messages */
+.messages { margin-bottom: 14px; display: grid; gap: 8px; }
+.message { padding: 10px 12px; border-radius: 10px; font-size: 14px; border: 1px solid transparent; background: rgba(255, 255, 255, 0.9); }
+.message.success { border-color: rgba(43, 145, 96, 0.5); color: #216d49; }
+.message.error { border-color: rgba(180, 52, 52, 0.5); color: #9d2c2c; }
+.message.info { border-color: rgba(52, 122, 180, 0.5); color: #2c639d; }
+
+.messages {
+    margin-bottom: 14px;
+    display: grid;
+    gap: 8px;
+}
+
+.message {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.message.error {
+    border-color: rgba(180, 52, 52, 0.5);
+    color: #9d2c2c;
+    background: #fdf3f3;
+}
+
+.message.success {
+    border-color: rgba(11, 107, 91, 0.4);
+    color: var(--primary);
+    background: #f3faf8;
+}
+
+.message.warning {
+    border-color: rgba(200, 150, 50, 0.5);
+    color: #906010;
+    background: #fdfcf3;
+}

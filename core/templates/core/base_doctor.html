@@ -1,0 +1,34 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block topbar %}
+<div class="topbar">
+    <a href="{% url 'doctor_home' %}" class="brand-wrap">
+        <img src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo" class="brand-logo">
+        <div class="brand">
+            <h1>Hệ thống Y tế</h1>
+            <span>Dành cho Bác sĩ</span>
+        </div>
+    </a>
+    <div class="user-area">
+        {% if user.is_authenticated %}
+        <div class="user-meta">
+            <span class="user-name">BS. {{ doctor_info.ho_ten|default:user.username }}</span>
+        </div>
+        <div class="user-actions">
+            <a href="{% url 'doctor_home' %}" class="btn ghost">Trang bác sĩ</a>
+            <a href="{% url 'doctor_schedule' %}" class="btn ghost">Lịch làm việc</a>
+            <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn primary">Đăng xuất</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="user-meta"></div>
+        <div class="user-actions">
+            <a href="{% url 'login' %}" class="btn ghost">Đăng nhập</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

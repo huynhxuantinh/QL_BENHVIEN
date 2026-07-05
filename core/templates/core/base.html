@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <meta name="description" content="{% block meta_description %}Hệ thống quản lý bệnh viện{% endblock %}">
+    <title>{% block title %}Trang chủ{% endblock %} - Quản lý bệnh viện</title>
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="page">
+        <!-- TOPBAR -->
+        {% block topbar %}
+        <div class="topbar">
+            <a href="{% url 'home' %}" class="brand-wrap">
+                <img src="{% static 'core/img/benh-vien-3t-logo.png' %}" alt="Logo" class="brand-logo">
+                <div class="brand">
+                    <h1>Hệ thống Y tế</h1>
+                    <span>Chăm sóc sức khỏe toàn diện</span>
+                </div>
+            </a>
+            <div class="user-area">
+                {% if user.is_authenticated %}
+                <div class="user-meta">
+                    <span class="user-name">Xin chào, {{ display_name|default:user.username }}!</span>
+                </div>
+                <div class="user-actions">
+                    <a href="{% url 'appointment_list' %}" class="btn ghost">Lịch khám</a>
+                    <a href="{% url 'profile_view' %}" class="btn ghost">Hồ sơ</a>
+                    <form action="{% url 'logout' %}" method="post" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn primary">Đăng xuất</button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="user-meta"></div>
+                <div class="user-actions">
+                    <a href="{% url 'login' %}" class="btn ghost">Đăng nhập</a>
+                    <a href="{% url 'register' %}" class="btn primary">Đăng ký</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endblock %}
+
+        <!-- MESSAGES -->
+        {% if messages %}
+        <div class="messages" style="margin-top: 16px;">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- MAIN CONTENT -->
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script>
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName === 'FORM') {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    if (submitBtn.dataset.submitting) {
+                        e.preventDefault();
+                        return;
+                    }
+                    submitBtn.dataset.submitting = 'true';
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.style.opacity = '0.7';
+                    submitBtn.style.pointerEvents = 'none';
+                    if (!submitBtn.innerHTML.includes('<svg') && !submitBtn.innerHTML.includes('<img')) {
+                        submitBtn.innerHTML = 'Đang xử lý...';
+                    }
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

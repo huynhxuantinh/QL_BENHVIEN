@@ -121,7 +121,7 @@ def home(request):
         )
     )
     # Get all provinces that have hospitals
-    active_provinces = Province.objects.filter(ward_set__benh_vien_set__isnull=False).distinct().order_by("name")
+    active_provinces = Province.objects.filter(ward__benh_vien_set__isnull=False).distinct().order_by("name")
     
     # Get all wards that have hospitals
     all_phuong = Ward.objects.filter(benh_vien_set__isnull=False).distinct().order_by("name")

@@ -1,62 +1,20 @@
+{% extends 'core/base_doctor.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S&#7917;a phi&#7871;u kh&#225;m</title>
-    <style>
-        @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap");
 
-        :root {
-            --bg-1: #f6f3ee;
-            --bg-2: #eef4f0;
-            --ink: #1f2a2b;
-            --muted: #5b6b6a;
-            --primary: #0b6b5b;
-            --card: #ffffff;
-            --shadow: 0 18px 50px rgba(25, 35, 34, 0.12);
-        }
+{% block title %}Sửa phiếu khám{% endblock %}
 
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: "Work Sans", "Segoe UI", sans-serif;
-            color: var(--ink);
-            background:
-                radial-gradient(1200px 600px at 85% -10%, rgba(15, 138, 116, 0.16), transparent 60%),
-                radial-gradient(900px 500px at -10% 20%, rgba(242, 197, 124, 0.18), transparent 60%),
-                linear-gradient(120deg, var(--bg-1), var(--bg-2));
-            min-height: 100vh;
-        }
-
-        .page {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 28px 20px 60px;
-        }
-
-        .card {
-            background: var(--card);
-            padding: 22px;
-            border-radius: 20px;
-            border: 1px solid rgba(31, 42, 43, 0.08);
-            box-shadow: var(--shadow);
-        }
-
-        .field {
+{% block extra_css %}
+<style>
+.field {
             display: flex;
             flex-direction: column;
             gap: 8px;
             margin-bottom: 14px;
         }
-
         .field label {
             font-weight: 600;
             font-size: 14px;
         }
-
         .field textarea {
             padding: 10px 12px;
             border-radius: 12px;
@@ -66,27 +24,23 @@
             min-height: 110px;
             resize: vertical;
         }
-
         .field input[type="file"] {
             padding: 8px 10px;
             border-radius: 12px;
             border: 1px solid rgba(31, 42, 43, 0.18);
             background: #fff;
         }
-
         .image-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 10px;
         }
-
         .image-item {
             border: 1px solid rgba(31, 42, 43, 0.12);
             border-radius: 12px;
             padding: 8px;
             background: #fff;
         }
-
         .image-item img {
             width: 100%;
             height: 100px;
@@ -95,73 +49,43 @@
             display: block;
             margin-bottom: 6px;
         }
-
         .alert-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
             margin-bottom: 14px;
         }
-
         .alert {
             border-radius: 12px;
             padding: 10px 12px;
             font-size: 14px;
             border: 1px solid transparent;
         }
-
         .alert.error {
             background: #fff1f1;
             border-color: #ffc8c8;
             color: #9f2d2d;
         }
-
         .alert.success {
             background: #eefaf4;
             border-color: #bfe9cf;
             color: #176b3a;
         }
-
         .alert.info {
             background: #eef6ff;
             border-color: #bfd8ff;
             color: #1d4b8f;
         }
+</style>
+{% endblock %}
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 16px;
-            border-radius: 999px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            border: 1px solid transparent;
-            white-space: nowrap;
-        }
-
-        .btn.primary {
-            background: var(--primary);
-            color: #fff;
-            box-shadow: 0 10px 18px rgba(11, 107, 91, 0.25);
-        }
-
-        .btn.ghost {
-            color: var(--primary);
-            border-color: rgba(11, 107, 91, 0.3);
-            background: rgba(255, 255, 255, 0.9);
-        }
-    </style>
-</head>
-<body>
-    <div class="page">
-        <div class="card">
-            <h2 style="margin-top:0;">S&#7917;a phi&#7871;u kh&#225;m</h2>
-            <p style="color:var(--muted);">
-                B&#7879;nh nh&#226;n: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> &#8212;
-                Ng&#224;y {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }} l&#250;c {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
-                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}s&#225;ng{% elif h < "18" %}chi&#7873;u{% else %}t&#7889;i{% endif %}{% endwith %})
+{% block content %}
+<div class="card">
+<h2 style="margin-top:0;">Sửa phiếu khám</h2>
+<p style="color:var(--muted);">
+                Bệnh nhân: <strong>{{ phieu.benh_nhan.ho_ten }}</strong> —
+                Ngày {{ phieu.lich_kham.ngay_kham|date:"d/m/Y" }} lúc {{ phieu.lich_kham.gio_kham|time:"H\hi" }}
+                ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
             </p>
 
             {% if messages %}
@@ -172,54 +96,46 @@
                 </div>
             {% endif %}
 
-            <form method="post" enctype="multipart/form-data">
+            <form enctype="multipart/form-data" method="post">
                 {% csrf_token %}
 
                 <div class="field">
-                    <label>Tri&#7879;u ch&#7913;ng</label>
-                    <textarea name="trieu_chung" required>{{ phieu.trieu_chung }}</textarea>
-                </div>
-
-                <div class="field">
-                    <label>Ch&#7849;n &#273;o&#225;n</label>
-                    <textarea name="chan_doan" required>{{ phieu.chan_doan }}</textarea>
-                </div>
-
-                <div class="field">
-                    <label>H&#432;&#7899;ng &#273;i&#7873;u tr&#7883;</label>
-                    <textarea name="huong_dieu_tri" required>{{ phieu.huong_dieu_tri }}</textarea>
-                </div>
+<label>Triệu chứng</label>
+<textarea name="trieu_chung" required="">{{ phieu.trieu_chung }}</textarea>
+</div>
+<div class="field">
+<label>Chẩn đoán</label>
+<textarea name="chan_doan" required="">{{ phieu.chan_doan }}</textarea>
+</div>
+<div class="field">
+<label>Hướng điều trị</label>
+<textarea name="huong_dieu_tri" required="">{{ phieu.huong_dieu_tri }}</textarea>
+</div>
 
                 {% if existing_images %}
                     <div class="field">
-                        <label>&#7842;nh hi&#7879;n t&#7841;i (ch&#7885;n &#273;&#7875; x&#243;a)</label>
-                        <div class="image-grid">
+<label>Ảnh hiện tại (chọn để xóa)</label>
+<div class="image-grid">
                             {% for img in existing_images %}
                                 <label class="image-item">
-                                    <img src="{{ img.hinh_anh.url }}" alt="&#7842;nh phi&#7871;u kh&#225;m">
-                                    <input type="checkbox" name="remove_image_ids" value="{{ img.id }}">
-                                    X&#243;a &#7843;nh n&#224;y
+<img alt="Ảnh phiếu khám" src="{{ img.hinh_anh.url }}"/>
+<input name="remove_image_ids" type="checkbox" value="{{ img.id }}"/>
+                                    Xóa ảnh này
                                 </label>
                             {% endfor %}
                         </div>
-                    </div>
+</div>
                 {% endif %}
 
                 <div class="field">
-                    <label>Th&#234;m &#7843;nh m&#7899;i</label>
-                    <input type="file" name="new_images" accept="image/*" multiple>
-                </div>
-
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn primary" type="submit">L&#432;u thay &#273;&#7893;i</button>
-                    <a class="btn ghost" href="{% url 'phieu_kham_detail' phieu.id %}">Quay l&#7841;i</a>
-                    <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button type="submit" class="btn ghost">&#272;&#259;ng xu&#7845;t</button></form>
-                </div>
-            </form>
-        </div>
-    </div>
-    <script src="{% static 'core/js/form_validation_vi.js' %}"></script>
-</body>
-</html>
-
-
+<label>Thêm ảnh mới</label>
+<input accept="image/*" multiple="" name="new_images" type="file"/>
+</div>
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+<button class="btn primary" type="submit">Lưu thay đổi</button>
+<a class="btn ghost" href="{% url 'phieu_kham_detail' phieu.id %}">Quay lại</a>
+<form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button class="btn ghost" type="submit">Đăng xuất</button></form>
+</div>
+</form>
+</div>
+{% endblock %}

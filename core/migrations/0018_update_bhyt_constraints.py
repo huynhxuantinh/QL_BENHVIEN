@@ -31,8 +31,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="baohiemyte",
-            constraint=models.CheckConstraint(
-                check=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
+            constraint=models.CheckConstraint(condition=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
                 name="bhyt_ngay_cap_lt_ngay_het_han",
             ),
         ),

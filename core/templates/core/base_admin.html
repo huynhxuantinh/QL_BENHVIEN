@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Quản trị hệ thống{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'core/img/benh-vien-3t-logo.png' %}">
+    <style>
+        :root {
+            --bg: #f2f6f4;
+            --card: #ffffff;
+            --line: #d8e4df;
+            --text: #1e2a27;
+            --muted: #647772;
+            --primary: #0f7d69;
+            --primary-2: #0b6958;
+            --soft: #f8fbfa;
+            --wait: #0f6b58;
+            --run: #a1631c;
+            --done: #1f7a4f;
+            --cancel: #8b2f2f;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); }
+        .page { max-width: 1360px; margin: 0 auto; padding: 18px 14px 30px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 9px 13px; border-radius: 999px; text-decoration: none; border: 1px solid #d0ddd8; color: var(--primary); background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+        .btn:hover { border-color: var(--primary); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(15, 125, 105, 0.08); }
+        .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn.primary:hover { background: var(--primary-2); }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+        {% block extra_css %}{% endblock %}
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="page">
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName === 'FORM') {
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    if (submitBtn.dataset.submitting) {
+                        e.preventDefault();
+                        return;
+                    }
+                    submitBtn.dataset.submitting = 'true';
+                    submitBtn.style.opacity = '0.7';
+                    submitBtn.style.pointerEvents = 'none';
+                    if (!submitBtn.innerHTML.includes('<svg') && !submitBtn.innerHTML.includes('<img')) {
+                        submitBtn.innerHTML = 'Đang xử lý...';
+                    }
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -82,12 +82,6 @@ body {
     border: 1px solid rgba(31, 42, 43, 0.08);
 }
 
-/* Messages */
-.messages { margin-bottom: 14px; display: grid; gap: 8px; }
-.message { padding: 10px 12px; border-radius: 10px; font-size: 14px; border: 1px solid transparent; background: rgba(255, 255, 255, 0.9); }
-.message.success { border-color: rgba(43, 145, 96, 0.5); color: #216d49; }
-.message.error { border-color: rgba(180, 52, 52, 0.5); color: #9d2c2c; }
-.message.info { border-color: rgba(52, 122, 180, 0.5); color: #2c639d; }
 
 .messages {
     margin-bottom: 14px;

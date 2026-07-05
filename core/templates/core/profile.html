@@ -88,7 +88,7 @@
 <h1>Hồ sơ của tôi</h1>
 <span>Cập nhật thông tin cá nhân và bảo hiểm y tế</span>
 </div>
-<a class="btn ghost" href="/">← Trang chủ</a>
+<a class="btn ghost" href="{% url 'home' %}">← Trang chủ</a>
 </header>
 
         {% if messages %}
@@ -149,7 +149,7 @@
 </div>
 <div class="actions">
 <button class="btn primary" type="submit">Lưu thay đổi</button>
-<a class="btn ghost" href="/">Quay lại trang chủ</a>
+<a class="btn ghost" href="{% url 'home' %}">Quay lại trang chủ</a>
 </div>
 </form>
 <h2 class="section-title">Đổi mật khẩu</h2>

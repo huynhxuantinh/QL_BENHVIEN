@@ -11,7 +11,7 @@
         min-height: calc(100vh - 160px);
         padding: 24px;
     }
-    .card {
+    .auth-card {
         width: min(420px, 100%);
     }
     h2 {
@@ -110,7 +110,7 @@
         border: 0;
         white-space: nowrap;
     }
-    .btn {
+    .auth-btn {
         width: 100%;
         padding: 12px 14px;
         font-size: 15px;
@@ -137,8 +137,8 @@
 
 {% block content %}
 <div class="login-wrapper">
-    <div class="card">
-        <h2>Đăng ký</h2>
+    <div class="card auth-card">
+        <h2>Đăng ký tài khoản</h2>
         <p class="subtitle">Tạo tài khoản bệnh nhân mới</p>
 
         <form method="post" action="{% url 'register' %}" class="needs-validation" novalidate>
@@ -199,7 +199,7 @@
                 <input type="email" id="email" name="email">
             </div>
 
-            <button type="submit" class="btn primary">Đăng ký</button>
+            <button type="submit" class="btn primary auth-btn">Đăng ký</button>
         </form>
 
         <div class="footer">

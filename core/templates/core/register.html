@@ -145,7 +145,7 @@
             {% csrf_token %}
             <div class="field">
                 <label for="username">Tên đăng nhập *</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required value="{{ form_data.username|default:'' }}">
             </div>
             
             <div class="field">
@@ -186,17 +186,36 @@
 
             <div class="field">
                 <label for="ho_ten">Họ và tên *</label>
-                <input type="text" id="ho_ten" name="ho_ten" required>
+                <input type="text" id="ho_ten" name="ho_ten" required value="{{ form_data.ho_ten|default:'' }}">
             </div>
 
             <div class="field">
                 <label for="so_dien_thoai">Số điện thoại *</label>
-                <input type="text" id="so_dien_thoai" name="so_dien_thoai" required>
+                <input type="text" id="so_dien_thoai" name="so_dien_thoai" required value="{{ form_data.so_dien_thoai|default:'' }}">
+            </div>
+
+                        <div class="field">
+                <label for="ngay_sinh">Ngày sinh *</label>
+                <input type="date" id="ngay_sinh" name="ngay_sinh" required value="{{ form_data.ngay_sinh|default:'' }}">
             </div>
 
             <div class="field">
+                <label for="gioi_tinh">Giới tính *</label>
+                <select id="gioi_tinh" name="gioi_tinh" required style="padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(31, 42, 43, 0.18); font-family: inherit; font-size: 14px; outline: none; transition: border 0.2s ease, box-shadow 0.2s ease; background: white;">
+                    <option value="" {% if not form_data.gioi_tinh %}selected{% endif %}>Chọn giới tính</option>
+                    <option value="Nam" {% if form_data.gioi_tinh == 'Nam' %}selected{% endif %}>Nam</option>
+                    <option value="Nữ" {% if form_data.gioi_tinh == 'Nữ' %}selected{% endif %}>Nữ</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="dia_chi">Địa chỉ *</label>
+                <input type="text" id="dia_chi" name="dia_chi" required value="{{ form_data.dia_chi|default:'' }}">
+            </div>
+
+<div class="field">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email">
+                <input type="email" id="email" name="email" value="{{ form_data.email|default:'' }}">
             </div>
 
             <button type="submit" class="btn primary auth-btn">Đăng ký</button>

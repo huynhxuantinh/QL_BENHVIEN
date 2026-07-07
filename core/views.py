@@ -946,7 +946,7 @@ def register(request):
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         confirm_password = request.POST.get("confirm_password", "")
-        name = request.POST.get("name", "").strip()
+        name = request.POST.get("ho_ten", "").strip()
         email = request.POST.get("email", "").strip()
         so_dien_thoai = request.POST.get("so_dien_thoai", "").strip()
         ngay_sinh = request.POST.get("ngay_sinh", "").strip()
@@ -958,11 +958,11 @@ def register(request):
                 request,
                 "Vui lòng nhập đầy đủ thông tin (bao gồm ngày sinh, giới tính và địa chỉ).",
             )
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         if password != confirm_password:
             messages.error(request, "Mật khẩu và xác nhận mật khẩu không khớp.")
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         username_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$"
         if not re.fullmatch(username_pattern, username):
@@ -970,22 +970,22 @@ def register(request):
                 request,
                 "Tên người dùng phải không dấu, không khoảng trắng và phải gồm cả chữ lẫn số.",
             )
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         if not email:
             messages.error(request, "Vui lòng nhập email")
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         if not re.fullmatch(r"^0\d{9}$", so_dien_thoai):
             messages.error(request, "Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0.")
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         try:
             validate_password(password, user=User(username=username, email=email))
         except ValidationError as exc:
             for raw_message in exc.messages:
                 messages.error(request, _translate_password_validation_message(raw_message))
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
         ho, ten = _split_full_name(name)
 
@@ -1009,7 +1009,7 @@ def register(request):
                 )
         except IntegrityError:
             messages.error(request, "Tên đăng nhập, email hoặc số điện thoại đã tồn tại.")
-            return redirect("register")
+            return render(request, "core/register.html", {"form_data": request.POST})
 
 
         messages.success(request, "Đăng ký thành công")

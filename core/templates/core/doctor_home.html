@@ -4,57 +4,7 @@
 {% block title %}Trang bác sĩ{% endblock %}
 
 {% block extra_css %}
-<style>
-.btn.primary:hover { background: var(--primary-2); transform: translateY(-1px); }
-        .btn.ghost:hover { box-shadow: 0 8px 16px rgba(11, 107, 91, 0.12); transform: translateY(-1px); }
-        .list {
-            margin-top: 22px;
-            display: grid;
-            gap: 14px;
-        }
-        .card:hover { transform: translateY(-2px); }
-        .page > .card:nth-of-type(1) { --enter-delay: 0.06s; }
-        .page > .card:nth-of-type(2) { --enter-delay: 0.1s; }
-        .list .card:nth-child(2n) { --enter-delay: 0.14s; }
-        .list .card:nth-child(3n) { --enter-delay: 0.18s; }
-        .meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            font-size: 14px;
-            color: var(--muted);
-        }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            background: rgba(11, 107, 91, 0.1);
-            color: var(--primary);
-        }
-        .badge.warn {
-            background: rgba(242, 197, 124, 0.3);
-            color: #8a5a10;
-        }
-        .badge.danger {
-            background: rgba(220, 53, 69, 0.16);
-            color: #a61f2d;
-        }
-        @keyframes riseIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        @media (max-width: 700px) {
-            .stat-grid, .meta { flex-direction: column; align-items: flex-start; }
-            .btn { width: 100%; }
-        }
-</style>
+<link rel="stylesheet" href="{% static 'core/css/doctor.css' %}">
 {% endblock %}
 
 {% block content %}

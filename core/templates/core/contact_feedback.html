@@ -57,9 +57,7 @@
 {% block content %}
 
 <section class="card">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
+            ">{{ message }}</div>
                 {% endfor %}
             {% endif %}
 

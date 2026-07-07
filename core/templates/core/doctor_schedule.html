@@ -40,13 +40,7 @@ table {
 {% block content %}
 
 
-        {% if messages %}
-            <div class="card">
-                {% for message in messages %}
-                    <div style="font-weight:600;">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
+        
 
         <form class="card" method="post">
             {% csrf_token %}

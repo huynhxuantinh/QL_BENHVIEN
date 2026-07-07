@@ -88,10 +88,7 @@
                 ({% with h=phieu.lich_kham.gio_kham|time:"H" %}{% if h < "12" %}sáng{% elif h < "18" %}chiều{% else %}tối{% endif %}{% endwith %})
             </p>
 
-            {% if messages %}
-                <div class="alert-list">
-                    {% for message in messages %}
-                        <div class="alert {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
+            ">{{ message }}</div>
                     {% endfor %}
                 </div>
             {% endif %}

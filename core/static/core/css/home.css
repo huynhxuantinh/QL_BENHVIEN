@@ -2,7 +2,7 @@
         .user-name { font-weight: 600; color: var(--primary); }
         .btn.primary:hover { background: var(--primary-2); transform: translateY(-1px); }
         .btn.ghost:hover { box-shadow: 0 10px 16px rgba(14, 111, 96, 0.12); transform: translateY(-1px); }
-        .notif-badge { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(255, 205, 121, 0.35); color: #7b5310; font-size: 12px; font-weight: 700; }
+
         .hero {
             margin: 22px 0 16px;
             display: grid;

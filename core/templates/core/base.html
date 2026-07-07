@@ -31,6 +31,7 @@
                 <div class="user-actions">
                     <a href="{% url 'gioi_thieu' %}" class="btn ghost">Giới thiệu</a>
                     <a href="{% url 'contact_feedback' %}" class="btn ghost">Liên hệ / Góp ý</a>
+                    <a href="{% url 'notifications' %}" class="btn ghost">Thông báo{% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}</a>
                     <a href="{% url 'upcoming_appointments' %}" class="btn ghost">Lịch khám</a>
                     <a href="{% url 'profile' %}" class="btn ghost">Hồ sơ</a>
                     <form action="{% url 'logout' %}" method="post" style="margin: 0;">

@@ -121,3 +121,13 @@ body {
     border-color: #b8d9f0;
     color: #1a5a8a;
 }
+
+.notif-badge {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 205, 121, 0.35);
+    color: #7b5310;
+    font-size: 12px;
+    font-weight: 700;
+}

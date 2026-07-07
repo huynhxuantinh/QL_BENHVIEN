@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'core/css/hospital_detail.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div class="brand">
 <h1>{{ bv.ten }}</h1>
@@ -20,6 +20,10 @@
 <a class="btn primary" href="{% url 'dat_lich' bv.id %}">Đặt lịch khám</a>
 </div>
 </header>
+{% endblock %}
+
+{% block content %}
+
 <section class="hero">
 <div class="info-col">
 <aside class="card info-card">

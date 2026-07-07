@@ -67,7 +67,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div class="brand">
 <h1>Thông báo bác sĩ</h1>
@@ -78,6 +78,10 @@
 <form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button class="btn ghost" type="submit">Đăng xuất</button></form>
 </div>
 </header>
+{% endblock %}
+
+{% block content %}
+
 
         {% if messages %}
             <div class="list">

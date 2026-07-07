@@ -71,7 +71,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div class="brand">
 <h1>Thông báo</h1>
@@ -79,6 +79,10 @@
 </div>
 <a class="btn ghost" href="{% url 'home' %}">← Trang chủ</a>
 </header>
+{% endblock %}
+
+{% block content %}
+
 
         {% if messages %}
             <div class="list">

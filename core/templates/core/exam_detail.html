@@ -31,7 +31,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div class="brand">
 <h1>Phiếu khám</h1>
@@ -44,6 +44,10 @@
                 <a class="btn ghost" href="{% url 'medical_history' %}">← Lịch sử khám</a>
             {% endif %}
         </header>
+{% endblock %}
+
+{% block content %}
+
 <div class="card">
 <p class="meta"><strong>Bệnh nhân:</strong> {{ phieu.benh_nhan.ho_ten }}</p>
 <p class="meta"><strong>Bác sĩ:</strong> {{ phieu.lich_kham.bac_si.ho_ten }}</p>

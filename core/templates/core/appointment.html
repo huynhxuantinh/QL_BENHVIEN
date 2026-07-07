@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'core/css/appointment.css' %}">
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div class="brand">
 <h1>Đặt lịch khám</h1>
@@ -15,6 +15,10 @@
 </div>
 <a class="btn ghost" href="{% url 'hospital_detail' benh_vien.id %}">← Thông tin bệnh viện</a>
 </header>
+{% endblock %}
+
+{% block content %}
+
 <section class="layout">
 <aside class="stack">
 <div class="card">

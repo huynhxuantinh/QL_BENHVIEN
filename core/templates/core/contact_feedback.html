@@ -44,7 +44,7 @@
 </style>
 {% endblock %}
 
-{% block content %}
+{% block topbar %}
 <header class="topbar">
 <div>
 <h1 class="title">Liên Hệ / Góp Ý</h1>
@@ -52,6 +52,10 @@
 </div>
 <a class="btn" href="{% url 'home' %}">← Trang chủ</a>
 </header>
+{% endblock %}
+
+{% block content %}
+
 <section class="card">
             {% if messages %}
                 {% for message in messages %}

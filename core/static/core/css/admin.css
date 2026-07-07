@@ -20,3 +20,11 @@ body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--
 .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
 .btn.primary:hover { background: var(--primary-2); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+
+/* Messages */
+.messages { margin-bottom: 14px; display: grid; gap: 8px; }
+.message { padding: 10px 12px; border-radius: 10px; font-size: 14px; border: 1px solid transparent; background: rgba(255, 255, 255, 0.9); }
+.message.error { border-color: rgba(180, 52, 52, 0.5); color: #9d2c2c; background: #fdf3f3; }
+.message.success { border-color: rgba(11, 107, 91, 0.4); color: var(--primary); background: #f3faf8; }
+.message.warning { border-color: rgba(200, 150, 50, 0.5); color: #906010; background: #fdfcf3; }
+.message.info { border-color: rgba(52, 122, 180, 0.5); color: #2c639d; background: #f0f7fb; }

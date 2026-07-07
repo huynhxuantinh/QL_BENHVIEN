@@ -97,11 +97,7 @@ h1 { margin: 0 0 8px; font-size: 28px; }
                 <p class="meta">Đối tượng: {{ object_name }}</p>
             {% endif %}
 
-            {% if messages %}
-                {% for message in messages %}
-                    <p class="meta">{{ message }}</p>
-                {% endfor %}
-            {% endif %}
+
 
             <form enctype="multipart/form-data" method="post">
                 {% csrf_token %}

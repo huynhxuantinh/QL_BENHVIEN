@@ -37,7 +37,9 @@
 <h1>Phiếu khám</h1>
 <span>{{ benh_nhan.ho_ten }} · {{ benh_nhan.so_dien_thoai }}</span>
 </div>
-            {% if request.user.bac_si %}
+            {% if request.user.is_superuser or request.user.is_staff %}
+                <a class="btn ghost" href="{% url 'custom_admin_dashboard' %}">← Trang quản trị</a>
+            {% elif request.user.bac_si %}
                 <a class="btn ghost" href="{% url 'bac_si_phieu_kham_edit' phieu.id %}">Sửa phiếu</a>
 <a class="btn ghost" href="{% url 'bac_si_home' %}">← Trang bác sĩ</a>
             {% else %}

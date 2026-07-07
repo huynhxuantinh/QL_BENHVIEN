@@ -1059,6 +1059,9 @@ def user_login(request):
                 return redirect("bac_si_home")
 
             # Nếu là bệnh nhân
+            next_url = request.POST.get("next") or request.GET.get("next") or ""
+            if next_url and next_url.startswith("/") and not next_url.startswith("//"):
+                return redirect(next_url)
             return redirect("home")
 
         attempts += 1

@@ -103,6 +103,7 @@ body {
     background: #fdf3f3;
 }
 
+
 .message.success {
     border-color: rgba(11, 107, 91, 0.4);
     color: var(--primary);
@@ -113,4 +114,10 @@ body {
     border-color: rgba(200, 150, 50, 0.5);
     color: #906010;
     background: #fdfcf3;
+}
+
+.message.info {
+    background: #e8f4fd;
+    border-color: #b8d9f0;
+    color: #1a5a8a;
 }

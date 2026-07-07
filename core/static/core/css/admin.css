@@ -27,4 +27,4 @@ body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: var(--
 .message.error { border-color: rgba(180, 52, 52, 0.5); color: #9d2c2c; background: #fdf3f3; }
 .message.success { border-color: rgba(11, 107, 91, 0.4); color: var(--primary); background: #f3faf8; }
 .message.warning { border-color: rgba(200, 150, 50, 0.5); color: #906010; background: #fdfcf3; }
-.message.info { border-color: rgba(52, 122, 180, 0.5); color: #2c639d; background: #f0f7fb; }
+.message.info { border-color: #b8d9f0; color: #1a5a8a; background: #e8f4fd; }

@@ -938,6 +938,9 @@ def doctor_exam(request, lich_id):
 # ĐĂNG KÝ
 # ==========================
 def register(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+
 
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -1021,6 +1024,9 @@ def register(request):
 # ĐĂNG NHẬP
 # ==========================
 def user_login(request):
+    if request.user.is_authenticated:
+        return redirect("home")
+
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")

@@ -190,8 +190,10 @@
                 {% for bv in bvs %}
                     <div class="card">
 <div class="card-title">{{ bv.ten }}</div>
-<div class="card-meta">{% if bv.phuong_xa_fk %}{{ bv.phuong_xa_fk.name }}{% else %}{{ bv.phuong }}{% endif %}</div>
+<div class="card-meta" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ bv.dia_chi }}"><i class="fas fa-map-marker-alt" style="width:16px; text-align:center;"></i> {{ bv.dia_chi }}</div>
+<div class="card-meta"><i class="fas fa-clock" style="width:16px; text-align:center;"></i> {{ bv.gio_mo|time:"H:i" }} - {{ bv.gio_dong|time:"H:i" }}</div>
 <div class="card-badges">
+                            <span class="badge ghost">BV {{ bv.get_loai_hinh_display }}</span>
                             {% if bv.co_bhyt %}
                                 <span class="badge">Có BHYT</span>
                             {% else %}

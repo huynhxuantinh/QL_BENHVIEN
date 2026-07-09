@@ -108,7 +108,7 @@
 </div>
 <div class="tool-field">
 <label for="radius">Bán kính (km)</label>
-<input id="radius" min="1" name="radius" placeholder="Ví dụ: 5" step="1" type="number" value="{{ radius_km|default:5 }}"/>
+<input id="radius" min="1" name="radius" placeholder="Ví dụ: 5" step="1" type="number" value="{% if radius_km %}{{ radius_km }}{% endif %}"/>
 </div>
 <div class="tool-field">
 <label for="loai_hinh">Loại hình BV</label>

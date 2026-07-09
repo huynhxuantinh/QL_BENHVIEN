@@ -109,17 +109,6 @@ def home(request):
     province_filter = request.GET.get("province", "").strip()
     search_query = request.GET.get("q", "").strip()
 
-    non_name_filter_requested = any(
-        (
-            loai_hinh in {"cong", "tu", "qt"},
-            bool(phuong_filter),
-            bool(province_filter),
-            filter_open,
-            filter_emergency,
-            filter_bhyt,
-            filter_cap_cuu_24h,
-        )
-    )
     # Get all provinces that have hospitals
     active_provinces = Province.objects.filter(ward__benh_vien_set__isnull=False).distinct().order_by("name")
     
@@ -143,29 +132,14 @@ def home(request):
         except ValueError:
             user_point = None
 
-    if non_name_filter_requested and not user_point:
-        messages.error(
-            request,
-            "Vui lòng lấy vị trí người dùng trước khi áp dụng bộ lọc bệnh viện.",
-        )
-        filter_open = False
-        filter_emergency = False
-        filter_bhyt = False
-        filter_cap_cuu_24h = False
-        loai_hinh = None
-        phuong_filter = ""
-        province_filter = ""
-        radius_str = "5"
-
-    if radius_str:
+    radius_km = None
+    if user_point and radius_str:
         try:
             radius_km = float(radius_str)
             if radius_km <= 0:
                 radius_km = None
         except ValueError:
             radius_km = None
-    else:
-        radius_km = 5.0 if user_point else None
 
     if loai_hinh in {"cong", "tu", "qt"}:
         bvs = bvs.filter(loai_hinh=loai_hinh)

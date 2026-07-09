@@ -114,9 +114,9 @@
 <label for="loai_hinh">Loại hình BV</label>
 <select class="form-control" id="loai_hinh" name="loai_hinh">
 <option value="">Tất cả</option>
-<option %}="" %}selected{%="" endif="" if="" loai_hinh="cong" value="cong" {%="">Công</option>
-<option %}="" %}selected{%="" endif="" if="" loai_hinh="tu" value="tu" {%="">Tư</option>
-<option %}="" %}selected{%="" endif="" if="" loai_hinh="qt" value="qt" {%="">Quốc tế</option>
+<option value="cong" {% if loai_hinh == "cong" %}selected{% endif %}>Công</option>
+<option value="tu" {% if loai_hinh == "tu" %}selected{% endif %}>Tư</option>
+<option value="qt" {% if loai_hinh == "qt" %}selected{% endif %}>Quốc tế</option>
 </select>
 </div>
 <div class="tool-field">
@@ -124,7 +124,7 @@
 <select class="form-control" id="province" name="province" onchange="this.form.submit()">
 <option value="">Tất cả</option>
                                 {% for p in all_provinces %}
-                                    <option %}="" %}selected{%="" endif="" if="" province_filter="p.code" value="{{ p.code }}" {%="">{{ p.name }}</option>
+                                    <option value="{{ p.code }}" {% if province_filter == p.code %}selected{% endif %}>{{ p.name }}</option>
                                 {% endfor %}
                             </select>
 </div>
@@ -133,7 +133,7 @@
 <select class="form-control" id="phuong" name="phuong" onchange="this.form.submit()">
 <option value="">Tất cả</option>
                                 {% for q in all_phuong %}
-                                    <option %}="" %}selected{%="" endif="" if="" phuong_filter="q.code" value="{{ q.code }}" {%="">{{ q.name }}</option>
+                                    <option value="{{ q.code }}" {% if phuong_filter == q.code %}selected{% endif %}>{{ q.name }}</option>
                                 {% endfor %}
                             </select>
 </div>
@@ -148,25 +148,25 @@
 <div class="tool-field">
 <label> </label>
 <label style="display:flex; align-items:center; gap:8px;">
-<input %}="" %}checked{%="" endif="" filter_open="" if="" name="open" type="checkbox" value="1" {%=""/>
+<input type="checkbox" name="open" value="1" {% if filter_open %}checked{% endif %}>
                                 BV đang mở
                             </label>
 </div>
 <div class="tool-field">
 <label> </label>
 <label style="display:flex; align-items:center; gap:8px;">
-<input %}="" %}checked{%="" endif="" filter_emergency="" if="" name="emergency" type="checkbox" value="1" {%=""/>
+<input type="checkbox" name="emergency" value="1" {% if filter_emergency %}checked{% endif %}>
                                 Có cấp cứu
                             </label>
 <label style="display:flex; align-items:center; gap:8px; margin-top:5px;">
-<input %}="" %}checked{%="" endif="" filter_cap_cuu_24h="" if="" name="cap_cuu_24h" type="checkbox" value="1" {%=""/>
+<input type="checkbox" name="cap_cuu_24h" value="1" {% if filter_cap_cuu_24h %}checked{% endif %}>
                                 Cấp cứu 24/7
                             </label>
 </div>
 <div class="tool-field">
 <label> </label>
 <label style="display:flex; align-items:center; gap:8px;">
-<input %}="" %}checked{%="" endif="" filter_bhyt="" if="" name="bhyt" type="checkbox" value="1" {%=""/>
+<input type="checkbox" name="bhyt" value="1" {% if filter_bhyt %}checked{% endif %}>
                                 Có BHYT
                             </label>
 </div>

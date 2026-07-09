@@ -191,20 +191,15 @@
                     <div class="card">
 <div class="card-title">{{ bv.ten }}</div>
 <div class="card-meta" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ bv.dia_chi }}"><i class="fas fa-map-marker-alt" style="width:16px; text-align:center;"></i> {{ bv.dia_chi }}</div>
-<div class="card-meta"><i class="fas fa-clock" style="width:16px; text-align:center;"></i> {{ bv.gio_mo|time:"H:i" }} - {{ bv.gio_dong|time:"H:i" }}</div>
 <div class="card-badges">
                             <span class="badge ghost">BV {{ bv.get_loai_hinh_display }}</span>
                             {% if bv.co_bhyt %}
                                 <span class="badge">Có BHYT</span>
-                            {% else %}
-                                <span class="badge warn">Không BHYT</span>
                             {% endif %}
                             {% if bv.cap_cuu_24h %}
                                 <span class="badge">Cấp cứu 24/7</span>
                             {% elif bv.co_cap_cuu %}
                                 <span class="badge">Có cấp cứu</span>
-                            {% else %}
-                                <span class="badge warn">Không cấp cứu 24/7</span>
                             {% endif %}
                             {% if bv.is_open %}
                                 <span class="status">Đang mở</span>

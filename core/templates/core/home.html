@@ -196,10 +196,11 @@
                             {% if bv.co_bhyt %}
                                 <span class="badge">Có BHYT</span>
                             {% endif %}
+                            {% if bv.co_cap_cuu %}
+                                <span class="badge">Có cấp cứu</span>
+                            {% endif %}
                             {% if bv.cap_cuu_24h %}
                                 <span class="badge">Cấp cứu 24/7</span>
-                            {% elif bv.co_cap_cuu %}
-                                <span class="badge">Có cấp cứu</span>
                             {% endif %}
                             {% if bv.is_open %}
                                 <span class="status">Đang mở</span>
@@ -300,19 +301,17 @@
         mapData.forEach(item => {
             const marker = L.marker([item.lat, item.lon]).addTo(map);
             const openText = item.open ? "&#272;ang m&#7903;" : "&#272;&#243;ng c&#7917;a";
-            let emergencyText = "Không có cấp cứu";
-            if (item.cap_cuu_24h) {
-                emergencyText = "Cấp cứu 24/7";
-            } else if (item.emergency) {
-                emergencyText = "Có cấp cứu (không 24/7)";
-            }
+            let emergencyText = [];
+            if (item.emergency) emergencyText.push("Có cấp cứu");
+            if (item.cap_cuu_24h) emergencyText.push("Cấp cứu 24/7");
+            const emergencyDisplay = emergencyText.length ? emergencyText.join(" | ") : "Không có cấp cứu";
             const distanceText = typeof item.distance_km === "number" ? `${item.distance_km} km` : "";
             const popupHtml = `
                 <div class="map-popup">
                     <div class="map-popup-title">${escapeHtml(item.name)}</div>
                     <div class="map-popup-meta">${escapeHtml(item.phuong || "Chưa rõ phường")}</div>
                     <div class="map-popup-meta">${openText}${distanceText ? ` - ${distanceText}` : ""}</div>
-                    <div class="map-popup-meta">${emergencyText}</div>
+                    <div class="map-popup-meta">${emergencyDisplay}</div>
                     <a class="map-popup-link" href="${detailUrlForId(item.id)}">Xem chi ti&#7871;t</a>
                 </div>
             `;

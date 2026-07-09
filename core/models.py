@@ -153,8 +153,9 @@ class BenhVien(models.Model):
 
     def clean(self):
         super().clean()
-        # App only exposes "Cấp cứu 24/7", so keep legacy field synced.
-        self.co_cap_cuu = bool(self.cap_cuu_24h)
+        # If cap_cuu_24h is checked, it must have co_cap_cuu
+        if self.cap_cuu_24h:
+            self.co_cap_cuu = True
         if self.gio_mo and self.gio_dong and self.gio_mo >= self.gio_dong:
             raise ValidationError({"gio_dong": "Giờ đóng phải sau giờ mở."})
         if self.vi_tri:

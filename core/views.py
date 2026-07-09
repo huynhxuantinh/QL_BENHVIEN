@@ -133,7 +133,7 @@ def home(request):
             user_point = None
 
     radius_km = None
-    if user_point and radius_str:
+    if user_point and radius_str and not (phuong_filter or province_filter):
         try:
             radius_km = float(radius_str)
             if radius_km <= 0:

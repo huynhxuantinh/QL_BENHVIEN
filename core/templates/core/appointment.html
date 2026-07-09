@@ -11,7 +11,7 @@
 <header class="topbar">
 <div class="brand">
 <h1>Đặt lịch khám</h1>
-<span>{{ benh_vien.ten }} - {{ benh_vien.phuong }}</span>
+<span>{{ benh_vien.ten }} - {% if benh_vien.phuong_xa_fk %}{{ benh_vien.phuong_xa_fk.name }}{% else %}{{ benh_vien.phuong }}{% endif %}</span>
 </div>
 <a class="btn ghost" href="{% url 'hospital_detail' benh_vien.id %}">← Thông tin bệnh viện</a>
 </header>

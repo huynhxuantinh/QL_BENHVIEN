@@ -888,8 +888,10 @@ def doctor_exam(request, lich_id):
 
         if not trieu_chung or not chan_doan or not huong_dieu_tri:
             messages.error(request, "Vui lòng nhập đầy đủ thông tin phiếu khám.")
+            lich_su = LichSuKhamBenh.objects.filter(benh_nhan=lich.benh_nhan).select_related("bac_si", "benh_vien", "phieu_kham").order_by("-ngay_kham", "-ngay_tao")
             return render(request, "core/doctor_exam.html", {
-                "lich": lich
+                "lich": lich,
+                "lich_su": lich_su,
             })
 
         try:
@@ -917,8 +919,10 @@ def doctor_exam(request, lich_id):
                 lich.save()
         except ValidationError:
             messages.error(request, "Ảnh tải lên không hợp lệ. Vui lòng dùng JPG, PNG hoặc WEBP.")
+            lich_su = LichSuKhamBenh.objects.filter(benh_nhan=lich.benh_nhan).select_related("bac_si", "benh_vien", "phieu_kham").order_by("-ngay_kham", "-ngay_tao")
             return render(request, "core/doctor_exam.html", {
-                "lich": lich
+                "lich": lich,
+                "lich_su": lich_su,
             })
 
         messages.success(request, "Đã hoàn thành khám")
@@ -929,9 +933,13 @@ def doctor_exam(request, lich_id):
         lich.trang_thai = "dang"
         lich.save(update_fields=["trang_thai", "ngay_cap_nhat"])
 
+    lich_su = LichSuKhamBenh.objects.filter(
+        benh_nhan=lich.benh_nhan
+    ).select_related("bac_si", "benh_vien", "phieu_kham").order_by("-ngay_kham", "-ngay_tao")
 
     return render(request, "core/doctor_exam.html", {
-        "lich": lich
+        "lich": lich,
+        "lich_su": lich_su,
     })
 
 # ==========================

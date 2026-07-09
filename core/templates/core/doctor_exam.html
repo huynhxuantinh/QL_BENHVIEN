@@ -63,10 +63,35 @@
             .preview-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
             .btn { width: 100%; justify-content: center; }
         }
+
+        @media (max-width: 900px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            align-items: start;
+        }
+        .history-item {
+            border-top: 1px solid rgba(31, 42, 43, 0.08);
+            padding-top: 14px;
+            margin-top: 14px;
+        }
+        .label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .value {
+            font-weight: 600;
+        }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="layout-grid">
 <div class="card">
 <h2 style="margin-top:0;">Khám bệnh</h2>
 <p style="color:var(--muted);">
@@ -98,10 +123,55 @@
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
 <button class="btn primary" type="submit">Hoàn thành khám</button>
 <a class="btn ghost" href="{% url 'bac_si_home' %}">Quay lại</a>
-<form action="{% url 'logout' %}" method="post" style="display:inline;">{% csrf_token %}<button class="btn ghost" type="submit">Đăng xuất</button></form>
 </div>
 </form>
-</div>
+
+    </div> <!-- end form card -->
+
+    <!-- Sidebar: Bệnh nhân info & Lịch sử khám -->
+    <div>
+        <div class="card" style="margin-bottom: 20px;">
+            <h3 style="margin-top:0;">Thông tin bổ sung</h3>
+            <div style="margin-bottom: 8px;">
+                <span class="label">BHYT:</span>
+                <span class="value">{% if lich.benh_nhan.bhyt %}{{ lich.benh_nhan.bhyt.ma_bhyt }}{% else %}Không có{% endif %}</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span class="label">Ngày sinh:</span>
+                <span class="value">{{ lich.benh_nhan.ngay_sinh|date:"d/m/Y" }}</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <span class="label">Giới tính:</span>
+                <span class="value">{{ lich.benh_nhan.get_gioi_tinh_display }}</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0;">Lịch sử khám</h3>
+            {% for item in lich_su %}
+                <div class="history-item">
+                    <div class="label">Ngày khám</div>
+                    <div class="value">{{ item.ngay_kham|date:"d/m/Y" }}</div>
+                    <div class="label">Chẩn đoán</div>
+                    <div class="value">{{ item.chan_doan }}</div>
+                    <div class="label">Hướng điều trị</div>
+                    <div class="value">{{ item.huong_dieu_tri }}</div>
+                    <div class="label">Bác sĩ</div>
+                    <div class="value">{% if item.bac_si %}{{ item.bac_si.ho_ten }}{% else %}--{% endif %}</div>
+                    <div class="label">Bệnh viện</div>
+                    <div class="value">{% if item.benh_vien %}{{ item.benh_vien.ten }}{% else %}--{% endif %}</div>
+                    {% if item.phieu_kham %}
+                        <div style="margin-top:8px;">
+                            <a class="btn ghost" href="{% url 'phieu_kham_detail' item.phieu_kham.id %}" target="_blank">Xem phiếu khám</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div>Chưa có lịch sử khám.</div>
+            {% endfor %}
+        </div>
+    </div> <!-- end sidebar -->
+</div> <!-- end layout-grid -->
 {% endblock %}
 
 {% block extra_js %}

@@ -107,6 +107,10 @@
                                     <button class="btn danger" onclick="return confirm('Bạn có chắc chắn muốn hủy lịch khám này?')" type="submit">Hủy lịch</button>
 </form>
 </div>
+                        {% elif lich.trang_thai == 'dang' %}
+                            <div class="actions">
+                                <p style="margin: 0; color: var(--warning); font-size: 14px; font-weight: 500;">Đang trong quá trình khám...</p>
+                            </div>
                         {% endif %}
                     </div>
                 {% endfor %}

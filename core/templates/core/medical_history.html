@@ -72,7 +72,13 @@
                 {% for item in lich_su %}
                     <div class="card">
 <h3>{{ item.bac_si.ho_ten|default:"Bác sĩ" }}</h3>
-<p class="meta"><strong>Ngày khám:</strong> {{ item.ngay_kham|date:"d/m/Y" }}</p>
+<p class="meta">
+    <strong>Ngày khám:</strong> {{ item.ngay_kham|date:"d/m/Y" }}
+    {% if item.phieu_kham and item.phieu_kham.lich_kham %}
+        - <strong>Giờ:</strong> {{ item.phieu_kham.lich_kham.gio_kham|time:"H\hi" }}
+    {% endif %}
+</p>
+<p class="meta"><strong>Khoa:</strong> {{ item.bac_si.khoa.ten|default:"—" }}</p>
 <p class="meta"><strong>Bệnh viện:</strong> {{ item.benh_vien.ten|default:"—" }}</p>
 <span class="badge">Đã khám</span>
 <div class="section">

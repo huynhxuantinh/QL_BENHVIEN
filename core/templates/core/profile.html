@@ -145,7 +145,17 @@
 <input id="id_ngay_cap" name="ngay_cap" type="date" value="{% if bn.bhyt %}{{ bn.bhyt.ngay_cap|date:'Y-m-d' }}{% endif %}"/>
 </div>
 <div class="field">
-<label for="id_ngay_het_han">Ngày hết hạn</label>
+<label for="id_ngay_het_han" style="display:flex; align-items:center;">
+    Ngày hết hạn
+    {% if bn.bhyt and bn.bhyt.ngay_het_han %}
+        {% now "Y-m-d" as current_date %}
+        {% if bn.bhyt.ngay_het_han|date:"Y-m-d" >= current_date %}
+            <span class="badge" style="font-size: 11px; padding: 3px 6px; margin-left: 10px;">Còn hạn</span>
+        {% else %}
+            <span class="badge danger" style="font-size: 11px; padding: 3px 6px; margin-left: 10px;">Hết hạn</span>
+        {% endif %}
+    {% endif %}
+</label>
 <input id="id_ngay_het_han" name="ngay_het_han" type="date" value="{% if bn.bhyt %}{{ bn.bhyt.ngay_het_han|date:'Y-m-d' }}{% endif %}"/>
 </div>
 </div>

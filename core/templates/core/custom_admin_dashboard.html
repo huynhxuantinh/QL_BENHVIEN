@@ -57,7 +57,23 @@
             gap: 7px;
         }
         .sidebar-links 
+        
+        .sidebar-links a {
+            display: block;
+            padding: 10px 14px;
+            color: var(--text);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.2s;
+            margin-bottom: 4px;
+        }
+        .sidebar-links a:hover, .sidebar-links a.active {
+            background: rgba(11, 107, 91, 0.08);
+            color: var(--primary);
+            font-weight: 600;
+        }
         .main {
+
             min-width: 0;
             display: grid;
             gap: 12px;

@@ -147,7 +147,7 @@
 <h2 class="section-title">Khoa</h2>
 <ul class="list">
                     {% for k in khoas %}
-                        <li class="list-item">{{ k.ten }}</li>
+                        <li class="list-item">{{ k.ten }} <span style="color:var(--muted); font-size: 13px;">({{ k.bac_sis.count }} bác sĩ)</span></li>
                     {% empty %}
                         <li class="list-item">Chưa có khoa</li>
                     {% endfor %}

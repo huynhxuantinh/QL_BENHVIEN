@@ -87,7 +87,7 @@
                                 <button class="btn ghost" type="submit">Bắt đầu khám</button>
 </form>
                         {% endif %}
-                        {% if lich.trang_thai != "huy" and lich.trang_thai != "xong" %}
+                        {% if lich.trang_thai == "dang" %}
                         <div>
 <a class="btn primary" href="{% url 'doctor_exam' lich.id %}">Khám bệnh</a>
 </div>

@@ -489,18 +489,6 @@
             const capCuuChecked = !!document.querySelector('input[name="cap_cuu_24h"]')?.checked;
             const bhytChecked = !!document.querySelector('input[name="bhyt"]')?.checked;
 
-            const hasAdvancedFilters = !!(
-                loaiHinhValue || phuongValue || openChecked || emergencyChecked || capCuuChecked || bhytChecked || (!qValue && radiusValue)
-            );
-
-            if (hasAdvancedFilters && (!latValue || !lonValue)) {
-                event.preventDefault();
-                locateUser(true, () => {
-                    geoForm.submit();
-                });
-                return;
-            }
-
             if (!latValue && !lonValue) {
                 return;
             }

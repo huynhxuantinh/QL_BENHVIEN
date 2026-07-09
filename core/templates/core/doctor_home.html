@@ -66,6 +66,9 @@
 <span>Khoa: {{ lich.bac_si.khoa.ten }}</span>
 </div>
 <div class="meta">Trạng thái: <strong>{{ lich.get_trang_thai_display }}</strong></div>
+{% if lich.ghi_chu %}
+<div class="meta" style="color: var(--primary);"><strong>Ghi chú từ bệnh nhân:</strong> {{ lich.ghi_chu }}</div>
+{% endif %}
 <div>
                         {% if lich.trang_thai == "cho" %}
                             <span class="badge">Chờ khám</span>

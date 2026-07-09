@@ -184,8 +184,8 @@ class BenhVien(models.Model):
             })
 
     def save(self, *args, **kwargs):
-        # Always persist both fields consistently.
-        self.co_cap_cuu = bool(self.cap_cuu_24h)
+        if self.cap_cuu_24h:
+            self.co_cap_cuu = True
         super().save(*args, **kwargs)
 
     def __str__(self):

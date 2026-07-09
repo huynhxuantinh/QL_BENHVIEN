@@ -134,12 +134,15 @@ def home(request):
 
     radius_km = None
     if user_point and radius_str and not (phuong_filter or province_filter):
-        try:
-            radius_km = float(radius_str)
-            if radius_km <= 0:
-                radius_km = None
-        except ValueError:
+        if radius_str.strip() in ("5", "5.0"):
             radius_km = None
+        else:
+            try:
+                radius_km = float(radius_str)
+                if radius_km <= 0:
+                    radius_km = None
+            except ValueError:
+                radius_km = None
 
     if loai_hinh in {"cong", "tu", "qt"}:
         bvs = bvs.filter(loai_hinh=loai_hinh)

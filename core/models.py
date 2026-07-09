@@ -133,13 +133,13 @@ class BenhVien(models.Model):
             models.Index(fields=['cap_cuu_24h', 'co_cap_cuu']),
         ]
         constraints = [
-            models.CheckConstraint(condition=models.Q(gio_mo__lt=models.F("gio_dong")),
+            models.CheckConstraint(check=models.Q(gio_mo__lt=models.F("gio_dong")),
                 name="benhvien_gio_mo_lt_gio_dong",
             ),
-            models.CheckConstraint(condition=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
+            models.CheckConstraint(check=models.Q(cap_cuu_24h=False) | models.Q(co_cap_cuu=True),
                 name="benhvien_cap_cuu_24h_requires_cap_cuu",
             ),
-            models.CheckConstraint(condition=(
+            models.CheckConstraint(check=(
                     GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(-180))
                     & LessThanOrEqual(models.Func(models.F("vi_tri"), function="ST_X"), models.Value(180))
                     & GreaterThanOrEqual(models.Func(models.F("vi_tri"), function="ST_Y"), models.Value(-90))
@@ -262,7 +262,7 @@ class GioLamViecBenhVien(models.Model):
         unique_together = [['benh_vien', 'thu']]
         ordering = ['benh_vien', 'thu']
         constraints = [
-            models.CheckConstraint(condition=models.Q(nghi=True) | models.Q(gio_mo__lt=models.F("gio_dong")),
+            models.CheckConstraint(check=models.Q(nghi=True) | models.Q(gio_mo__lt=models.F("gio_dong")),
                 name="giolamviec_benhvien_gio_mo_lt_gio_dong",
             ),
         ]
@@ -376,7 +376,7 @@ class GioLamViecBacSi(models.Model):
         unique_together = [['bac_si', 'thu']]
         ordering = ['bac_si', 'thu']
         constraints = [
-            models.CheckConstraint(condition=models.Q(nghi=True) | models.Q(gio_bat_dau__lt=models.F("gio_ket_thuc")),
+            models.CheckConstraint(check=models.Q(nghi=True) | models.Q(gio_bat_dau__lt=models.F("gio_ket_thuc")),
                 name="giolamviec_bacsi_gio_bat_dau_lt_gio_ket_thuc",
             ),
         ]
@@ -406,7 +406,7 @@ class BaoHiemYTe(models.Model):
 
     class Meta:
         constraints = [
-            models.CheckConstraint(condition=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
+            models.CheckConstraint(check=models.Q(ngay_cap__lt=models.F("ngay_het_han")),
                 name="bhyt_ngay_cap_lt_ngay_het_han",
             ),
         ]

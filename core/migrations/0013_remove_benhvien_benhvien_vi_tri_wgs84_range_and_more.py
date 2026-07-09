@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='benhvien',
-            constraint=models.CheckConstraint(condition=models.Q(django.db.models.lookups.GreaterThanOrEqual(models.Func(models.F('vi_tri'), function='ST_X'), models.Value(-180)), django.db.models.lookups.LessThanOrEqual(models.Func(models.F('vi_tri'), function='ST_X'), models.Value(180)), django.db.models.lookups.GreaterThanOrEqual(models.Func(models.F('vi_tri'), function='ST_Y'), models.Value(-90)), django.db.models.lookups.LessThanOrEqual(models.Func(models.F('vi_tri'), function='ST_Y'), models.Value(90))), name='benhvien_vi_tri_wgs84_range'),
+            constraint=models.CheckConstraint(check=models.Q(django.db.models.lookups.GreaterThanOrEqual(models.Func(models.F('vi_tri'), function='ST_X'), models.Value(-180)), django.db.models.lookups.LessThanOrEqual(models.Func(models.F('vi_tri'), function='ST_X'), models.Value(180)), django.db.models.lookups.GreaterThanOrEqual(models.Func(models.F('vi_tri'), function='ST_Y'), models.Value(-90)), django.db.models.lookups.LessThanOrEqual(models.Func(models.F('vi_tri'), function='ST_Y'), models.Value(90))), name='benhvien_vi_tri_wgs84_range'),
         ),
     ]

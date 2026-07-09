@@ -972,11 +972,11 @@ def register(request):
             messages.error(request, "Mật khẩu và xác nhận mật khẩu không khớp.")
             return render(request, "core/register.html", {"form_data": request.POST})
 
-        username_pattern = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$"
+        username_pattern = r"^[A-Za-z0-9_]+$"
         if not re.fullmatch(username_pattern, username):
             messages.error(
                 request,
-                "Tên người dùng phải không dấu, không khoảng trắng và phải gồm cả chữ lẫn số.",
+                "Tên đăng nhập chỉ được chứa chữ cái không dấu, số hoặc dấu gạch dưới, không có khoảng trắng.",
             )
             return render(request, "core/register.html", {"form_data": request.POST})
 

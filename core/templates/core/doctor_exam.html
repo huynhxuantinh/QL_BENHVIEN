@@ -105,15 +105,15 @@
 
                 <div class="field">
 <label for="id_trieu_chung">Triệu chứng</label>
-<textarea id="id_trieu_chung" name="trieu_chung" required=""></textarea>
+<textarea id="id_trieu_chung" name="trieu_chung" required="">{{ form_data.trieu_chung|default:'' }}</textarea>
 </div>
 <div class="field">
 <label for="id_chan_doan">Chẩn đoán</label>
-<textarea id="id_chan_doan" name="chan_doan" required=""></textarea>
+<textarea id="id_chan_doan" name="chan_doan" required="">{{ form_data.chan_doan|default:'' }}</textarea>
 </div>
 <div class="field">
 <label for="id_huong_dieu_tri">Hướng điều trị</label>
-<textarea id="id_huong_dieu_tri" name="huong_dieu_tri" required=""></textarea>
+<textarea id="id_huong_dieu_tri" name="huong_dieu_tri" required="">{{ form_data.huong_dieu_tri|default:'' }}</textarea>
 </div>
 <div class="field">
 <label for="exam-images-input">Ảnh đính kèm (có thể chọn nhiều ảnh)</label>

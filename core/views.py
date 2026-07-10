@@ -900,15 +900,13 @@ def doctor_exam(request, lich_id):
             return render(request, "core/doctor_exam.html", {
                 "lich": lich,
                 "lich_su": lich_su,
+                "form_data": request.POST,
             })
 
         messages.success(request, "Đã hoàn thành khám")
 
         return redirect("bac_si_home")
 
-    if lich.trang_thai == "cho":
-        lich.trang_thai = "dang"
-        lich.save(update_fields=["trang_thai", "ngay_cap_nhat"])
 
     lich_su = LichSuKhamBenh.objects.filter(
         benh_nhan=lich.benh_nhan
@@ -2499,7 +2497,7 @@ def start_exam(request, lich_id):
         lich.save()
         messages.success(request, "Đã chuyển trạng thái sang đang khám.")
 
-    return redirect("bac_si_home")
+    return redirect("doctor_exam", lich_id=lich.id)
 
 
 # ==========================

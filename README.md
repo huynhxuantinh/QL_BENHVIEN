@@ -83,6 +83,12 @@ venv\Scripts\python.exe manage.py migrate
 venv\Scripts\python.exe manage.py createcachetable ql_benhvien_cache_table
 ```
 
+> **LƯU Ý QUAN TRỌNG: Import Dữ liệu GIS (Bắt buộc)**
+> 
+> Các model về hành chính (Phường, Quận, Tỉnh) được cấu hình `managed=False` và tham chiếu tới bảng từ `vietnamese-provinces-database`.
+> Sau khi chạy migrate, bạn **bắt buộc** phải import file SQL dump từ repository đó vào database Postgres của bạn (`ql_benhvien`).
+> Nếu bỏ qua bước này, trang chủ và các tính năng lọc theo phường/tỉnh sẽ crash ngay lập tức khi query.
+
 ---
 
 ## 6) Chạy ứng dụng

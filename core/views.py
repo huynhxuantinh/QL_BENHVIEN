@@ -2312,6 +2312,10 @@ def forgot_password(request):
 # LIEN HE / GOP Y
 # ==========================
 def contact_feedback(request):
+    from django.core.cache import cache
+    ip_addr = request.META.get("REMOTE_ADDR", "")
+    cache_key = f"contact_feedback_rate_limit_{ip_addr}" if ip_addr else None
+
     initial = {}
     if request.user.is_authenticated:
         full_name = request.user.get_full_name().strip()
@@ -2324,6 +2328,12 @@ def contact_feedback(request):
             initial["email"] = request.user.email
 
     if request.method == "POST":
+        if cache_key:
+            attempts = cache.get(cache_key, 0)
+            if attempts >= 3:
+                messages.error(request, "Bạn đã gửi quá nhiều phản hồi. Vui lòng thử lại sau 1 giờ.")
+                return redirect("contact_feedback")
+
         form = ContactFeedbackForm(request.POST)
         if form.is_valid():
             cleaned = form.cleaned_data
@@ -2348,6 +2358,11 @@ def contact_feedback(request):
                     request,
                     "Không gửi được góp ý lúc này. Vui lòng thử lại sau.",
                 )
+            else:
+                if cache_key:
+                    cache.set(cache_key, cache.get(cache_key, 0) + 1, timeout=3600)
+                messages.success(request, "Cảm ơn bạn đã đóng góp ý kiến!")
+                return redirect("home")
             else:
                 messages.success(
                     request,
@@ -2557,45 +2572,71 @@ def bac_si_schedule(request):
     ]
 
     if request.method == "POST":
-        for thu, _ in thu_labels:
+        updates = []
+        has_error = False
+
+        for thu, label in thu_labels:
             nghi = request.POST.get(f"nghi_{thu}") == "on"
             gio_bat_dau = request.POST.get(f"gio_bat_dau_{thu}", "").strip()
             gio_ket_thuc = request.POST.get(f"gio_ket_thuc_{thu}", "").strip()
 
             if nghi:
-                GioLamViecBacSi.objects.update_or_create(
-                    bac_si=bac_si,
-                    thu=thu,
-                    defaults={
-                        "nghi": True,
-                        "gio_bat_dau": "00:00",
-                        "gio_ket_thuc": "00:00",
-                    },
-                )
+                updates.append({
+                    "thu": thu,
+                    "nghi": True,
+                    "gio_bat_dau": "00:00",
+                    "gio_ket_thuc": "00:00",
+                })
                 continue
 
             if not gio_bat_dau or not gio_ket_thuc:
-                messages.error(request, "Vui lòng nhập đầy đủ giờ làm việc.")
-                return redirect("bac_si_schedule")
+                messages.error(request, f"Vui lòng nhập đầy đủ giờ làm việc cho {label}.")
+                has_error = True
+                continue
 
             try:
                 start_time = datetime.time.fromisoformat(gio_bat_dau)
                 end_time = datetime.time.fromisoformat(gio_ket_thuc)
             except ValueError:
-                messages.error(request, "Định dạng giờ không hợp lệ.")
-                return redirect("bac_si_schedule")
+                messages.error(request, f"Định dạng giờ không hợp lệ cho {label}.")
+                has_error = True
+                continue
 
             if start_time >= end_time:
-                messages.error(request, "Giờ bắt đầu phải nhỏ hơn giờ kết thúc.")
-                return redirect("bac_si_schedule")
+                messages.error(request, f"Giờ bắt đầu phải nhỏ hơn giờ kết thúc cho {label}.")
+                has_error = True
+                continue
 
+            updates.append({
+                "thu": thu,
+                "nghi": False,
+                "gio_bat_dau": start_time,
+                "gio_ket_thuc": end_time,
+            })
+
+        if has_error:
+            schedule_items = []
+            for thu, label in thu_labels:
+                schedule_items.append({
+                    "thu": thu,
+                    "label": label,
+                    "nghi": request.POST.get(f"nghi_{thu}") == "on",
+                    "gio_bat_dau": request.POST.get(f"gio_bat_dau_{thu}", "").strip(),
+                    "gio_ket_thuc": request.POST.get(f"gio_ket_thuc_{thu}", "").strip(),
+                })
+            return render(request, "core/doctor_schedule.html", {
+                "bac_si": bac_si,
+                "schedule_items": schedule_items,
+            })
+
+        for update in updates:
             GioLamViecBacSi.objects.update_or_create(
                 bac_si=bac_si,
-                thu=thu,
+                thu=update["thu"],
                 defaults={
-                    "nghi": False,
-                    "gio_bat_dau": start_time,
-                    "gio_ket_thuc": end_time,
+                    "nghi": update["nghi"],
+                    "gio_bat_dau": update["gio_bat_dau"],
+                    "gio_ket_thuc": update["gio_ket_thuc"],
                 },
             )
 

@@ -58,7 +58,7 @@ table {
                         <tr>
 <td>{{ item.label }}</td>
 <td>
-<input %}="" %}checked{%="" endif="" if="" item.nghi="" name="nghi_{{ item.thu }}" type="checkbox" {%=""/>
+<input type="checkbox" name="nghi_{{ item.thu }}" {% if item.nghi %}checked{% endif %}/>
 </td>
 <td>
 <input name="gio_bat_dau_{{ item.thu }}" type="time" value="{{ item.gio_bat_dau }}"/>

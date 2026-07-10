@@ -57,7 +57,7 @@
 <select id="khoa-select" name="khoa" onchange="this.form.submit()">
 <option value="">-- Chọn khoa --</option>
                             {% for k in khoas %}
-                                <option %}="" %}selected{%="" endif="" if="" k.id|stringformat:"s"="khoa_id" value="{{ k.id }}" {%="">{{ k.ten }}</option>
+                                <option value="{{ k.id }}" {% if khoa_id == k.id|stringformat:"s" %}selected{% endif %}>{{ k.ten }}</option>
                             {% endfor %}
                         </select>
 </form>

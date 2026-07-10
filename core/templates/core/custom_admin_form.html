@@ -174,7 +174,7 @@ h1 { margin: 0 0 8px; font-size: 28px; }
 <img alt="Ảnh bệnh viện {{ forloop.counter }}" src="{{ image.hinh_anh.url }}"/>
 <div class="image-actions">
 <label>
-<input %}="" %}checked{%="" endif="" if="" image.id="" in="" name="delete_image_ids" selected_delete_ids="" type="checkbox" value="{{ image.id }}" {%=""/>
+<input type="checkbox" name="delete_image_ids" value="{{ image.id }}" {% if image.id in selected_delete_ids %}checked{% endif %}/>
                                                     Xóa ảnh này
                                                 </label>
 </div>
@@ -217,7 +217,7 @@ h1 { margin: 0 0 8px; font-size: 28px; }
 <img alt="Ảnh phiếu khám {{ forloop.counter }}" src="{{ image.hinh_anh.url }}"/>
 <div class="image-actions">
 <label>
-<input %}="" %}checked{%="" endif="" if="" image.id="" in="" name="delete_exam_image_ids" selected_delete_exam_ids="" type="checkbox" value="{{ image.id }}" {%=""/>
+<input type="checkbox" name="delete_exam_image_ids" value="{{ image.id }}" {% if image.id in selected_delete_exam_ids %}checked{% endif %}/>
                                                     Xóa ảnh này
                                                 </label>
 </div>
@@ -256,7 +256,7 @@ h1 { margin: 0 0 8px; font-size: 28px; }
                                     <tr>
 <td>{{ row.label }}</td>
 <td>
-<input %}="" %}checked{%="" endif="" if="" name="schedule_{{ row.thu }}_nghi" row.nghi="" type="checkbox" value="1" {%=""/>
+<input type="checkbox" name="schedule_{{ row.thu }}_nghi" value="1" {% if row.nghi %}checked{% endif %}/>
 </td>
 <td>
 <input name="schedule_{{ row.thu }}_gio_mo" type="time" value="{{ row.gio_mo_raw }}"/>

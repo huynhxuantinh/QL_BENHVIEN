@@ -81,7 +81,7 @@
 </div>
 <div class="route-actions">
 <button class="btn ghost" id="route-locate" type="button">Lấy vị trí</button>
-<button %}="" %}disabled{%="" class="btn primary" endif="" id="route-draw" if="" map_lat="" map_lon="" not="" or="" type="button" {%="">Chỉ đường đến bệnh viện</button>
+<button class="btn primary" id="route-draw" type="button" {% if not map_lat or not map_lon %}disabled{% endif %}>Chỉ đường đến bệnh viện</button>
 </div>
 <div class="route-status" id="route-status">Nhập địa chỉ hoặc tọa độ xuất phát, có thể kéo chấm xanh trên bản đồ để chỉnh vị trí.</div>
 </div>

@@ -23,27 +23,27 @@
 <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
 <label for="range-filter" style="font-weight:600; font-size:14px;">Khoảng thời gian</label>
 <select id="range-filter" name="range" style="padding:10px 12px; border-radius:12px; border:1px solid rgba(31, 42, 43, 0.18); font-family:inherit;">
-<option %}="" %}selected{%="" endif="" if="" not="" range_filter="" value="" {%="">Tất cả</option>
-<option %}="" %}selected{%="" endif="" if="" range_filter="week" value="week" {%="">Tuần tới</option>
-<option %}="" %}selected{%="" endif="" if="" range_filter="month" value="month" {%="">Tháng tới</option>
+<option value="" {% if not range_filter %}selected{% endif %}>Tất cả</option>
+<option value="week" {% if range_filter == "week" %}selected{% endif %}>Tuần tới</option>
+<option value="month" {% if range_filter == "month" %}selected{% endif %}>Tháng tới</option>
 </select>
 </div>
 <div style="display:flex; flex-direction:column; gap:6px; min-width:170px;">
 <label for="status-filter" style="font-weight:600; font-size:14px;">Trạng thái</label>
 <select id="status-filter" name="status" style="padding:10px 12px; border-radius:12px; border:1px solid rgba(31, 42, 43, 0.18); font-family:inherit;">
-<option %}="" %}selected{%="" endif="" if="" not="" status_filter="" value="" {%="">Tất cả</option>
-<option %}="" %}selected{%="" endif="" if="" status_filter="cho" value="cho" {%="">Chờ khám</option>
-<option %}="" %}selected{%="" endif="" if="" status_filter="dang" value="dang" {%="">Đang khám</option>
-<option %}="" %}selected{%="" endif="" if="" status_filter="xong" value="xong" {%="">Đã xong</option>
-<option %}="" %}selected{%="" endif="" if="" status_filter="huy" value="huy" {%="">Đã hủy</option>
+<option value="" {% if not status_filter %}selected{% endif %}>Tất cả</option>
+<option value="cho" {% if status_filter == "cho" %}selected{% endif %}>Chờ khám</option>
+<option value="dang" {% if status_filter == "dang" %}selected{% endif %}>Đang khám</option>
+<option value="xong" {% if status_filter == "xong" %}selected{% endif %}>Đã xong</option>
+<option value="huy" {% if status_filter == "huy" %}selected{% endif %}>Đã hủy</option>
 </select>
 </div>
 <div style="display:flex; flex-direction:column; gap:6px; min-width:140px;">
 <label for="shift-filter" style="font-weight:600; font-size:14px;">Ca</label>
 <select id="shift-filter" name="shift" style="padding:10px 12px; border-radius:12px; border:1px solid rgba(31, 42, 43, 0.18); font-family:inherit;">
-<option %}="" %}selected{%="" endif="" if="" not="" shift_filter="" value="" {%="">Tất cả</option>
-<option %}="" %}selected{%="" endif="" if="" shift_filter="sang" value="sang" {%="">Ca sáng</option>
-<option %}="" %}selected{%="" endif="" if="" shift_filter="chieu" value="chieu" {%="">Ca chiều</option>
+<option value="" {% if not shift_filter %}selected{% endif %}>Tất cả</option>
+<option value="sang" {% if shift_filter == "sang" %}selected{% endif %}>Ca sáng</option>
+<option value="chieu" {% if shift_filter == "chieu" %}selected{% endif %}>Ca chiều</option>
 </select>
 </div>
 <div style="display:flex; gap:10px; flex-wrap:nowrap; align-items:center;">

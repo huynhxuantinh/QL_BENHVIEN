@@ -122,9 +122,9 @@
 <div class="field">
 <label for="id_gioi_tinh">Giới tính</label>
 <select id="id_gioi_tinh" name="gioi_tinh">
-<option %}="" %}selected{%="" bn.gioi_tinh="nam" endif="" if="" value="nam" {%="">Nam</option>
-<option %}="" %}selected{%="" bn.gioi_tinh="nu" endif="" if="" value="nu" {%="">Nữ</option>
-<option %}="" %}selected{%="" bn.gioi_tinh="khac" endif="" if="" value="khac" {%="">Khác</option>
+<option value="nam" {% if bn.gioi_tinh == "nam" %}selected{% endif %}>Nam</option>
+<option value="nu" {% if bn.gioi_tinh == "nu" %}selected{% endif %}>Nữ</option>
+<option value="khac" {% if bn.gioi_tinh == "khac" %}selected{% endif %}>Khác</option>
 </select>
 </div>
 <div class="field">
